@@ -24,6 +24,18 @@ type file struct {
 	pos      int64
 }
 
+func (f *file) validTo(m opMode) error {
+	if f.opMode == 0 {
+		return fs.ErrClosed
+	}
+
+	if f.opMode&m != m {
+		return fs.ErrInvalid
+	}
+
+	return nil
+}
+
 func (f *file) Stat() (fs.FileInfo, error) {
 	return f, nil
 }

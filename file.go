@@ -53,6 +53,7 @@ func (f *file) Read(p []byte) (int, error) {
 	n := copy(p, f.data[f.pos:])
 
 	f.pos += int64(n)
+	f.lastRead = 0
 
 	return n, nil
 }
@@ -80,7 +81,20 @@ func (f *file) ReadFrom(r io.Reader) (int64, error) {
 }
 
 func (f *file) ReadByte() (byte, error) {
-	return 0, nil
+	if err := f.validTo(opRead); err != nil {
+		return 0, err
+	}
+
+	if f.pos >= int64(len(f.data)) {
+		return 0, io.EOF
+	}
+
+	b := f.data[f.pos]
+
+	f.pos++
+	f.lastRead = 1
+
+	return b, nil
 }
 
 func (f *file) UnreadByte() error {

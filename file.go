@@ -58,7 +58,17 @@ func (f *file) Read(p []byte) (int, error) {
 }
 
 func (f *file) ReadAt(p []byte, off int64) (int, error) {
-	return 0, nil
+	if err := f.validTo(opRead); err != nil {
+		return 0, err
+	}
+
+	n := copy(p, f.data[off:])
+
+	if n < len(p) {
+		return 0, io.EOF
+	}
+
+	return n, nil
 }
 
 func (f *file) ReadFrom(r io.Reader) (int64, error) {

@@ -21,6 +21,7 @@ type file struct {
 
 	opMode   opMode
 	lastRead uint8
+	data     []byte
 	pos      int64
 }
 
@@ -41,7 +42,19 @@ func (f *file) Stat() (fs.FileInfo, error) {
 }
 
 func (f *file) Read(p []byte) (int, error) {
-	return 0, nil
+	if err := f.validTo(opRead); err != nil {
+		return 0, err
+	}
+
+	n := copy(p, f.data[f.pos:])
+
+	if n == 0 {
+		return 0, io.EOF
+	}
+
+	f.pos += int64(n)
+
+	return n, nil
 }
 
 func (f *file) ReadAt(p []byte, off int64) (int, error) {

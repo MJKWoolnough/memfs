@@ -46,11 +46,11 @@ func (f *file) Read(p []byte) (int, error) {
 		return 0, err
 	}
 
-	n := copy(p, f.data[f.pos:])
-
-	if n == 0 {
+	if f.pos >= int64(len(f.data)) {
 		return 0, io.EOF
 	}
+
+	n := copy(p, f.data[f.pos:])
 
 	f.pos += int64(n)
 
@@ -60,6 +60,10 @@ func (f *file) Read(p []byte) (int, error) {
 func (f *file) ReadAt(p []byte, off int64) (int, error) {
 	if err := f.validTo(opRead); err != nil {
 		return 0, err
+	}
+
+	if off >= int64(len(f.data)) {
+		return 0, io.EOF
 	}
 
 	n := copy(p, f.data[off:])

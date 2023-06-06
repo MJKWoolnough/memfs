@@ -76,10 +76,6 @@ func (f *file) ReadAt(p []byte, off int64) (int, error) {
 	return n, nil
 }
 
-func (f *file) ReadFrom(r io.Reader) (int64, error) {
-	return 0, nil
-}
-
 func (f *file) ReadByte() (byte, error) {
 	if err := f.validTo(opRead); err != nil {
 		return 0, err

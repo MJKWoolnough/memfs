@@ -6,7 +6,23 @@ import (
 	"time"
 )
 
-type file struct{}
+type opMode uint8
+
+const (
+	opRead opMode = 1 << iota
+	opWrite
+	opSeek
+)
+
+type file struct {
+	name    string
+	modtime time.Time
+	mode    fs.FileMode
+
+	opMode   opMode
+	lastRead uint8
+	pos      int64
+}
 
 func (f *file) Stat() (fs.FileInfo, error) {
 	return f, nil

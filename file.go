@@ -97,6 +97,17 @@ func (f *file) ReadByte() (byte, error) {
 }
 
 func (f *file) UnreadByte() error {
+	if err := f.validTo(opRead | opSeek); err != nil {
+		return err
+	}
+
+	if f.lastRead != 1 {
+		return fs.ErrInvalid
+	}
+
+	f.lastRead = 0
+
+	f.pos--
 	return nil
 }
 

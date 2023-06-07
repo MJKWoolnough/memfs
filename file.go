@@ -158,7 +158,24 @@ func (f *file) WriteTo(w io.Writer) (int64, error) {
 }
 
 func (f *file) Seek(offset int64, whence int) (int64, error) {
-	return 0, nil
+	if err := f.validTo(opSeek); err != nil {
+		return 0, err
+	}
+
+	switch whence {
+	case io.SeekStart:
+		f.pos = offset
+	case io.SeekCurrent:
+		f.pos += offset
+	case io.SeekEnd:
+		f.pos = int64(len(f.data)) + offset
+	default:
+		return 0, fs.ErrInvalid
+	}
+
+	f.lastRead = 0
+
+	return f.pos, nil
 }
 
 func (f *file) Write(p []byte) (int, error) {

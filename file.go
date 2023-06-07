@@ -63,7 +63,7 @@ func (f *file) Read(p []byte) (int, error) {
 }
 
 func (f *file) ReadAt(p []byte, off int64) (int, error) {
-	if err := f.validTo(opRead); err != nil {
+	if err := f.validTo(opRead | opSeek); err != nil {
 		return 0, err
 	}
 

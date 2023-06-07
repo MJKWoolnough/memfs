@@ -4,6 +4,7 @@ import (
 	"io"
 	"io/fs"
 	"time"
+	"unicode/utf8"
 )
 
 type opMode uint8
@@ -108,11 +109,24 @@ func (f *file) UnreadByte() error {
 	f.lastRead = 0
 
 	f.pos--
+
 	return nil
 }
 
 func (f *file) ReadRune() (rune, int, error) {
-	return 0, 0, nil
+	if err := f.validTo(opRead); err != nil {
+		return 0, 0, err
+	}
+
+	if f.pos >= int64(len(f.data)) {
+		return 0, 0, io.EOF
+	}
+
+	r, s := utf8.DecodeRune(f.data[f.pos:])
+
+	f.lastRead = uint8(s)
+
+	return r, s, nil
 }
 
 func (f *file) UnreadRune() error {

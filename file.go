@@ -178,6 +178,23 @@ func (f *file) Seek(offset int64, whence int) (int64, error) {
 	return f.pos, nil
 }
 
+func (f *file) grow(size int) {
+	if size > len(f.data) {
+		if size < cap(f.data) {
+			f.data = (f.data)[:size]
+		} else {
+			var newData []byte
+			if len(f.data) < 512 {
+				newData = make([]byte, size, size<<1)
+			} else {
+				newData = make([]byte, size, size+(size>>2))
+			}
+			copy(newData, f.data)
+			f.data = newData
+		}
+	}
+}
+
 func (f *file) Write(p []byte) (int, error) {
 	return 0, nil
 }

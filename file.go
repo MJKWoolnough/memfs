@@ -130,6 +130,18 @@ func (f *file) ReadRune() (rune, int, error) {
 }
 
 func (f *file) UnreadRune() error {
+	if err := f.validTo(opRead | opSeek); err != nil {
+		return err
+	}
+
+	if f.lastRead == 0 {
+		return fs.ErrInvalid
+	}
+
+	f.lastRead = 0
+
+	f.pos -= int64(f.lastRead)
+
 	return nil
 }
 

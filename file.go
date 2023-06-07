@@ -202,7 +202,17 @@ func (f *file) grow(size int) {
 }
 
 func (f *file) Write(p []byte) (int, error) {
-	return 0, nil
+	if err := f.validTo(opWrite); err != nil {
+		return 0, err
+	}
+
+	f.grow(len(f.data) + len(p))
+
+	n := copy(f.data[f.pos:], p)
+	f.pos += int64(n)
+	f.lastRead = 0
+
+	return n, nil
 }
 
 func (f *file) WriterAt(p []byte) (int, error) {

@@ -14,14 +14,17 @@ const (
 	opSeek
 )
 
-type file struct {
-	name    string
+type inode struct {
 	modtime time.Time
+	data    []byte
 	mode    fs.FileMode
+}
 
+type file struct {
+	name string
+	*inode
 	opMode   opMode
 	lastRead uint8
-	data     []byte
 	pos      int64
 }
 

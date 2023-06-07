@@ -146,7 +146,15 @@ func (f *file) UnreadRune() error {
 }
 
 func (f *file) WriteTo(w io.Writer) (int64, error) {
-	return 0, nil
+	if err := f.validTo(opRead); err != nil {
+		return 0, err
+	}
+
+	n, err := w.Write(f.data[f.pos:])
+	f.pos += int64(n)
+	f.lastRead = 0
+
+	return int64(n), err
 }
 
 func (f *file) Seek(offset int64, whence int) (int64, error) {

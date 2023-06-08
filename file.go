@@ -242,6 +242,16 @@ func (f *file) WriteString(str string) (int, error) {
 }
 
 func (f *file) WriteByte(c byte) error {
+	if err := f.validTo(opWrite); err != nil {
+		return err
+	}
+
+	f.grow(int(f.pos) + 1)
+
+	f.data[f.pos] = c
+	f.pos++
+	f.lastRead = 0
+
 	return nil
 }
 

@@ -272,7 +272,7 @@ func (f *file) Size() int64 {
 }
 
 func (f *file) Mode() fs.FileMode {
-	return 0
+	return f.mode
 }
 
 func (f *file) ModTime() time.Time {

@@ -75,7 +75,7 @@ func (f *file) ReadAt(p []byte, off int64) (int, error) {
 	n := copy(p, f.data[off:])
 
 	if n < len(p) {
-		return 0, io.EOF
+		return n, io.EOF
 	}
 
 	return n, nil

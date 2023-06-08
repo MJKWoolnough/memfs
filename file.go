@@ -276,7 +276,7 @@ func (f *file) Mode() fs.FileMode {
 }
 
 func (f *file) ModTime() time.Time {
-	return time.Time{}
+	return f.modtime
 }
 
 func (f *file) IsDir() bool {

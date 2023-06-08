@@ -215,8 +215,16 @@ func (f *file) Write(p []byte) (int, error) {
 	return n, nil
 }
 
-func (f *file) WriterAt(p []byte) (int, error) {
-	return 0, nil
+func (f *file) WriteAt(p []byte, off int64) (int, error) {
+	if err := f.validTo(opWrite | opSeek); err != nil {
+		return 0, err
+	}
+
+	f.grow(int(off) + len(p))
+
+	n := copy(f.data[off:], p)
+
+	return n, nil
 }
 
 func (f *file) WriteString(str string) (int, error) {

@@ -206,7 +206,7 @@ func (f *file) Write(p []byte) (int, error) {
 		return 0, err
 	}
 
-	f.grow(len(f.data) + len(p))
+	f.grow(int(f.pos) + len(p))
 
 	n := copy(f.data[f.pos:], p)
 	f.pos += int64(n)
@@ -228,7 +228,17 @@ func (f *file) WriteAt(p []byte, off int64) (int, error) {
 }
 
 func (f *file) WriteString(str string) (int, error) {
-	return 0, nil
+	if err := f.validTo(opWrite); err != nil {
+		return 0, err
+	}
+
+	f.grow(int(f.pos) + len(str))
+
+	n := copy(f.data[f.pos:], str)
+	f.pos += int64(n)
+	f.lastRead = 0
+
+	return n, nil
 }
 
 func (f *file) WriteByte(c byte) error {

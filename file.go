@@ -264,7 +264,7 @@ func (f *file) Close() error {
 }
 
 func (f *file) Name() string {
-	return ""
+	return f.name
 }
 
 func (f *file) Size() int64 {

@@ -10,7 +10,8 @@ import (
 type opMode uint8
 
 const (
-	opRead opMode = 1 << iota
+	opClose opMode = 0
+	opRead  opMode = 1 << iota
 	opWrite
 	opSeek
 )
@@ -30,7 +31,7 @@ type file struct {
 }
 
 func (f *file) validTo(m opMode) error {
-	if f.opMode == 0 {
+	if f.opMode == opClose {
 		return fs.ErrClosed
 	}
 
@@ -256,9 +257,9 @@ func (f *file) WriteByte(c byte) error {
 }
 
 func (f *file) Close() error {
-	err := f.validTo(0)
+	err := f.validTo(opClose)
 
-	f.opMode = 0
+	f.opMode = opClose
 
 	return err
 }

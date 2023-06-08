@@ -268,7 +268,7 @@ func (f *file) Name() string {
 }
 
 func (f *file) Size() int64 {
-	return 0
+	return int64(len(f.data))
 }
 
 func (f *file) Mode() fs.FileMode {

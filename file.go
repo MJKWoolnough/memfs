@@ -256,7 +256,11 @@ func (f *file) WriteByte(c byte) error {
 }
 
 func (f *file) Close() error {
-	return nil
+	err := f.validTo(0)
+
+	f.opMode = 0
+
+	return err
 }
 
 func (f *file) Name() string {

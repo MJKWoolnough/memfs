@@ -41,7 +41,7 @@ func (d *directory) Mode() fs.FileMode {
 }
 
 func (d *directory) ModTime() time.Time {
-	return time.Time{}
+	return d.modtime
 }
 
 func (d *directory) IsDir() bool {

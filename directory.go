@@ -37,7 +37,7 @@ func (d *directory) Size() int64 {
 }
 
 func (d *directory) Mode() fs.FileMode {
-	return 0
+	return d.mode
 }
 
 func (d *directory) ModTime() time.Time {

@@ -29,7 +29,7 @@ func (d *directory) ReadDir(n int) ([]fs.DirEntry, error) {
 }
 
 func (d *directory) Name() string {
-	return ""
+	return d.name
 }
 
 func (d *directory) Size() int64 {

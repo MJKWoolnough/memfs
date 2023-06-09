@@ -5,12 +5,16 @@ import (
 	"time"
 )
 
-type directory struct {
+type direntry struct {
 	name    string
 	entries []fs.DirEntry
-	pos     int
 	modtime time.Time
 	mode    fs.FileMode
+}
+
+type directory struct {
+	*direntry
+	pos int
 }
 
 func (d *directory) Stat() (fs.FileInfo, error) {

@@ -17,6 +17,10 @@ type directory struct {
 	pos int
 }
 
+func (d *directory) Info() (fs.FileInfo, error) {
+	return d, nil
+}
+
 func (d *directory) Stat() (fs.FileInfo, error) {
 	return d, nil
 }

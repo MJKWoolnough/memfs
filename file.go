@@ -42,6 +42,10 @@ func (f *file) validTo(m opMode) error {
 	return nil
 }
 
+func (f *file) Info() (fs.FileInfo, error) {
+	return f, nil
+}
+
 func (f *file) Stat() (fs.FileInfo, error) {
 	return f, nil
 }

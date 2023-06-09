@@ -8,6 +8,7 @@ import (
 type directory struct {
 	name    string
 	entries []fs.DirEntry
+	pos     int
 	modtime time.Time
 	mode    fs.FileMode
 }
@@ -25,7 +26,25 @@ func (d *directory) Close() error {
 }
 
 func (d *directory) ReadDir(n int) ([]fs.DirEntry, error) {
-	return nil, nil
+	if n <= 0 {
+		dirs := make([]fs.DirEntry, len(d.entries))
+
+		copy(dirs, d.entries)
+
+		return dirs, nil
+	}
+
+	left := len(d.entries) - d.pos
+
+	if left < n {
+		n = left
+	}
+
+	dirs := make([]fs.DirEntry, n)
+
+	d.pos += copy(dirs, d.entries[d.pos:])
+
+	return dirs, nil
 }
 
 func (d *directory) Name() string {

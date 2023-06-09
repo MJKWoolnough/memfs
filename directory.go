@@ -59,6 +59,10 @@ func (d *directory) Size() int64 {
 	return 0
 }
 
+func (d *directory) Type() fs.FileMode {
+	return d.mode
+}
+
 func (d *directory) Mode() fs.FileMode {
 	return d.mode
 }

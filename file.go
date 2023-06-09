@@ -276,6 +276,10 @@ func (f *file) Size() int64 {
 	return int64(len(f.data))
 }
 
+func (f *file) Type() fs.FileMode {
+	return f.mode
+}
+
 func (f *file) Mode() fs.FileMode {
 	return f.mode
 }

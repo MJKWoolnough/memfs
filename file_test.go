@@ -9,6 +9,17 @@ import (
 	"testing"
 )
 
+var _ interface {
+	io.ReadSeekCloser
+	io.ReaderAt
+	io.Writer
+	io.WriterTo
+	io.WriterAt
+	io.RuneScanner
+	io.ByteScanner
+	io.ByteWriter
+} = &file{}
+
 func TestRead(t *testing.T) {
 	for n, test := range [...]struct {
 		Data []byte

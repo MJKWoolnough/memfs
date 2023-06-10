@@ -272,7 +272,7 @@ func TestUnreadByte(t *testing.T) {
 
 	c, _ := f.ReadByte()
 	if c != '2' {
-		t.Errorf("test 2: expecting to read \"2\", read %q", c)
+		t.Errorf("test 2: expecting to read '2', read %q", c)
 
 		return
 	}
@@ -286,7 +286,7 @@ func TestUnreadByte(t *testing.T) {
 
 	c, _ = f.ReadByte()
 	if c != '2' {
-		t.Errorf("test 4: expecting to read \"2\", read %q", c)
+		t.Errorf("test 4: expecting to read '2', read %q", c)
 
 		return
 	}
@@ -307,7 +307,7 @@ func TestUnreadByte(t *testing.T) {
 
 	c, _ = f.ReadByte()
 	if c != '2' {
-		t.Errorf("test 7: expecting to read \"2\", read %q", c)
+		t.Errorf("test 7: expecting to read '2', read %q", c)
 
 		return
 	}
@@ -323,7 +323,7 @@ func TestUnreadByte(t *testing.T) {
 
 	c, _ = f.ReadByte()
 	if c != '3' {
-		t.Errorf("test 9: expecting to read \"2\", read %q", c)
+		t.Errorf("test 9: expecting to read '2', read %q", c)
 
 		return
 	}

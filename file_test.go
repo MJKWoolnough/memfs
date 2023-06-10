@@ -200,3 +200,53 @@ func TestReadAt(t *testing.T) {
 		}
 	}
 }
+
+func TestReadByte(t *testing.T) {
+Tests:
+	for n, test := range [...]struct {
+		Data []byte
+		Mode opMode
+		Err  error
+	}{
+		{
+			Err: fs.ErrInvalid,
+		},
+		{
+			Data: []byte{'a'},
+			Err:  fs.ErrClosed,
+		},
+		{
+			Data: []byte("abc"),
+			Mode: opRead,
+		},
+	} {
+		f := file{
+			inode: &inode{
+				data: test.Data,
+			},
+			opMode: test.Mode,
+		}
+
+		for i := range test.Data {
+			b, err := f.ReadByte()
+			if !errors.Is(test.Err, err) {
+				t.Errorf("test %d.%d: expecting error %s, got %s", n+1, i+1, test.Err, err)
+			} else if test.Err != nil {
+				continue Tests
+			} else if test.Data[i] != b {
+				t.Errorf("test %d.%d: expecting to read byte %d, got %d", n+1, i+1, test.Data[0], b)
+			}
+		}
+
+		if test.Err != nil {
+			continue
+		}
+
+		b, err := f.ReadByte()
+		if !errors.Is(io.EOF, err) {
+			t.Errorf("test %d.%d: expecting error %s, got %s", n+1, len(test.Data)+1, io.EOF, err)
+		} else if b != 0 {
+			t.Errorf("test %d.%d: expecting to read byte %d, got %d", n+1, len(test.Data)+1, 0, b)
+		}
+	}
+}

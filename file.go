@@ -112,7 +112,6 @@ func (f *file) UnreadByte() error {
 	}
 
 	f.lastRead = 0
-
 	f.pos--
 
 	return nil
@@ -145,7 +144,6 @@ func (f *file) UnreadRune() error {
 	}
 
 	f.lastRead = 0
-
 	f.pos -= int64(f.lastRead)
 
 	return nil

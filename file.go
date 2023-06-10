@@ -130,6 +130,7 @@ func (f *file) ReadRune() (rune, int, error) {
 	r, s := utf8.DecodeRune(f.data[f.pos:])
 
 	f.lastRead = uint8(s)
+	f.pos += int64(s)
 
 	return r, s, nil
 }

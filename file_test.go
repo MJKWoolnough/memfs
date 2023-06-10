@@ -250,3 +250,90 @@ Tests:
 		}
 	}
 }
+
+func TestUnreadByte(t *testing.T) {
+	f := file{
+		inode: &inode{
+			data: []byte("12345"),
+		},
+		opMode: opRead,
+	}
+
+	f.ReadByte()
+
+	err := f.UnreadByte()
+	if !errors.Is(err, fs.ErrInvalid) {
+		t.Errorf("test 1: expecting ErrClosed, got %s", err)
+
+		return
+	}
+
+	f.opMode |= opSeek
+
+	c, _ := f.ReadByte()
+	if c != '2' {
+		t.Errorf("test 2: expecting to read \"2\", read %q", c)
+
+		return
+	}
+
+	err = f.UnreadByte()
+	if !errors.Is(err, nil) {
+		t.Errorf("test 3: expecting nil error, got %s", err)
+
+		return
+	}
+
+	c, _ = f.ReadByte()
+	if c != '2' {
+		t.Errorf("test 4: expecting to read \"2\", read %q", c)
+
+		return
+	}
+
+	err = f.UnreadByte()
+	if !errors.Is(err, nil) {
+		t.Errorf("test 5: expecting nil error, got %s", err)
+
+		return
+	}
+
+	err = f.UnreadByte()
+	if !errors.Is(err, fs.ErrInvalid) {
+		t.Errorf("test 6: expecting nil error, got %s", err)
+
+		return
+	}
+
+	c, _ = f.ReadByte()
+	if c != '2' {
+		t.Errorf("test 7: expecting to read \"2\", read %q", c)
+
+		return
+	}
+
+	f.ReadByte()
+
+	err = f.UnreadByte()
+	if !errors.Is(err, nil) {
+		t.Errorf("test 8: expecting nil error, got %s", err)
+
+		return
+	}
+
+	c, _ = f.ReadByte()
+	if c != '3' {
+		t.Errorf("test 9: expecting to read \"2\", read %q", c)
+
+		return
+	}
+
+	f.Read([]byte{0})
+
+	err = f.UnreadByte()
+	if !errors.Is(err, fs.ErrInvalid) {
+		t.Errorf("test 6: expecting nil error, got %s", err)
+
+		return
+	}
+}

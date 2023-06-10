@@ -26,7 +26,7 @@ func (d *directory) Stat() (fs.FileInfo, error) {
 }
 
 func (d *directory) Read(_ []byte) (int, error) {
-	return 0, nil
+	return 0, fs.ErrInvalid
 }
 
 func (d *directory) Close() error {

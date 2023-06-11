@@ -143,8 +143,8 @@ func (f *file) UnreadRune() error {
 		return fs.ErrInvalid
 	}
 
-	f.lastRead = 0
 	f.pos -= int64(f.lastRead)
+	f.lastRead = 0
 
 	return nil
 }

@@ -300,7 +300,7 @@ func TestUnreadByte(t *testing.T) {
 
 	err = f.UnreadByte()
 	if !errors.Is(err, fs.ErrInvalid) {
-		t.Errorf("test 6: expecting nil error, got %s", err)
+		t.Errorf("test 6: expecting ErrInvalid error, got %s", err)
 
 		return
 	}
@@ -323,7 +323,7 @@ func TestUnreadByte(t *testing.T) {
 
 	c, _ = f.ReadByte()
 	if c != '3' {
-		t.Errorf("test 9: expecting to read '2', read %q", c)
+		t.Errorf("test 9: expecting to read '3', read %q", c)
 
 		return
 	}

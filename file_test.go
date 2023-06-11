@@ -552,3 +552,93 @@ func TestUnreadRune(t *testing.T) {
 		return
 	}
 }
+
+func TestSeek(t *testing.T) {
+	f := file{
+		inode: &inode{
+			data: make([]byte, 100),
+		},
+		opMode: opSeek,
+	}
+	for n, test := range [...]struct {
+		Offset int64
+		Whence int
+		Pos    int64
+		Err    error
+	}{
+		{
+			Offset: 0,
+			Whence: io.SeekStart,
+			Pos:    0,
+		},
+		{
+			Offset: -1,
+			Whence: io.SeekStart,
+			Pos:    0,
+			Err:    fs.ErrInvalid,
+		},
+		{
+			Offset: 10,
+			Whence: io.SeekStart,
+			Pos:    10,
+		},
+		{
+			Offset: 10,
+			Whence: io.SeekStart,
+			Pos:    10,
+		},
+		{
+			Offset: -1,
+			Whence: io.SeekStart,
+			Pos:    0,
+			Err:    fs.ErrInvalid,
+		},
+		{
+			Offset: 10,
+			Whence: io.SeekStart,
+			Pos:    10,
+		},
+		{
+			Offset: 10,
+			Whence: io.SeekCurrent,
+			Pos:    20,
+		},
+		{
+			Offset: 10,
+			Whence: io.SeekCurrent,
+			Pos:    30,
+		},
+		{
+			Offset: -10,
+			Whence: io.SeekCurrent,
+			Pos:    20,
+		},
+		{
+			Offset: 0,
+			Whence: io.SeekCurrent,
+			Pos:    20,
+		},
+		{
+			Offset: 0,
+			Whence: io.SeekEnd,
+			Pos:    100,
+		},
+		{
+			Offset: 10,
+			Whence: io.SeekEnd,
+			Pos:    110,
+		},
+		{
+			Offset: -10,
+			Whence: io.SeekEnd,
+			Pos:    90,
+		},
+	} {
+		pos, err := f.Seek(test.Offset, test.Whence)
+		if !errors.Is(err, test.Err) {
+			t.Errorf("test %d: expecting error %s, got %s", n+1, test.Err, err)
+		} else if pos != test.Pos {
+			t.Errorf("test %d: expecting pos %d, got %d", n+1, test.Pos, pos)
+		}
+	}
+}

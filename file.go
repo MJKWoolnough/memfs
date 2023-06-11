@@ -255,6 +255,8 @@ func (f *file) Close() error {
 	err := f.validTo(opClose, false)
 
 	f.opMode = opClose
+	f.pos = 0
+	f.lastRead = 0
 
 	return err
 }

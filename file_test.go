@@ -332,7 +332,7 @@ func TestUnreadByte(t *testing.T) {
 
 	err = f.UnreadByte()
 	if !errors.Is(err, fs.ErrInvalid) {
-		t.Errorf("test 6: expecting nil error, got %s", err)
+		t.Errorf("test 10: expecting nil error, got %s", err)
 
 		return
 	}

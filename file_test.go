@@ -433,3 +433,122 @@ func TestReadRune(t *testing.T) {
 		return
 	}
 }
+
+func TestUnreadRune(t *testing.T) {
+	f := file{
+		inode: &inode{
+			data: []byte("1ħᕗ🐶"),
+		},
+		opMode: opRead,
+	}
+
+	f.ReadRune()
+
+	err := f.UnreadRune()
+	if !errors.Is(err, fs.ErrInvalid) {
+		t.Errorf("test 1: expecting ErrClosed, got %s", err)
+
+		return
+	}
+
+	f.opMode |= opSeek
+	f.pos = 0
+
+	c, _, _ := f.ReadRune()
+	if c != '1' {
+		t.Errorf("test 2: expecting to read '1', read %q", c)
+
+		return
+	}
+
+	err = f.UnreadRune()
+	if !errors.Is(err, nil) {
+		t.Errorf("test 3: expecting nil error, got %s", err)
+
+		return
+	}
+
+	c, _, _ = f.ReadRune()
+	if c != '1' {
+		t.Errorf("test 4: expecting to read '1', read %q", c)
+
+		return
+	}
+
+	err = f.UnreadRune()
+	if !errors.Is(err, nil) {
+		t.Errorf("test 5: expecting nil error, got %s", err)
+
+		return
+	}
+
+	err = f.UnreadRune()
+	if !errors.Is(err, fs.ErrInvalid) {
+		t.Errorf("test 6: expecting ErrInvalid error, got %s", err)
+
+		return
+	}
+
+	c, _, _ = f.ReadRune()
+	if c != '1' {
+		t.Errorf("test 7: expecting to read '1', read %q", c)
+
+		return
+	}
+
+	err = f.UnreadRune()
+	if !errors.Is(err, nil) {
+		t.Errorf("test 8: expecting nil error, got %s", err)
+
+		return
+	}
+
+	c, _, _ = f.ReadRune()
+	if c != '1' {
+		t.Errorf("test 9: expecting to read '1', read %q", c)
+
+		return
+	}
+
+	f.Read([]byte{0})
+
+	err = f.UnreadRune()
+	if !errors.Is(err, fs.ErrInvalid) {
+		t.Errorf("test 10: expecting nil error, got %s", err)
+
+		return
+	}
+
+	f.pos = 1
+
+	f.ReadRune()
+
+	f.UnreadRune()
+
+	c, _, _ = f.ReadRune()
+	if c != 'ħ' {
+		t.Errorf("test 11: expecting to read 'ħ', read %q", c)
+
+		return
+	}
+
+	f.ReadRune()
+	f.ReadRune()
+	f.UnreadRune()
+
+	c, _, _ = f.ReadRune()
+	if c != '🐶' {
+		t.Errorf("test 12: expecting to read '🐶', read %q", c)
+
+		return
+	}
+
+	f.UnreadRune()
+
+	c, _, _ = f.ReadRune()
+	if c != '🐶' {
+		t.Errorf("test 12: expecting to read '🐶', read %q", c)
+
+		return
+	}
+}

@@ -154,6 +154,10 @@ func (f *file) WriteTo(w io.Writer) (int64, error) {
 		return 0, err
 	}
 
+	if f.pos >= int64(len(f.data)) {
+		return 0, io.EOF
+	}
+
 	n, err := w.Write(f.data[f.pos:])
 	f.pos += int64(n)
 	f.lastRead = 0

@@ -687,3 +687,66 @@ func TestWrite(t *testing.T) {
 		}
 	}
 }
+
+func TestWriteAt(t *testing.T) {
+	f := file{
+		inode: &inode{
+			data: make([]byte, 10),
+		},
+	}
+
+	n, err := f.WriteAt([]byte{0}, 0)
+	if !errors.Is(err, fs.ErrClosed) {
+		t.Errorf("test 1: expecting ErrClosed, got %s", err)
+	} else if n != 0 {
+		t.Errorf("test 1: expecting to write 0 bytes, wrote %d", n)
+	}
+
+	f.opMode = opWrite | opSeek
+
+	for n, test := range [...]struct {
+		ToWrite []byte
+		Pos     int64
+		N       int
+		Err     error
+		Buffer  []byte
+	}{
+		{
+			ToWrite: []byte("Beep"),
+			Pos:     2,
+			N:       4,
+			Err:     nil,
+			Buffer:  []byte("\000\000Beep\000\000\000\000"),
+		},
+		{
+			ToWrite: []byte("Boop"),
+			Pos:     2,
+			N:       4,
+			Err:     nil,
+			Buffer:  []byte("\000\000Boop\000\000\000\000"),
+		},
+		{
+			ToWrite: []byte("FooBar"),
+			Pos:     12,
+			N:       6,
+			Err:     nil,
+			Buffer:  []byte("\000\000Boop\000\000\000\000\000\000FooBar"),
+		},
+		{
+			ToWrite: []byte("Hello"),
+			Pos:     0,
+			N:       5,
+			Err:     nil,
+			Buffer:  []byte("Hellop\000\000\000\000\000\000FooBar"),
+		},
+	} {
+		m, err := f.WriteAt(test.ToWrite, test.Pos)
+		if !errors.Is(test.Err, err) {
+			t.Errorf("test %d: expecting error %s, got %s", n+1, test.Err, err)
+		} else if m != test.N {
+			t.Errorf("test %d: expecting to write %d bytes, wrote %d", n+1, test.N, m)
+		} else if !bytes.Equal(f.data, test.Buffer) {
+			t.Errorf("test %d: expecting buffer to be %v bytes, got %v", n+1, test.Buffer, f.data)
+		}
+	}
+}

@@ -553,6 +553,49 @@ func TestUnreadRune(t *testing.T) {
 	}
 }
 
+func TestWriteTo(t *testing.T) {
+	f := file{
+		inode: &inode{
+			data: []byte("12345"),
+		},
+	}
+
+	var sb strings.Builder
+
+	_, err := f.WriteTo(&sb)
+	if !errors.Is(err, fs.ErrClosed) {
+		t.Errorf("test 1: expecting to get error ErrClosed, got %s", err)
+	}
+
+	f.opMode = opRead
+
+	n, err := f.WriteTo(&sb)
+	if err != nil {
+		t.Errorf("test 2: expecting to get no error, got %s", err)
+	} else if n != 5 {
+		t.Errorf("test 2: expecting to read 5 bytes, read %d", n)
+	} else if str := sb.String(); str != "12345" {
+		t.Errorf("test 2: expecting to write %q, wrote %q", "12345", str)
+	}
+
+	_, err = f.WriteTo(&sb)
+	if !errors.Is(err, io.EOF) {
+		t.Errorf("test 3: expecting to get error EOF, got %s", err)
+	}
+
+	f.pos = 1
+	sb.Reset()
+
+	n, err = f.WriteTo(&sb)
+	if err != nil {
+		t.Errorf("test 4: expecting to get no error, got %s", err)
+	} else if n != 4 {
+		t.Errorf("test 4: expecting to read 5 bytes, read %d", n)
+	} else if str := sb.String(); str != "2345" {
+		t.Errorf("test 4: expecting to write %q, wrote %q", "2345", str)
+	}
+}
+
 func TestSeek(t *testing.T) {
 	f := file{
 		inode: &inode{

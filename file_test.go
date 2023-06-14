@@ -840,3 +840,65 @@ Tests:
 		}
 	}
 }
+
+func TestClose(t *testing.T) {
+	f := file{
+		inode:  &inode{},
+		opMode: opWrite,
+	}
+
+	_, err := f.WriteString("123")
+	if err != nil {
+		t.Errorf("test 1: expecting nil error, got %s", err)
+	}
+
+	err = f.Close()
+	if err != nil {
+		t.Errorf("test 2: expecting nil error, got %s", err)
+	}
+
+	_, err = f.WriteString("1")
+	if !errors.Is(err, fs.ErrClosed) {
+		t.Errorf("test 3: expecting ErrClosed error, got %s", err)
+	}
+
+	f.opMode = opRead
+
+	var buf [1]byte
+
+	_, err = f.Read(buf[:])
+	if err != nil {
+		t.Errorf("test 4: expecting nil error, got %s", err)
+	} else if buf[0] != '1' {
+		t.Errorf("test 4: expecting to read '1', read %s", buf[:1])
+	}
+
+	err = f.Close()
+	if err != nil {
+		t.Errorf("test 5: expecting nil error, got %s", err)
+	}
+
+	_, err = f.Read(buf[:])
+	if !errors.Is(err, fs.ErrClosed) {
+		t.Errorf("test 6: expecting ErrClosed error, got %s", err)
+	}
+
+	f.opMode = opSeek
+
+	pos, err := f.Seek(1, io.SeekStart)
+	if err != nil {
+		t.Errorf("test 7: expecting nil error, got %s", err)
+	} else if pos != 1 {
+		t.Errorf("test 7: expecting to be at position 1, at %d", pos)
+	}
+
+	err = f.Close()
+	if err != nil {
+		t.Errorf("test 8: expecting nil error, got %s", err)
+	}
+
+	pos, err = f.Seek(1, io.SeekStart)
+	if !errors.Is(err, fs.ErrClosed) {
+		t.Errorf("test 9: expecting ErrClosed error, got %s", err)
+	}
+}

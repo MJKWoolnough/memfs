@@ -795,3 +795,48 @@ func TestWriteString(t *testing.T) {
 		}
 	}
 }
+
+func TestWriteByte(t *testing.T) {
+Tests:
+	for n, test := range [...]struct {
+		Data []byte
+		Mode opMode
+		Err  error
+	}{
+		{
+			Err: fs.ErrInvalid,
+		},
+		{
+			Data: []byte{'a'},
+			Err:  fs.ErrClosed,
+		},
+		{
+			Data: []byte("abc"),
+			Mode: opWrite,
+		},
+	} {
+		f := file{
+			inode: &inode{
+				data: test.Data,
+			},
+			opMode: test.Mode,
+		}
+
+		for i := range test.Data {
+			err := f.WriteByte(test.Data[i])
+			if !errors.Is(test.Err, err) {
+				t.Errorf("test %d.%d: expecting error %s, got %s", n+1, i+1, test.Err, err)
+			} else if test.Err != nil {
+				continue Tests
+			}
+		}
+
+		if test.Err != nil {
+			continue
+		}
+
+		if !bytes.Equal(test.Data, f.data) {
+			t.Errorf("test %d: expecting to write %s, wrote %s", n+1, test.Data, f.data)
+		}
+	}
+}

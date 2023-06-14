@@ -750,3 +750,48 @@ func TestWriteAt(t *testing.T) {
 		}
 	}
 }
+
+func TestWriteString(t *testing.T) {
+	var toWrite [256]byte
+
+	for n := range toWrite {
+		toWrite[n] = byte(n)
+	}
+
+	f := file{
+		inode: &inode{
+			data: make([]byte, 100),
+		},
+	}
+
+	n, err := f.WriteString(string(toWrite[:10]))
+	if !errors.Is(err, fs.ErrClosed) {
+		t.Errorf("test 1: expecting ErrClosed, got %s", err)
+	} else if n != 0 {
+		t.Errorf("test 1: expecting to write 0 bytes, wrote %d", n)
+	}
+
+	for n := range toWrite {
+		if n == 0 {
+			continue
+		}
+		f := file{
+			inode: &inode{
+				data: make([]byte, 100),
+			},
+			opMode: opWrite,
+		}
+		for i := 0; i < 100; i++ {
+			m, err := f.WriteString(string(toWrite[:n]))
+			if !errors.Is(err, nil) {
+				t.Errorf("test %d: expecting no error, got %s", n+1, err)
+			} else if m != n {
+				t.Errorf("test %d: expecting to write %d bytes, wrote %d", n+1, n, m)
+			}
+		}
+		expected := bytes.Repeat(toWrite[:n], 100)
+		if !bytes.Equal(f.data, expected) {
+			t.Errorf("test %d: expecting to write %v, wrote %v", n+1, expected, f.data)
+		}
+	}
+}

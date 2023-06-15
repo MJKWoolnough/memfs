@@ -5,7 +5,7 @@ import (
 	"time"
 )
 
-type FS map[string]fs.DirEntry
+type FS direntry
 
 func (f *FS) Open(path string) (fs.File, error) {
 	return nil, nil

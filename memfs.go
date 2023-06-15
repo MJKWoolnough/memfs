@@ -7,6 +7,13 @@ import (
 
 type FS direntry
 
+func New() *FS {
+	return &FS{
+		modtime: time.Now(),
+		mode:    0o777,
+	}
+}
+
 func (f *FS) Open(path string) (fs.File, error) {
 	return nil, nil
 }

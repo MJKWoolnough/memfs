@@ -11,6 +11,7 @@ type directoryEntry interface {
 	Type() fs.FileMode
 	Mode() fs.FileMode
 	Size() int64
+	open(name string, mode opMode) fs.File
 }
 
 type dirEnt struct {
@@ -35,6 +36,12 @@ type dnode struct {
 	entries []*dirEnt
 	modtime time.Time
 	mode    fs.FileMode
+}
+
+func (d *dnode) open(_ string, _ opMode) fs.File {
+	return &directory{
+		dnode: d,
+	}
 }
 
 type directory struct {

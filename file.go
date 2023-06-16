@@ -265,23 +265,23 @@ func (f *file) Name() string {
 	return f.name
 }
 
-func (f *file) Size() int64 {
-	return int64(len(f.data))
+func (i *inode) Size() int64 {
+	return int64(len(i.data))
 }
 
-func (f *file) Type() fs.FileMode {
-	return f.mode
+func (i *inode) Type() fs.FileMode {
+	return i.mode
 }
 
-func (f *file) Mode() fs.FileMode {
-	return f.mode
+func (i *inode) Mode() fs.FileMode {
+	return i.mode
 }
 
-func (f *file) ModTime() time.Time {
-	return f.modtime
+func (i *inode) ModTime() time.Time {
+	return i.modtime
 }
 
-func (f *file) IsDir() bool {
+func (i *inode) IsDir() bool {
 	return false
 }
 

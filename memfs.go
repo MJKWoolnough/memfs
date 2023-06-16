@@ -2,10 +2,14 @@ package memfs
 
 import (
 	"io/fs"
+	"path/filepath"
+	"strings"
 	"time"
 )
 
-type FS direntry
+const separator = string(filepath.Separator)
+
+type FS dnode
 
 func New() *FS {
 	return &FS{
@@ -15,7 +19,30 @@ func New() *FS {
 }
 
 func (f *FS) Open(path string) (fs.File, error) {
-	return nil, nil
+	dirName, fileName := filepath.Split(path)
+	for _, p := range strings.Split(dirName, separator) {
+		if p == "" {
+			continue
+		}
+
+		for _, de := range f.entries {
+			if de.name == p {
+				if d, ok := de.directoryEntry.(*directory); ok {
+					f = (*FS)(d.dnode)
+				} else {
+					return nil, fs.ErrNotExist
+				}
+			}
+		}
+	}
+
+	for _, de := range f.entries {
+		if de.name == fileName {
+			return de.open(fileName, opRead|opSeek), nil
+		}
+	}
+
+	return nil, fs.ErrNotExist
 }
 
 func (f *FS) ReadDir(name string) ([]fs.DirEntry, error) {

@@ -5,15 +5,40 @@ import (
 	"time"
 )
 
-type direntry struct {
+type directoryEntry interface {
+	IsDir() bool
+	ModTime() time.Time
+	Type() fs.FileMode
+	Mode() fs.FileMode
+	Size() int64
+}
+
+type dirEnt struct {
+	directoryEntry
+	name string
+}
+
+func (d *dirEnt) Info() (fs.FileInfo, error) {
+	return d, nil
+}
+
+func (d *dirEnt) Name() string {
+	return d.name
+}
+
+func (d *dirEnt) Sys() any {
+	return d.directoryEntry
+}
+
+type dnode struct {
 	name    string
-	entries []fs.DirEntry
+	entries []*dirEnt
 	modtime time.Time
 	mode    fs.FileMode
 }
 
 type directory struct {
-	*direntry
+	*dnode
 	pos int
 }
 
@@ -37,7 +62,9 @@ func (d *directory) ReadDir(n int) ([]fs.DirEntry, error) {
 	if n <= 0 {
 		dirs := make([]fs.DirEntry, len(d.entries))
 
-		copy(dirs, d.entries)
+		for i := range d.entries {
+			dirs[i] = d.entries[i]
+		}
 
 		return dirs, nil
 	}
@@ -48,9 +75,11 @@ func (d *directory) ReadDir(n int) ([]fs.DirEntry, error) {
 		n = left
 	}
 
-	dirs := make([]fs.DirEntry, n)
+	dirs := make([]fs.DirEntry, 0, n)
 
-	d.pos += copy(dirs, d.entries[d.pos:])
+	for i := range d.entries {
+		dirs[i] = d.entries[i]
+	}
 
 	return dirs, nil
 }
@@ -59,23 +88,23 @@ func (d *directory) Name() string {
 	return d.name
 }
 
-func (d *directory) Size() int64 {
+func (d *dnode) Size() int64 {
 	return 0
 }
 
-func (d *directory) Type() fs.FileMode {
+func (d *dnode) Type() fs.FileMode {
 	return d.mode
 }
 
-func (d *directory) Mode() fs.FileMode {
+func (d *dnode) Mode() fs.FileMode {
 	return d.mode
 }
 
-func (d *directory) ModTime() time.Time {
+func (d *dnode) ModTime() time.Time {
 	return d.modtime
 }
 
-func (d *directory) IsDir() bool {
+func (d *dnode) IsDir() bool {
 	return true
 }
 

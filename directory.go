@@ -44,6 +44,16 @@ func (d *dnode) open(_ string, _ opMode) fs.File {
 	}
 }
 
+func (d *dnode) get(name string) *dirEnt {
+	for _, de := range d.entries {
+		if de.name == name {
+			return de
+		}
+	}
+
+	return nil
+}
+
 type directory struct {
 	*dnode
 	pos int

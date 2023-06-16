@@ -20,29 +20,37 @@ func New() *FS {
 
 func (f *FS) Open(path string) (fs.File, error) {
 	dirName, fileName := filepath.Split(path)
-	for _, p := range strings.Split(dirName, separator) {
+
+	d := f.getDirEnt(dirName)
+	if d == nil {
+		return nil, fs.ErrNotExist
+	}
+
+	de := d.get(fileName)
+	if de == nil {
+		return nil, fs.ErrNotExist
+	}
+
+	return de.open(fileName, opRead|opSeek), nil
+}
+
+func (f *FS) getDirEnt(path string) *dnode {
+	d := (*dnode)(f)
+	for _, p := range strings.Split(path, separator) {
 		if p == "" {
 			continue
 		}
 
-		for _, de := range f.entries {
-			if de.name == p {
-				if d, ok := de.directoryEntry.(*directory); ok {
-					f = (*FS)(d.dnode)
-				} else {
-					return nil, fs.ErrNotExist
-				}
-			}
+		de := d.get(p)
+
+		if de, ok := de.directoryEntry.(*directory); ok {
+			d = de.dnode
+		} else {
+			return nil
 		}
 	}
 
-	for _, de := range f.entries {
-		if de.name == fileName {
-			return de.open(fileName, opRead|opSeek), nil
-		}
-	}
-
-	return nil, fs.ErrNotExist
+	return d
 }
 
 func (f *FS) ReadDir(name string) ([]fs.DirEntry, error) {

@@ -107,6 +107,24 @@ func (f *FS) Sub(dir string) (fs.FS, error) {
 }
 
 func (f *FS) Mkdir(name string, perm fs.FileMode) error {
+	parent, child := filepath.Split(name)
+	d := f.getDirEnt(parent)
+	if d == nil {
+		return fs.ErrNotExist
+	}
+
+	if d.get(child) != nil {
+		return fs.ErrExist
+	}
+
+	d.entries = append(d.entries, &dirEnt{
+		directoryEntry: &dnode{
+			name:    child,
+			modtime: time.Now(),
+			mode:    perm,
+		},
+		name: child,
+	})
 	return nil
 }
 

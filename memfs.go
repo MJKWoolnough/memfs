@@ -19,17 +19,12 @@ func New() *FS {
 }
 
 func (f *FS) Open(path string) (fs.File, error) {
-	dirName, fileName := filepath.Split(path)
-
-	d := f.getDirEnt(dirName)
-	if d == nil {
-		return nil, fs.ErrNotExist
-	}
-
-	de := d.get(fileName)
+	de := f.getEntry(path)
 	if de == nil {
 		return nil, fs.ErrNotExist
 	}
+
+	_, fileName := filepath.Split(path)
 
 	return de.open(fileName, opRead|opSeek), nil
 }
@@ -51,6 +46,17 @@ func (f *FS) getDirEnt(path string) *dnode {
 	}
 
 	return d
+}
+
+func (f *FS) getEntry(path string) *dirEnt {
+	dirName, fileName := filepath.Split(path)
+
+	d := f.getDirEnt(dirName)
+	if d == nil {
+		return nil
+	}
+
+	return d.get(fileName)
 }
 
 func (f *FS) ReadDir(name string) ([]fs.DirEntry, error) {

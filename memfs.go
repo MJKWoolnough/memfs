@@ -75,7 +75,17 @@ func (f *FS) ReadDir(name string) ([]fs.DirEntry, error) {
 }
 
 func (f *FS) ReadFile(name string) ([]byte, error) {
-	return nil, nil
+	de := f.getEntry(name)
+	inode, ok := de.directoryEntry.(*inode)
+	if !ok {
+		return nil, fs.ErrInvalid
+	}
+
+	data := make([]byte, len(inode.data))
+
+	copy(data, inode.data)
+
+	return data, nil
 }
 
 func (f *FS) Stat(name string) (fs.FileInfo, error) {

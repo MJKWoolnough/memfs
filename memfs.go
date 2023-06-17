@@ -66,7 +66,12 @@ func (f *FS) Stat(name string) (fs.FileInfo, error) {
 }
 
 func (f *FS) Sub(dir string) (fs.FS, error) {
-	return nil, nil
+	dn := f.getDirEnt(dir)
+	if dn == nil {
+		return nil, fs.ErrNotExist
+	}
+
+	return (*FS)(dn), nil
 }
 
 func (f *FS) Mkdir(name string, perm fs.FileMode) error {

@@ -89,7 +89,12 @@ func (f *FS) ReadFile(name string) ([]byte, error) {
 }
 
 func (f *FS) Stat(name string) (fs.FileInfo, error) {
-	return nil, nil
+	de := f.getEntry(name)
+	if de == nil {
+		return nil, fs.ErrNotExist
+	}
+
+	return de.Info()
 }
 
 func (f *FS) Sub(dir string) (fs.FS, error) {

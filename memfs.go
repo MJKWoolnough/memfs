@@ -60,7 +60,18 @@ func (f *FS) getEntry(path string) *dirEnt {
 }
 
 func (f *FS) ReadDir(name string) ([]fs.DirEntry, error) {
-	return nil, nil
+	d := f.getDirEnt(name)
+	if d == nil {
+		return nil, fs.ErrNotExist
+	}
+
+	dirs := make([]fs.DirEntry, len(d.entries))
+
+	for i := range d.entries {
+		dirs[i] = d.entries[i]
+	}
+
+	return dirs, nil
 }
 
 func (f *FS) ReadFile(name string) ([]byte, error) {

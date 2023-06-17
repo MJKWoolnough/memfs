@@ -129,6 +129,29 @@ func (f *FS) Mkdir(name string, perm fs.FileMode) error {
 }
 
 func (f *FS) MkdirAll(path string, perm fs.FileMode) error {
+	d := (*dnode)(f)
+
+	var ok bool
+
+	for _, p := range strings.Split(path, string(filepath.Separator)) {
+		e := d.get(p)
+		if e == nil {
+			d := &dnode{
+				name:    p,
+				modtime: time.Now(),
+				mode:    perm,
+			}
+			e = &dirEnt{
+				directoryEntry: d,
+				name:           p,
+			}
+
+			d.entries = append(d.entries, e)
+		} else if d, ok = e.directoryEntry.(*dnode); !ok {
+			return fs.ErrInvalid
+		}
+	}
+
 	return nil
 }
 

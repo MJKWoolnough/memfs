@@ -160,8 +160,40 @@ type File interface {
 	Write([]byte) (int, error)
 }
 
-func (f *FS) Create(name string) (File, error) {
-	return nil, nil
+func (f *FS) Create(path string) (File, error) {
+	dirName, fileName := filepath.Split(path)
+
+	d := f.getDirEnt(dirName)
+	if d == nil {
+		return nil, fs.ErrNotExist
+	}
+
+	existingFile := d.get(fileName)
+	if existingFile == nil {
+		i := &inode{
+			modtime: time.Now(),
+			mode:    0o777,
+		}
+		d.entries = append(d.entries, &dirEnt{
+			directoryEntry: i,
+			name:           fileName,
+		})
+
+		return &file{
+			name:   fileName,
+			inode:  i,
+			opMode: opWrite | opSeek,
+		}, nil
+	}
+
+	ef, ok := existingFile.open(fileName, opWrite|opSeek).(*file)
+	if !ok {
+		return nil, fs.ErrInvalid
+	}
+
+	ef.data = ef.data[:0]
+
+	return ef, nil
 }
 
 func (f *FS) Link(oldname, newname string) error {

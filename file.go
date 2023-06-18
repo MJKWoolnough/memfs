@@ -23,6 +23,10 @@ type inode struct {
 }
 
 func (i *inode) open(name string, mode opMode) (fs.File, error) {
+	if mode&opRead > 0 && i.mode&0o444 == 0 || mode&opWrite > 0 && i.mode&0o222 == 0 {
+		return nil, fs.ErrPermission
+	}
+
 	return &file{
 		name:   name,
 		inode:  i,

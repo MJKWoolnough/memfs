@@ -103,6 +103,10 @@ func (f *FS) Sub(dir string) (fs.FS, error) {
 		return nil, fs.ErrNotExist
 	}
 
+	if dn.mode&0o110 == 0 {
+		return nil, fs.ErrPermission
+	}
+
 	return (*FS)(dn), nil
 }
 

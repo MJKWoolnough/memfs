@@ -73,6 +73,10 @@ func (f *FS) ReadDir(name string) ([]fs.DirEntry, error) {
 		return nil, err
 	}
 
+	if d.mode&0o444 == 0 {
+		return nil, fs.ErrPermission
+	}
+
 	dirs := make([]fs.DirEntry, len(d.entries))
 
 	for i := range d.entries {

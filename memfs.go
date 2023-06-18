@@ -36,7 +36,7 @@ func (f *FS) getDirEnt(path string) (*dnode, error) {
 			continue
 		}
 
-		if d.mode&0x440 == 0 {
+		if d.mode&0o440 == 0 {
 			return nil, fs.ErrPermission
 		}
 

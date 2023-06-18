@@ -19,9 +19,9 @@ func New() *FS {
 }
 
 func (f *FS) Open(path string) (fs.File, error) {
-	de := f.getEntry(path)
-	if de == nil {
-		return nil, fs.ErrNotExist
+	de, err := f.getEntry(path)
+	if err != nil {
+		return nil, err
 	}
 
 	_, fileName := filepath.Split(path)
@@ -29,11 +29,15 @@ func (f *FS) Open(path string) (fs.File, error) {
 	return de.open(fileName, opRead|opSeek), nil
 }
 
-func (f *FS) getDirEnt(path string) *dnode {
+func (f *FS) getDirEnt(path string) (*dnode, error) {
 	d := (*dnode)(f)
 	for _, p := range strings.Split(path, separator) {
 		if p == "" {
 			continue
+		}
+
+		if d.mode&0x440 == 0 {
+			return nil, fs.ErrPermission
 		}
 
 		de := d.get(p)
@@ -41,28 +45,32 @@ func (f *FS) getDirEnt(path string) *dnode {
 		if de, ok := de.directoryEntry.(*directory); ok {
 			d = de.dnode
 		} else {
-			return nil
+			return nil, fs.ErrNotExist
 		}
 	}
 
 	return d
 }
 
-func (f *FS) getEntry(path string) *dirEnt {
+func (f *FS) getEntry(path string) (*dirEnt, error) {
 	dirName, fileName := filepath.Split(path)
 
-	d := f.getDirEnt(dirName)
-	if d == nil {
-		return nil
+	d, err := f.getDirEnt(dirName)
+	if err != nil {
+		return nil, err
 	}
 
-	return d.get(fileName)
+	if d.mode&0o440 == 0 {
+		return nil, fs.ErrPermission
+	}
+
+	return d.get(fileName), nil
 }
 
 func (f *FS) ReadDir(name string) ([]fs.DirEntry, error) {
-	d := f.getDirEnt(name)
-	if d == nil {
-		return nil, fs.ErrNotExist
+	d, err := f.getDirEnt(name)
+	if err != nil {
+		return nil, err
 	}
 
 	dirs := make([]fs.DirEntry, len(d.entries))
@@ -75,7 +83,11 @@ func (f *FS) ReadDir(name string) ([]fs.DirEntry, error) {
 }
 
 func (f *FS) ReadFile(name string) ([]byte, error) {
-	de := f.getEntry(name)
+	de, err := f.getEntry(name)
+	if err != nil {
+		return nil, err
+	}
+
 	inode, ok := de.directoryEntry.(*inode)
 	if !ok {
 		return nil, fs.ErrInvalid
@@ -89,18 +101,18 @@ func (f *FS) ReadFile(name string) ([]byte, error) {
 }
 
 func (f *FS) Stat(name string) (fs.FileInfo, error) {
-	de := f.getEntry(name)
-	if de == nil {
-		return nil, fs.ErrNotExist
+	de, err := f.getEntry(name)
+	if err != nil {
+		return nil, err
 	}
 
 	return de.Info()
 }
 
 func (f *FS) Sub(dir string) (fs.FS, error) {
-	dn := f.getDirEnt(dir)
-	if dn == nil {
-		return nil, fs.ErrNotExist
+	dn, err := f.getDirEnt(dir)
+	if err != nil {
+		return nil, err
 	}
 
 	if dn.mode&0o110 == 0 {
@@ -112,9 +124,9 @@ func (f *FS) Sub(dir string) (fs.FS, error) {
 
 func (f *FS) Mkdir(name string, perm fs.FileMode) error {
 	parent, child := filepath.Split(name)
-	d := f.getDirEnt(parent)
-	if d == nil {
-		return fs.ErrNotExist
+	d, err := f.getDirEnt(parent)
+	if err != nil {
+		return err
 	}
 
 	if d.get(child) != nil {
@@ -167,9 +179,9 @@ type File interface {
 func (f *FS) Create(path string) (File, error) {
 	dirName, fileName := filepath.Split(path)
 
-	d := f.getDirEnt(dirName)
-	if d == nil {
-		return nil, fs.ErrNotExist
+	d, err := f.getDirEnt(dirName)
+	if err != nil {
+		return nil, err
 	}
 
 	existingFile := d.get(fileName)

@@ -39,6 +39,10 @@ type dnode struct {
 }
 
 func (d *dnode) open(_ string, _ opMode) (fs.File, error) {
+	if d.mode&0o444 == 0 {
+		return nil, fs.ErrPermission
+	}
+
 	return &directory{
 		dnode: d,
 	}, nil

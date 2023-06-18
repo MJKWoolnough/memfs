@@ -22,12 +22,12 @@ type inode struct {
 	mode    fs.FileMode
 }
 
-func (i *inode) open(name string, mode opMode) fs.File {
+func (i *inode) open(name string, mode opMode) (fs.File, error) {
 	return &file{
 		name:   name,
 		inode:  i,
 		opMode: mode,
-	}
+	}, nil
 }
 
 type file struct {

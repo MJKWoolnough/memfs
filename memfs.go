@@ -26,7 +26,7 @@ func (f *FS) Open(path string) (fs.File, error) {
 
 	_, fileName := filepath.Split(path)
 
-	return de.open(fileName, opRead|opSeek), nil
+	return de.open(fileName, opRead|opSeek)
 }
 
 func (f *FS) getDirEnt(path string) (*dnode, error) {
@@ -49,7 +49,7 @@ func (f *FS) getDirEnt(path string) (*dnode, error) {
 		}
 	}
 
-	return d
+	return d, nil
 }
 
 func (f *FS) getEntry(path string) (*dirEnt, error) {
@@ -202,7 +202,12 @@ func (f *FS) Create(path string) (File, error) {
 		}, nil
 	}
 
-	ef, ok := existingFile.open(fileName, opWrite|opSeek).(*file)
+	of, err := existingFile.open(fileName, opWrite|opSeek)
+	if err != nil {
+		return nil, err
+	}
+
+	ef, ok := of.(*file)
 	if !ok {
 		return nil, fs.ErrInvalid
 	}

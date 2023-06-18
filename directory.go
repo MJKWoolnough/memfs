@@ -11,7 +11,7 @@ type directoryEntry interface {
 	Type() fs.FileMode
 	Mode() fs.FileMode
 	Size() int64
-	open(name string, mode opMode) fs.File
+	open(name string, mode opMode) (fs.File, error)
 }
 
 type dirEnt struct {
@@ -38,10 +38,10 @@ type dnode struct {
 	mode    fs.FileMode
 }
 
-func (d *dnode) open(_ string, _ opMode) fs.File {
+func (d *dnode) open(_ string, _ opMode) (fs.File, error) {
 	return &directory{
 		dnode: d,
-	}
+	}, nil
 }
 
 func (d *dnode) get(name string) *dirEnt {

@@ -34,6 +34,10 @@ func (i *inode) open(name string, mode opMode) (fs.File, error) {
 	}, nil
 }
 
+func (i *inode) setTimes(_, mtime time.Time) {
+	i.modtime = mtime
+}
+
 type file struct {
 	name string
 	*inode

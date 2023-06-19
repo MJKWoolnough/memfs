@@ -12,6 +12,7 @@ type directoryEntry interface {
 	Mode() fs.FileMode
 	Size() int64
 	open(name string, mode opMode) (fs.File, error)
+	setTimes(time.Time, time.Time)
 }
 
 type dirEnt struct {
@@ -56,6 +57,10 @@ func (d *dnode) get(name string) *dirEnt {
 	}
 
 	return nil
+}
+
+func (d *dnode) setTimes(_, mtime time.Time) {
+	d.modtime = mtime
 }
 
 type directory struct {

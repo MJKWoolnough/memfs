@@ -245,6 +245,27 @@ func (f *FS) Link(oldname, newname string) error {
 }
 
 func (f *FS) Symlink(oldname, newname string) error {
+	dirName, fileName := filepath.Split(newname)
+
+	d, err := f.getDirEnt(dirName)
+	if err != nil {
+		return err
+	}
+
+	existingFile := d.get(fileName)
+	if existingFile == nil {
+		return fs.ErrExist
+	}
+
+	d.entries = append(d.entries, &dirEnt{
+		directoryEntry: &inode{
+			data:    []byte(oldname),
+			modtime: time.Now(),
+			mode:    0o777,
+		},
+		name: fileName,
+	})
+
 	return nil
 }
 

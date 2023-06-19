@@ -53,6 +53,25 @@ func (f *FS) getDirEnt(path string) (*dnode, error) {
 }
 
 func (f *FS) getEntry(path string) (*dirEnt, error) {
+	for i := 0; i < 100; i++ {
+		de, err := f.getLEntry(path)
+		if err != nil {
+			return nil, err
+		}
+
+		if de.Mode()&fs.ModeSymlink == 0 {
+			return de, nil
+		}
+
+		f, _ := de.directoryEntry.(*inode)
+
+		path = string(f.data)
+	}
+
+	return nil, fs.ErrInvalid
+}
+
+func (f *FS) getLEntry(path string) (*dirEnt, error) {
 	dirName, fileName := filepath.Split(path)
 
 	d, err := f.getDirEnt(dirName)

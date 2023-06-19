@@ -262,5 +262,11 @@ func (f *FS) Lchown(name string, uid, gid int) error {
 }
 
 func (f *FS) Chtimes(name string, atime time.Time, mtime time.Time) error {
+	de, err := f.getEntry(name)
+	if err != nil {
+		return err
+	}
+
+	de.setTimes(atime, mtime)
 	return nil
 }

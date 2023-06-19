@@ -274,7 +274,23 @@ func (f *FS) Rename(oldpath, newpath string) error {
 }
 
 func (f *FS) Remove(path string) error {
-	return nil
+	dirName, fileName := filepath.Split(path)
+
+	d, err := f.getDirEnt(dirName)
+	if err != nil {
+		return err
+	}
+
+	de := d.get(fileName)
+	if de.IsDir() {
+		dir, _ := de.directoryEntry.(*dnode)
+
+		if len(dir.entries) > 0 {
+			return fs.ErrInvalid
+		}
+	}
+
+	return d.remove(fileName)
 }
 
 func (f *FS) RemoveAll(path string) error {

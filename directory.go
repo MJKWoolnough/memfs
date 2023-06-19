@@ -60,6 +60,18 @@ func (d *dnode) get(name string) *dirEnt {
 	return nil
 }
 
+func (d *dnode) remove(name string) error {
+	for n, de := range d.entries {
+		if de.name == name {
+			d.entries = append(d.entries[:n], d.entries[n+1:]...)
+
+			return nil
+		}
+	}
+
+	return fs.ErrNotExist
+}
+
 func (d *dnode) setMode(mode fs.FileMode) {
 	d.mode = mode
 }

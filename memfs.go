@@ -261,7 +261,12 @@ func (f *FS) RemoveAll(path string) error {
 }
 
 func (f *FS) LStat(name string) (fs.FileInfo, error) {
-	return nil, nil
+	de, err := f.getLEntry(name)
+	if err != nil {
+		return nil, err
+	}
+
+	return de.Info()
 }
 
 func (f *FS) Readlink(name string) (string, error) {

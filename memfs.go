@@ -254,6 +254,13 @@ func (f *FS) Chown(name string, uid, gid int) error {
 }
 
 func (f *FS) Chmod(name string, mode fs.FileMode) error {
+	de, err := f.getEntry(name)
+	if err != nil {
+		return err
+	}
+
+	de.setMode(mode)
+
 	return nil
 }
 
@@ -268,5 +275,6 @@ func (f *FS) Chtimes(name string, atime time.Time, mtime time.Time) error {
 	}
 
 	de.setTimes(atime, mtime)
+
 	return nil
 }

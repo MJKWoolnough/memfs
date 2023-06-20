@@ -52,6 +52,54 @@ func (f *FS) getDirEnt(path string) (*dnode, error) {
 	return d, nil
 }
 
+var maxRedirects uint8 = 100
+
+func (f *FS) getResolvedDirEnt(path string, remainingRedirects *uint8) (*dirEnt, error) {
+	var de *dirEnt
+
+	dir, base := filepath.Split(path)
+	if dir == "" {
+		if de = (*dnode)(f).get(base); de == nil {
+			return nil, fs.ErrNotExist
+		}
+	} else {
+		var err error
+
+		if de, err = f.getResolvedDirEnt(dir, remainingRedirects); err != nil {
+			return nil, err
+		}
+	}
+
+	if mode := de.Mode(); mode&0o444 == 0 {
+		return nil, fs.ErrPermission
+	} else if !mode.IsDir() {
+		return nil, fs.ErrInvalid
+	} else if mode&fs.ModeSymlink == 0 {
+		d, _ := de.directoryEntry.(*dnode)
+
+		de := d.get(base)
+		if de == nil {
+			return nil, fs.ErrNotExist
+		}
+
+		return de, nil
+	} else if *remainingRedirects == 0 {
+		return nil, fs.ErrInvalid
+	}
+
+	*remainingRedirects--
+
+	se, _ := de.directoryEntry.(*inode)
+
+	link := string(se.data)
+
+	if !strings.HasPrefix("/", link) {
+		link = filepath.Join(dir, link)
+	}
+
+	return f.getResolvedDirEnt(path, remainingRedirects)
+}
+
 func (f *FS) getEntry(path string) (*dirEnt, error) {
 	for i := 0; i < 100; i++ {
 		de, err := f.getLEntry(path)

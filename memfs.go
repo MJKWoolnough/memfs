@@ -99,16 +99,16 @@ func (f *FS) getEntry(path string) (*dirEnt, error) {
 func (f *FS) getLEntry(path string) (*dirEnt, error) {
 	dirName, fileName := filepath.Split(path)
 
-	d, err := f.getDirEnt(dirName)
+	redirectsRemaining := maxRedirects
+
+	de, err := f.getResolvedDirEnt(dirName, &redirectsRemaining)
 	if err != nil {
 		return nil, err
+	} else if d, ok := de.directoryEntry.(*dnode); !ok {
+		return nil, fs.ErrInvalid
+	} else {
+		return d.get(fileName), nil
 	}
-
-	if d.mode&0o440 == 0 {
-		return nil, fs.ErrPermission
-	}
-
-	return d.get(fileName), nil
 }
 
 func (f *FS) ReadDir(name string) ([]fs.DirEntry, error) {

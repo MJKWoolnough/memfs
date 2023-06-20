@@ -293,7 +293,36 @@ func (f *FS) Symlink(oldname, newname string) error {
 	return nil
 }
 
-func (f *FS) Rename(oldpath, newpath string) error {
+func (f *FS) Rename(oldPath, newPath string) error {
+	oldDirName, oldFileName := filepath.Split(oldPath)
+
+	od, err := f.getDirEnt(oldDirName)
+	if err != nil {
+		return err
+	}
+
+	oldFile := od.get(oldFileName)
+	if oldFile == nil {
+		return fs.ErrNotExist
+	}
+
+	newDirName, newFileName := filepath.Split(newPath)
+
+	nd, err := f.getDirEnt(newDirName)
+	if err != nil {
+		return err
+	}
+
+	if nd.get(oldFileName) != nil {
+		return fs.ErrExist
+	}
+
+	od.remove(oldFileName)
+	nd.entries = append(nd.entries, &dirEnt{
+		directoryEntry: oldFile.directoryEntry,
+		name:           newFileName,
+	})
+
 	return nil
 }
 

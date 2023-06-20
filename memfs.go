@@ -331,7 +331,7 @@ func (f *FS) Symlink(oldname, newname string) error {
 
 	d.entries = append(d.entries, &dirEnt{
 		directoryEntry: &inode{
-			data:    []byte(oldname),
+			data:    []byte(filepath.Clean(oldname)),
 			modtime: time.Now(),
 			mode:    0o777,
 		},

@@ -30,26 +30,16 @@ func (f *FS) Open(path string) (fs.File, error) {
 }
 
 func (f *FS) getDirEnt(path string) (*dnode, error) {
-	d := (*dnode)(f)
-	for _, p := range strings.Split(path, separator) {
-		if p == "" {
-			continue
-		}
+	redirectsRemaining := maxRedirects
 
-		if d.mode&0o440 == 0 {
-			return nil, fs.ErrPermission
-		}
-
-		de := d.get(p)
-
-		if de, ok := de.directoryEntry.(*directory); ok {
-			d = de.dnode
-		} else {
-			return nil, fs.ErrNotExist
-		}
+	de, err := f.getResolvedDirEnt(path, &redirectsRemaining)
+	if err != nil {
+		return nil, err
+	} else if d, ok := de.directoryEntry.(*dnode); !ok {
+		return nil, fs.ErrInvalid
+	} else {
+		return d, nil
 	}
-
-	return d, nil
 }
 
 var maxRedirects uint8 = 100

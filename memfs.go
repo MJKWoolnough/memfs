@@ -313,8 +313,19 @@ func (f *FS) LStat(name string) (fs.FileInfo, error) {
 	return de.Info()
 }
 
-func (f *FS) Readlink(name string) (string, error) {
-	return "", nil
+func (f *FS) Readlink(path string) (string, error) {
+	de, err := f.getLEntry(path)
+	if err != nil {
+		return "", err
+	}
+
+	if de.Mode()&fs.ModeSymlink == 0 {
+		return "", fs.ErrInvalid
+	}
+
+	s, _ := de.directoryEntry.(*inode)
+
+	return string(s.data), nil
 }
 
 func (f *FS) Chown(name string, uid, gid int) error {

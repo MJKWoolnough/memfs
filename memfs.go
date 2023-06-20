@@ -256,7 +256,7 @@ func (f *FS) Link(oldname, newname string) error {
 	}
 
 	existingFile := d.get(fileName)
-	if existingFile == nil {
+	if existingFile != nil {
 		return fs.ErrExist
 	}
 
@@ -277,7 +277,7 @@ func (f *FS) Symlink(oldname, newname string) error {
 	}
 
 	existingFile := d.get(fileName)
-	if existingFile == nil {
+	if existingFile != nil {
 		return fs.ErrExist
 	}
 

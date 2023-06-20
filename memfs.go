@@ -91,22 +91,9 @@ func (f *FS) getResolvedDirEnt(path string, remainingRedirects *uint8) (*dirEnt,
 }
 
 func (f *FS) getEntry(path string) (*dirEnt, error) {
-	for i := 0; i < 100; i++ {
-		de, err := f.getLEntry(path)
-		if err != nil {
-			return nil, err
-		}
+	redirectsRemaining := maxRedirects
 
-		if de.Mode()&fs.ModeSymlink == 0 {
-			return de, nil
-		}
-
-		f, _ := de.directoryEntry.(*inode)
-
-		path = string(f.data)
-	}
-
-	return nil, fs.ErrInvalid
+	return f.getResolvedDirEnt(path, &redirectsRemaining)
 }
 
 func (f *FS) getLEntry(path string) (*dirEnt, error) {

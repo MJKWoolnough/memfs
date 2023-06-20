@@ -439,7 +439,7 @@ func (f *FS) Chmod(name string, mode fs.FileMode) error {
 		return err
 	}
 
-	de.setMode(mode)
+	de.setMode(mode & fs.ModePerm)
 
 	return nil
 }

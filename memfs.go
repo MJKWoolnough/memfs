@@ -241,6 +241,30 @@ func (f *FS) Create(path string) (File, error) {
 }
 
 func (f *FS) Link(oldname, newname string) error {
+	oe, err := f.getLEntry(oldname)
+	if err != nil {
+		return err
+	} else if oe.IsDir() {
+		return fs.ErrInvalid
+	}
+
+	dirName, fileName := filepath.Split(newname)
+
+	d, err := f.getDirEnt(dirName)
+	if err != nil {
+		return err
+	}
+
+	existingFile := d.get(fileName)
+	if existingFile == nil {
+		return fs.ErrExist
+	}
+
+	d.entries = append(d.entries, &dirEnt{
+		directoryEntry: oe,
+		name:           fileName,
+	})
+
 	return nil
 }
 

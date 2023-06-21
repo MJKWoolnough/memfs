@@ -321,7 +321,7 @@ func (f *FS) Symlink(oldname, newname string) error {
 		directoryEntry: &inode{
 			data:    []byte(filepath.Clean(oldname)),
 			modtime: time.Now(),
-			mode:    0o777,
+			mode:    fs.ModeSymlink | fs.ModePerm,
 		},
 		name: fileName,
 	})

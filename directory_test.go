@@ -118,3 +118,56 @@ func TestReadDir(t *testing.T) {
 		}
 	}
 }
+
+func TestDnodeRemove(t *testing.T) {
+	d := dnode{
+		entries: []*dirEnt{
+			{
+				name: "1",
+			},
+			{
+				name: "2",
+			},
+			{
+				name: "3",
+			},
+			{
+				name: "4",
+			},
+		},
+	}
+
+	if err := d.remove("2"); err != nil {
+		t.Errorf("test 1: unexpected error: %s", err)
+
+		return
+	}
+
+	if err := d.remove("2"); !errors.Is(err, fs.ErrNotExist) {
+		t.Errorf("test 2: unexpected Not Exist, got %s", err)
+
+		return
+	}
+
+	if len(d.entries) != 3 {
+		t.Errorf("test 3: expecting 3 entries, got %d", len(d.entries))
+
+		return
+	}
+
+	expecting := []*dirEnt{
+		{
+			name: "1",
+		},
+		{
+			name: "3",
+		},
+		{
+			name: "4",
+		},
+	}
+
+	if !reflect.DeepEqual(expecting, d.entries) {
+		t.Errorf("test 4: expecting %v, got %v", expecting, d.entries)
+	}
+}

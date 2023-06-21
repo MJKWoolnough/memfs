@@ -1,6 +1,7 @@
 package memfs
 
 import (
+	"errors"
 	"io/fs"
 	"path/filepath"
 	"strings"
@@ -206,30 +207,27 @@ func (f *FS) Mkdir(name string, perm fs.FileMode) error {
 }
 
 func (f *FS) MkdirAll(path string, perm fs.FileMode) error {
-	d := f.dnode
+	path = filepath.Clean(path)
+	last := 0
 
-	var ok bool
+	for {
+		pos := strings.IndexRune(path[last:], filepath.Separator)
+		if pos < 0 {
+			break
+		} else if pos == 0 {
+			last++
 
-	for _, p := range strings.Split(path, string(filepath.Separator)) {
-		e := d.get(p)
-		if e == nil {
-			d := &dnode{
-				name:    p,
-				modtime: time.Now(),
-				mode:    perm,
-			}
-			e = &dirEnt{
-				directoryEntry: d,
-				name:           p,
-			}
+			continue
+		}
 
-			d.entries = append(d.entries, e)
-		} else if d, ok = e.directoryEntry.(*dnode); !ok {
-			return fs.ErrInvalid
+		last += pos
+
+		if err := f.Mkdir(path[:last], perm); err != nil && !errors.Is(err, fs.ErrExist) {
+			return err
 		}
 	}
 
-	return nil
+	return f.Mkdir(path, perm)
 }
 
 type File interface {

@@ -171,3 +171,42 @@ func TestDnodeRemove(t *testing.T) {
 		t.Errorf("test 4: expecting %v, got %v", expecting, d.entries)
 	}
 }
+
+func TestDnodeGet(t *testing.T) {
+	d := dnode{
+		entries: []*dirEnt{
+			{
+				name: "1",
+			},
+			{
+				name: "2",
+			},
+			{
+				name: "3",
+			},
+			{
+				name: "4",
+			},
+		},
+	}
+
+	if got := d.get("1"); got == nil || got.name != "1" {
+		t.Errorf("test 1: expecting to get '1', got %v", got)
+	}
+
+	if got := d.get("2"); got == nil || got.name != "2" {
+		t.Errorf("test 2: expecting to get '2', got %v", got)
+	}
+
+	if got := d.get("3"); got == nil || got.name != "3" {
+		t.Errorf("test 3: expecting to get '3', got %v", got)
+	}
+
+	if got := d.get("4"); got == nil || got.name != "4" {
+		t.Errorf("test 4: expecting to get '4', got %v", got)
+	}
+
+	if got := d.get("5"); got != nil {
+		t.Errorf("test 3: expecting to get nil, got %v", got)
+	}
+}

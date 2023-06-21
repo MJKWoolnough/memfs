@@ -259,11 +259,11 @@ func (f *FS) Create(path string) (File, error) {
 		return &file{
 			name:   fileName,
 			inode:  i,
-			opMode: opWrite | opSeek,
+			opMode: opRead | opWrite | opSeek,
 		}, nil
 	}
 
-	of, err := existingFile.open(fileName, opWrite|opSeek)
+	of, err := existingFile.open(fileName, opRead|opWrite|opSeek)
 	if err != nil {
 		return nil, err
 	}

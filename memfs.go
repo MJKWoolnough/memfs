@@ -9,12 +9,18 @@ import (
 
 const separator = string(filepath.Separator)
 
-type FS dnode
+type FS struct {
+	dnode *dnode
+	root  string
+}
 
 func New() *FS {
 	return &FS{
-		modtime: time.Now(),
-		mode:    0o777,
+		dnode: &dnode{
+			modtime: time.Now(),
+			mode:    0o777,
+		},
+		root: "/",
 	}
 }
 
@@ -49,7 +55,7 @@ func (f *FS) getResolvedDirEnt(path string, remainingRedirects *uint8) (*dirEnt,
 
 	dir, base := filepath.Split(path)
 	if dir == "" {
-		if de = (*dnode)(f).get(base); de == nil {
+		if de = f.dnode.get(base); de == nil {
 			return nil, fs.ErrNotExist
 		}
 	} else {
@@ -167,7 +173,10 @@ func (f *FS) Sub(dir string) (fs.FS, error) {
 		return nil, fs.ErrPermission
 	}
 
-	return (*FS)(dn), nil
+	return &FS{
+		dnode: dn,
+		root:  dir,
+	}, nil
 }
 
 func (f *FS) Mkdir(name string, perm fs.FileMode) error {
@@ -193,7 +202,7 @@ func (f *FS) Mkdir(name string, perm fs.FileMode) error {
 }
 
 func (f *FS) MkdirAll(path string, perm fs.FileMode) error {
-	d := (*dnode)(f)
+	d := f.dnode
 
 	var ok bool
 

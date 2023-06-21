@@ -24,6 +24,10 @@ func New() *FS {
 	}
 }
 
+func (f *FS) joinRoot(path string) string {
+	return filepath.Join(f.root, path)
+}
+
 func (f *FS) Open(path string) (fs.File, error) {
 	de, err := f.getEntry(path)
 	if err != nil {
@@ -38,7 +42,7 @@ func (f *FS) Open(path string) (fs.File, error) {
 func (f *FS) getDirEnt(path string) (*dnode, error) {
 	redirectsRemaining := maxRedirects
 
-	de, err := f.getResolvedDirEnt(path, &redirectsRemaining)
+	de, err := f.getResolvedDirEnt(f.joinRoot(path), &redirectsRemaining)
 	if err != nil {
 		return nil, err
 	} else if d, ok := de.directoryEntry.(*dnode); !ok {
@@ -99,7 +103,7 @@ func (f *FS) getResolvedDirEnt(path string, remainingRedirects *uint8) (*dirEnt,
 func (f *FS) getEntry(path string) (*dirEnt, error) {
 	redirectsRemaining := maxRedirects
 
-	return f.getResolvedDirEnt(path, &redirectsRemaining)
+	return f.getResolvedDirEnt(f.joinRoot(path), &redirectsRemaining)
 }
 
 func (f *FS) getLEntry(path string) (*dirEnt, error) {
@@ -107,7 +111,7 @@ func (f *FS) getLEntry(path string) (*dirEnt, error) {
 
 	redirectsRemaining := maxRedirects
 
-	de, err := f.getResolvedDirEnt(dirName, &redirectsRemaining)
+	de, err := f.getResolvedDirEnt(f.joinRoot(dirName), &redirectsRemaining)
 	if err != nil {
 		return nil, err
 	} else if d, ok := de.directoryEntry.(*dnode); !ok {

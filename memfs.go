@@ -19,7 +19,7 @@ func New() *FS {
 	return &FS{
 		dnode: &dnode{
 			modtime: time.Now(),
-			mode:    0o777,
+			mode:    fs.ModePerm,
 		},
 		root: "/",
 	}
@@ -247,7 +247,7 @@ func (f *FS) Create(path string) (File, error) {
 	if existingFile == nil {
 		i := &inode{
 			modtime: time.Now(),
-			mode:    0o777,
+			mode:    fs.ModePerm,
 		}
 		d.entries = append(d.entries, &dirEnt{
 			directoryEntry: i,

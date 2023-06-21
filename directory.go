@@ -1,6 +1,7 @@
 package memfs
 
 import (
+	"io"
 	"io/fs"
 	"time"
 )
@@ -118,10 +119,15 @@ func (d *directory) ReadDir(n int) ([]fs.DirEntry, error) {
 		n = left
 	}
 
-	dirs := make([]fs.DirEntry, 0, n)
+	if n == 0 {
+		return nil, io.EOF
+	}
 
-	for i := range d.entries {
-		dirs[i] = d.entries[i]
+	dirs := make([]fs.DirEntry, n)
+
+	for i := range dirs {
+		dirs[i] = d.entries[d.pos]
+		d.pos++
 	}
 
 	return dirs, nil

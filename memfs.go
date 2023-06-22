@@ -53,7 +53,7 @@ func (f *FS) getDirEnt(path string) (*dnode, error) {
 	}
 }
 
-var maxRedirects uint8 = 100
+var maxRedirects uint8 = 255
 
 func (f *FS) getResolvedDirEnt(path string, remainingRedirects *uint8) (*dirEnt, error) {
 	var de *dirEnt

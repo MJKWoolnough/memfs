@@ -123,8 +123,8 @@ func (f *FS) getLEntry(path string) (*dirEnt, error) {
 	}
 }
 
-func (f *FS) ReadDir(name string) ([]fs.DirEntry, error) {
-	d, err := f.getDirEnt(name)
+func (f *FS) ReadDir(path string) ([]fs.DirEntry, error) {
+	d, err := f.getDirEnt(path)
 	if err != nil {
 		return nil, err
 	}
@@ -142,8 +142,8 @@ func (f *FS) ReadDir(name string) ([]fs.DirEntry, error) {
 	return dirs, nil
 }
 
-func (f *FS) ReadFile(name string) ([]byte, error) {
-	de, err := f.getEntry(name)
+func (f *FS) ReadFile(path string) ([]byte, error) {
+	de, err := f.getEntry(path)
 	if err != nil {
 		return nil, err
 	}
@@ -160,8 +160,8 @@ func (f *FS) ReadFile(name string) ([]byte, error) {
 	return data, nil
 }
 
-func (f *FS) Stat(name string) (fs.FileInfo, error) {
-	de, err := f.getEntry(name)
+func (f *FS) Stat(path string) (fs.FileInfo, error) {
+	de, err := f.getEntry(path)
 	if err != nil {
 		return nil, err
 	}
@@ -185,8 +185,8 @@ func (f *FS) Sub(dir string) (fs.FS, error) {
 	}, nil
 }
 
-func (f *FS) Mkdir(name string, perm fs.FileMode) error {
-	parent, child := filepath.Split(name)
+func (f *FS) Mkdir(path string, perm fs.FileMode) error {
+	parent, child := filepath.Split(path)
 	d, err := f.getDirEnt(parent)
 	if err != nil {
 		return err
@@ -277,15 +277,15 @@ func (f *FS) Create(path string) (File, error) {
 	return ef, nil
 }
 
-func (f *FS) Link(oldname, newname string) error {
-	oe, err := f.getLEntry(oldname)
+func (f *FS) Link(oldPath, newPath string) error {
+	oe, err := f.getLEntry(oldPath)
 	if err != nil {
 		return err
 	} else if oe.IsDir() {
 		return fs.ErrInvalid
 	}
 
-	dirName, fileName := filepath.Split(newname)
+	dirName, fileName := filepath.Split(newPath)
 
 	d, err := f.getDirEnt(dirName)
 	if err != nil {
@@ -305,8 +305,8 @@ func (f *FS) Link(oldname, newname string) error {
 	return nil
 }
 
-func (f *FS) Symlink(oldname, newname string) error {
-	dirName, fileName := filepath.Split(newname)
+func (f *FS) Symlink(oldPath, newPath string) error {
+	dirName, fileName := filepath.Split(newPath)
 
 	d, err := f.getDirEnt(dirName)
 	if err != nil {
@@ -320,7 +320,7 @@ func (f *FS) Symlink(oldname, newname string) error {
 
 	d.entries = append(d.entries, &dirEnt{
 		directoryEntry: &inode{
-			data:    []byte(filepath.Clean(oldname)),
+			data:    []byte(filepath.Clean(oldPath)),
 			modtime: time.Now(),
 			mode:    fs.ModeSymlink | fs.ModePerm,
 		},
@@ -394,8 +394,8 @@ func (f *FS) RemoveAll(path string) error {
 	return d.remove(fileName)
 }
 
-func (f *FS) LStat(name string) (fs.FileInfo, error) {
-	de, err := f.getLEntry(name)
+func (f *FS) LStat(path string) (fs.FileInfo, error) {
+	de, err := f.getLEntry(path)
 	if err != nil {
 		return nil, err
 	}
@@ -424,8 +424,8 @@ func (f *FS) Chown(path string, uid, gid int) error {
 	return err
 }
 
-func (f *FS) Chmod(name string, mode fs.FileMode) error {
-	de, err := f.getEntry(name)
+func (f *FS) Chmod(path string, mode fs.FileMode) error {
+	de, err := f.getEntry(path)
 	if err != nil {
 		return err
 	}
@@ -441,8 +441,8 @@ func (f *FS) Lchown(path string, uid, gid int) error {
 	return err
 }
 
-func (f *FS) Chtimes(name string, atime time.Time, mtime time.Time) error {
-	de, err := f.getEntry(name)
+func (f *FS) Chtimes(path string, atime time.Time, mtime time.Time) error {
+	de, err := f.getEntry(path)
 	if err != nil {
 		return err
 	}

@@ -417,8 +417,10 @@ func (f *FS) Readlink(path string) (string, error) {
 	return string(s.data), nil
 }
 
-func (f *FS) Chown(name string, uid, gid int) error {
-	return nil
+func (f *FS) Chown(path string, uid, gid int) error {
+	_, err := f.getEntry(path)
+
+	return err
 }
 
 func (f *FS) Chmod(name string, mode fs.FileMode) error {

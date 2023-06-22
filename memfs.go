@@ -60,8 +60,9 @@ func (f *FS) getResolvedDirEnt(path string, remainingRedirects *uint8) (*dirEnt,
 
 	dir, base := filepath.Split(path)
 	if dir == "" || dir == "/" {
-		if de = f.dnode.get(base); de == nil {
-			return nil, fs.ErrNotExist
+		de = &dirEnt{
+			directoryEntry: f.dnode,
+			name:           f.root,
 		}
 	} else {
 		var err error

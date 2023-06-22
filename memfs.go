@@ -19,7 +19,7 @@ func New() *FS {
 	return &FS{
 		dnode: &dnode{
 			modtime: time.Now(),
-			mode:    fs.ModePerm,
+			mode:    fs.ModeDir | fs.ModePerm,
 		},
 		root: "/",
 	}

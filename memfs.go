@@ -200,7 +200,7 @@ func (f *FS) Mkdir(path string, perm fs.FileMode) error {
 		directoryEntry: &dnode{
 			name:    child,
 			modtime: time.Now(),
-			mode:    perm,
+			mode:    fs.ModeDir | perm,
 		},
 		name: child,
 	})

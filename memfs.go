@@ -67,7 +67,7 @@ func (f *FS) getResolvedDirEnt(path string, remainingRedirects *uint8) (*dirEnt,
 	} else {
 		var err error
 
-		if de, err = f.getResolvedDirEnt(dir, remainingRedirects); err != nil {
+		if de, err = f.getResolvedDirEnt(filepath.Clean(dir), remainingRedirects); err != nil {
 			return nil, err
 		}
 	}

@@ -434,8 +434,10 @@ func (f *FS) Chmod(name string, mode fs.FileMode) error {
 	return nil
 }
 
-func (f *FS) Lchown(name string, uid, gid int) error {
-	return nil
+func (f *FS) Lchown(path string, uid, gid int) error {
+	_, err := f.getLEntry(path)
+
+	return err
 }
 
 func (f *FS) Chtimes(name string, atime time.Time, mtime time.Time) error {

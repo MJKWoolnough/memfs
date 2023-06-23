@@ -1,6 +1,7 @@
 package memfs
 
 import (
+	"bytes"
 	"errors"
 	"io/fs"
 	"reflect"
@@ -369,6 +370,134 @@ func TestFSReadDir(t *testing.T) {
 			t.Errorf("test %d: expecting error %s, got %s", n+1, test.Err, err)
 		} else if !reflect.DeepEqual(test.Output, de) {
 			t.Errorf("test %d: expecting to get %v, got %v", n+1, test.Output, de)
+		}
+	}
+}
+
+func TestReadFile(t *testing.T) {
+	for n, test := range [...]struct {
+		FS     FS
+		Path   string
+		Output []byte
+		Err    error
+	}{
+		{
+			FS: FS{
+				dnode: &dnode{},
+				root:  "/",
+			},
+			Err: fs.ErrPermission,
+		},
+		{
+			FS: FS{
+				dnode: &dnode{
+					mode: fs.ModeDir | fs.ModePerm,
+				},
+				root: "/",
+			},
+			Err: fs.ErrInvalid,
+		},
+		{
+			FS: FS{
+				dnode: &dnode{
+					mode: fs.ModeDir | fs.ModePerm,
+				},
+				root: "/",
+			},
+			Path: "/file",
+			Err:  fs.ErrNotExist,
+		},
+		{
+			FS: FS{
+				dnode: &dnode{
+					entries: []*dirEnt{
+						{
+							directoryEntry: &inode{},
+							name:           "notFile",
+						},
+					},
+					mode: fs.ModeDir | fs.ModePerm,
+				},
+				root: "/",
+			},
+			Path: "/file",
+			Err:  fs.ErrNotExist,
+		},
+		{
+			FS: FS{
+				dnode: &dnode{
+					entries: []*dirEnt{
+						{
+							directoryEntry: &inode{},
+							name:           "file",
+						},
+					},
+					mode: fs.ModeDir | fs.ModePerm,
+				},
+				root: "/",
+			},
+			Path: "/file",
+			Err:  fs.ErrPermission,
+		},
+		{
+			FS: FS{
+				dnode: &dnode{
+					entries: []*dirEnt{
+						{
+							directoryEntry: &inode{
+								data: []byte("DATA"),
+								mode: fs.ModePerm,
+							},
+							name: "file",
+						},
+					},
+					mode: fs.ModeDir | fs.ModePerm,
+				},
+				root: "/",
+			},
+			Path:   "/file",
+			Output: []byte("DATA"),
+		},
+		{
+			FS: FS{
+				dnode: &dnode{
+					entries: []*dirEnt{
+						{
+							directoryEntry: &inode{
+								data: []byte("DATA"),
+								mode: fs.ModePerm,
+							},
+							name: "file",
+						},
+						{
+							directoryEntry: &dnode{
+								entries: []*dirEnt{
+									{
+										directoryEntry: &inode{
+											data: []byte("MORE DATA"),
+											mode: fs.ModePerm,
+										},
+										name: "file2",
+									},
+								},
+								mode: fs.ModeDir | fs.ModePerm,
+							},
+							name: "DIR",
+						},
+					},
+					mode: fs.ModeDir | fs.ModePerm,
+				},
+				root: "/",
+			},
+			Path:   "/DIR/file2",
+			Output: []byte("MORE DATA"),
+		},
+	} {
+		data, err := test.FS.ReadFile(test.Path)
+		if !errors.Is(test.Err, err) {
+			t.Errorf("test %d: expecting error %s, got %s", n+1, test.Err, err)
+		} else if !bytes.Equal(test.Output, data) {
+			t.Errorf("test %d: expecting to get %v, got %v", n+1, test.Output, data)
 		}
 	}
 }

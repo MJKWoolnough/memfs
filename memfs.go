@@ -79,6 +79,10 @@ func (f *FS) getResolvedDirEnt(path string, remainingRedirects *uint8) (*dirEnt,
 	} else if mode&fs.ModeSymlink == 0 {
 		d, _ := de.directoryEntry.(*dnode)
 
+		if base == "" {
+			return de, nil
+		}
+
 		de := d.get(base)
 		if de == nil {
 			return nil, fs.ErrNotExist

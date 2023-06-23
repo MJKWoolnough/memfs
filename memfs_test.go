@@ -704,3 +704,117 @@ func TestStat(t *testing.T) {
 		}
 	}
 }
+
+func TestSub(t *testing.T) {
+	for n, test := range [...]struct {
+		FS     FS
+		Path   string
+		Output fs.FS
+		Err    error
+	}{
+		{
+			FS: FS{
+				dnode: &dnode{},
+				root:  "/",
+			},
+			Err: fs.ErrPermission,
+		},
+		{
+			FS: FS{
+				dnode: &dnode{
+					mode: fs.ModeDir | fs.ModePerm,
+				},
+				root: "/",
+			},
+			Output: &FS{
+				dnode: &dnode{
+					mode: fs.ModeDir | fs.ModePerm,
+				},
+				root: "/",
+			},
+		},
+		{
+			FS: FS{
+				dnode: &dnode{
+					entries: []*dirEnt{
+						{
+							directoryEntry: &dnode{},
+							name:           "other-dir",
+						},
+					},
+					mode: fs.ModeDir | fs.ModePerm,
+				},
+				root: "/",
+			},
+			Path: "/dir",
+			Err:  fs.ErrNotExist,
+		},
+		{
+			FS: FS{
+				dnode: &dnode{
+					entries: []*dirEnt{
+						{
+							directoryEntry: &inode{},
+							name:           "not-a-dir",
+						},
+					},
+					mode: fs.ModeDir | fs.ModePerm,
+				},
+				root: "/",
+			},
+			Path: "/not-a-dir",
+			Err:  fs.ErrInvalid,
+		},
+		{
+			FS: FS{
+				dnode: &dnode{
+					entries: []*dirEnt{
+						{
+							directoryEntry: &dnode{
+								name: "dir",
+								mode: fs.ModeDir | fs.ModePerm,
+							},
+							name: "dir",
+						},
+					},
+					mode: fs.ModeDir | fs.ModePerm,
+				},
+				root: "/",
+			},
+			Path: "/dir",
+			Output: &FS{
+				dnode: &dnode{
+					name: "dir",
+					mode: fs.ModeDir | fs.ModePerm,
+				},
+				root: "/dir",
+			},
+		},
+		{
+			FS: FS{
+				dnode: &dnode{
+					entries: []*dirEnt{
+						{
+							directoryEntry: &dnode{
+								name: "dir",
+								mode: fs.ModeDir | 0o666,
+							},
+							name: "dir",
+						},
+					},
+					mode: fs.ModeDir | fs.ModePerm,
+				},
+				root: "/",
+			},
+			Path: "/dir",
+			Err:  fs.ErrPermission,
+		},
+	} {
+		fs, err := test.FS.Sub(test.Path)
+		if !errors.Is(test.Err, err) {
+			t.Errorf("test %d: expecting error %s, got %s", n+1, test.Err, err)
+		} else if !reflect.DeepEqual(test.Output, fs) {
+			t.Errorf("test %d: expecting to get %v, got %v", n+1, test.Output, fs)
+		}
+	}
+}

@@ -189,7 +189,7 @@ func (f *FS) Sub(dir string) (fs.FS, error) {
 
 	return &FS{
 		dnode: dn,
-		root:  dir,
+		root:  filepath.Join(f.root, dir),
 	}, nil
 }
 

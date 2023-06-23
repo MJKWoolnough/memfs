@@ -16,7 +16,7 @@ func TestOpen(t *testing.T) {
 		File fs.File
 		Err  error
 	}{
-		{
+		{ // 1
 			FS: FS{
 				dnode: &dnode{},
 				root:  "/",
@@ -24,7 +24,7 @@ func TestOpen(t *testing.T) {
 			Path: "/file",
 			Err:  fs.ErrPermission,
 		},
-		{
+		{ // 2
 			FS: FS{
 				dnode: &dnode{
 					mode: fs.ModeDir | fs.ModePerm,
@@ -34,7 +34,7 @@ func TestOpen(t *testing.T) {
 			Path: "/file",
 			Err:  fs.ErrNotExist,
 		},
-		{
+		{ // 3
 			FS: FS{
 				dnode: &dnode{
 					entries: []*dirEnt{
@@ -49,7 +49,7 @@ func TestOpen(t *testing.T) {
 			Path: "/file",
 			Err:  fs.ErrPermission,
 		},
-		{
+		{ // 4
 			FS: FS{
 				dnode: &dnode{
 					entries: []*dirEnt{
@@ -73,7 +73,7 @@ func TestOpen(t *testing.T) {
 				opMode: opRead | opSeek,
 			},
 		},
-		{
+		{ // 5
 			FS: FS{
 				dnode: &dnode{
 					entries: []*dirEnt{
@@ -91,7 +91,7 @@ func TestOpen(t *testing.T) {
 			Path: "/file",
 			Err:  fs.ErrNotExist,
 		},
-		{
+		{ // 6
 			FS: FS{
 				dnode: &dnode{
 					entries: []*dirEnt{
@@ -141,14 +141,14 @@ func TestFSReadDir(t *testing.T) {
 		Output []fs.DirEntry
 		Err    error
 	}{
-		{
+		{ // 1
 			FS: FS{
 				dnode: &dnode{},
 				root:  "/",
 			},
 			Err: fs.ErrPermission,
 		},
-		{
+		{ // 2
 			FS: FS{
 				dnode: &dnode{
 					mode: fs.ModeDir | fs.ModePerm,
@@ -157,7 +157,7 @@ func TestFSReadDir(t *testing.T) {
 			},
 			Output: []fs.DirEntry{},
 		},
-		{
+		{ // 3
 			FS: FS{
 				dnode: &dnode{
 					entries: []*dirEnt{
@@ -183,7 +183,7 @@ func TestFSReadDir(t *testing.T) {
 				},
 			},
 		},
-		{
+		{ // 4
 			FS: FS{
 				dnode: &dnode{
 					entries: []*dirEnt{
@@ -223,7 +223,7 @@ func TestFSReadDir(t *testing.T) {
 				},
 			},
 		},
-		{
+		{ // 5
 			FS: FS{
 				dnode: &dnode{
 					entries: []*dirEnt{
@@ -284,7 +284,7 @@ func TestFSReadDir(t *testing.T) {
 				},
 			},
 		},
-		{
+		{ // 6
 			FS: FS{
 				dnode: &dnode{
 					entries: []*dirEnt{
@@ -328,7 +328,7 @@ func TestFSReadDir(t *testing.T) {
 				},
 			},
 		},
-		{
+		{ // 7
 			FS: FS{
 				dnode: &dnode{
 					entries: []*dirEnt{
@@ -381,14 +381,14 @@ func TestReadFile(t *testing.T) {
 		Output []byte
 		Err    error
 	}{
-		{
+		{ // 1
 			FS: FS{
 				dnode: &dnode{},
 				root:  "/",
 			},
 			Err: fs.ErrPermission,
 		},
-		{
+		{ // 2
 			FS: FS{
 				dnode: &dnode{
 					mode: fs.ModeDir | fs.ModePerm,
@@ -397,7 +397,7 @@ func TestReadFile(t *testing.T) {
 			},
 			Err: fs.ErrInvalid,
 		},
-		{
+		{ // 3
 			FS: FS{
 				dnode: &dnode{
 					mode: fs.ModeDir | fs.ModePerm,
@@ -407,7 +407,7 @@ func TestReadFile(t *testing.T) {
 			Path: "/file",
 			Err:  fs.ErrNotExist,
 		},
-		{
+		{ // 4
 			FS: FS{
 				dnode: &dnode{
 					entries: []*dirEnt{
@@ -423,7 +423,7 @@ func TestReadFile(t *testing.T) {
 			Path: "/file",
 			Err:  fs.ErrNotExist,
 		},
-		{
+		{ // 5
 			FS: FS{
 				dnode: &dnode{
 					entries: []*dirEnt{
@@ -439,7 +439,7 @@ func TestReadFile(t *testing.T) {
 			Path: "/file",
 			Err:  fs.ErrPermission,
 		},
-		{
+		{ // 6
 			FS: FS{
 				dnode: &dnode{
 					entries: []*dirEnt{
@@ -458,7 +458,7 @@ func TestReadFile(t *testing.T) {
 			Path:   "/file",
 			Output: []byte("DATA"),
 		},
-		{
+		{ // 7
 			FS: FS{
 				dnode: &dnode{
 					entries: []*dirEnt{
@@ -509,14 +509,14 @@ func TestStat(t *testing.T) {
 		Output fs.FileInfo
 		Err    error
 	}{
-		{
+		{ // 1
 			FS: FS{
 				dnode: &dnode{},
 				root:  "/",
 			},
 			Err: fs.ErrPermission,
 		},
-		{
+		{ // 2
 			FS: FS{
 				dnode: &dnode{
 					modtime: time.Unix(1, 2),
@@ -532,7 +532,7 @@ func TestStat(t *testing.T) {
 				name: "/",
 			},
 		},
-		{
+		{ // 3
 			FS: FS{
 				dnode: &dnode{
 					mode: fs.ModeDir | fs.ModePerm,
@@ -542,7 +542,7 @@ func TestStat(t *testing.T) {
 			Path: "/file",
 			Err:  fs.ErrNotExist,
 		},
-		{
+		{ // 4
 			FS: FS{
 				dnode: &dnode{
 					entries: []*dirEnt{
@@ -558,7 +558,7 @@ func TestStat(t *testing.T) {
 			Path: "/file",
 			Err:  fs.ErrNotExist,
 		},
-		{
+		{ // 5
 			FS: FS{
 				dnode: &dnode{
 					entries: []*dirEnt{
@@ -583,7 +583,7 @@ func TestStat(t *testing.T) {
 				name: "file",
 			},
 		},
-		{
+		{ // 6
 			FS: FS{
 				dnode: &dnode{
 					entries: []*dirEnt{
@@ -617,7 +617,7 @@ func TestStat(t *testing.T) {
 				name: "dir",
 			},
 		},
-		{
+		{ // 7
 			FS: FS{
 				dnode: &dnode{
 					entries: []*dirEnt{
@@ -653,7 +653,7 @@ func TestStat(t *testing.T) {
 			Path: "/dir/anotherFile",
 			Err:  fs.ErrPermission,
 		},
-		{
+		{ // 8
 			FS: FS{
 				dnode: &dnode{
 					entries: []*dirEnt{
@@ -712,14 +712,14 @@ func TestSub(t *testing.T) {
 		Output fs.FS
 		Err    error
 	}{
-		{
+		{ // 1
 			FS: FS{
 				dnode: &dnode{},
 				root:  "/",
 			},
 			Err: fs.ErrPermission,
 		},
-		{
+		{ // 2
 			FS: FS{
 				dnode: &dnode{
 					mode: fs.ModeDir | fs.ModePerm,
@@ -733,7 +733,7 @@ func TestSub(t *testing.T) {
 				root: "/",
 			},
 		},
-		{
+		{ // 3
 			FS: FS{
 				dnode: &dnode{
 					entries: []*dirEnt{
@@ -749,7 +749,7 @@ func TestSub(t *testing.T) {
 			Path: "/dir",
 			Err:  fs.ErrNotExist,
 		},
-		{
+		{ // 4
 			FS: FS{
 				dnode: &dnode{
 					entries: []*dirEnt{
@@ -765,7 +765,7 @@ func TestSub(t *testing.T) {
 			Path: "/not-a-dir",
 			Err:  fs.ErrInvalid,
 		},
-		{
+		{ // 5
 			FS: FS{
 				dnode: &dnode{
 					entries: []*dirEnt{
@@ -790,7 +790,7 @@ func TestSub(t *testing.T) {
 				root: "/dir",
 			},
 		},
-		{
+		{ // 6
 			FS: FS{
 				dnode: &dnode{
 					entries: []*dirEnt{

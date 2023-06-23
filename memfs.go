@@ -157,6 +157,10 @@ func (f *FS) ReadFile(path string) ([]byte, error) {
 		return nil, fs.ErrInvalid
 	}
 
+	if inode.mode&0o444 == 0 {
+		return nil, fs.ErrPermission
+	}
+
 	data := make([]byte, len(inode.data))
 
 	copy(data, inode.data)

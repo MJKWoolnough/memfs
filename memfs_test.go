@@ -501,3 +501,206 @@ func TestReadFile(t *testing.T) {
 		}
 	}
 }
+
+func TestStat(t *testing.T) {
+	for n, test := range [...]struct {
+		FS     FS
+		Path   string
+		Output fs.FileInfo
+		Err    error
+	}{
+		{
+			FS: FS{
+				dnode: &dnode{},
+				root:  "/",
+			},
+			Err: fs.ErrPermission,
+		},
+		{
+			FS: FS{
+				dnode: &dnode{
+					modtime: time.Unix(1, 2),
+					mode:    fs.ModeDir | fs.ModePerm,
+				},
+				root: "/",
+			},
+			Output: &dirEnt{
+				directoryEntry: &dnode{
+					modtime: time.Unix(1, 2),
+					mode:    fs.ModeDir | fs.ModePerm,
+				},
+				name: "/",
+			},
+		},
+		{
+			FS: FS{
+				dnode: &dnode{
+					mode: fs.ModeDir | fs.ModePerm,
+				},
+				root: "/",
+			},
+			Path: "/file",
+			Err:  fs.ErrNotExist,
+		},
+		{
+			FS: FS{
+				dnode: &dnode{
+					entries: []*dirEnt{
+						{
+							directoryEntry: &inode{},
+							name:           "notFile",
+						},
+					},
+					mode: fs.ModeDir | fs.ModePerm,
+				},
+				root: "/",
+			},
+			Path: "/file",
+			Err:  fs.ErrNotExist,
+		},
+		{
+			FS: FS{
+				dnode: &dnode{
+					entries: []*dirEnt{
+						{
+							directoryEntry: &inode{
+								modtime: time.Unix(1, 2),
+								mode:    3,
+							},
+							name: "file",
+						},
+					},
+					mode: fs.ModeDir | fs.ModePerm,
+				},
+				root: "/",
+			},
+			Path: "/file",
+			Output: &dirEnt{
+				directoryEntry: &inode{
+					modtime: time.Unix(1, 2),
+					mode:    3,
+				},
+				name: "file",
+			},
+		},
+		{
+			FS: FS{
+				dnode: &dnode{
+					entries: []*dirEnt{
+						{
+							directoryEntry: &inode{
+								modtime: time.Unix(1, 2),
+								mode:    3,
+							},
+							name: "file",
+						},
+						{
+							directoryEntry: &dnode{
+								name:    "dir",
+								modtime: time.Unix(4, 5),
+								mode:    6,
+							},
+							name: "dir",
+						},
+					},
+					mode: fs.ModeDir | fs.ModePerm,
+				},
+				root: "/",
+			},
+			Path: "/dir",
+			Output: &dirEnt{
+				directoryEntry: &dnode{
+					name:    "dir",
+					modtime: time.Unix(4, 5),
+					mode:    6,
+				},
+				name: "dir",
+			},
+		},
+		{
+			FS: FS{
+				dnode: &dnode{
+					entries: []*dirEnt{
+						{
+							directoryEntry: &inode{
+								modtime: time.Unix(1, 2),
+								mode:    3,
+							},
+							name: "file",
+						},
+						{
+							directoryEntry: &dnode{
+								name: "dir",
+								entries: []*dirEnt{
+									{
+										directoryEntry: &inode{
+											modtime: time.Unix(4, 5),
+											mode:    6,
+										},
+										name: "anotherFile",
+									},
+								},
+								modtime: time.Unix(7, 8),
+								mode:    9,
+							},
+							name: "dir",
+						},
+					},
+					mode: fs.ModeDir | fs.ModePerm,
+				},
+				root: "/",
+			},
+			Path: "/dir/anotherFile",
+			Err:  fs.ErrPermission,
+		},
+		{
+			FS: FS{
+				dnode: &dnode{
+					entries: []*dirEnt{
+						{
+							directoryEntry: &inode{
+								modtime: time.Unix(1, 2),
+								mode:    3,
+							},
+							name: "file",
+						},
+						{
+							directoryEntry: &dnode{
+								name: "dir",
+								entries: []*dirEnt{
+									{
+										directoryEntry: &inode{
+											modtime: time.Unix(4, 5),
+											mode:    6,
+										},
+										name: "anotherFile",
+									},
+								},
+								modtime: time.Unix(7, 8),
+								mode:    fs.ModeDir | fs.ModePerm,
+							},
+							name: "dir",
+						},
+					},
+					mode: fs.ModeDir | fs.ModePerm,
+				},
+				root: "/",
+			},
+			Path: "/dir/anotherFile",
+			Output: &dirEnt{
+				directoryEntry: &inode{
+					modtime: time.Unix(4, 5),
+					mode:    6,
+				},
+				name: "anotherFile",
+			},
+		},
+	} {
+		stat, err := test.FS.Stat(test.Path)
+		if !errors.Is(test.Err, err) {
+			t.Errorf("test %d: expecting error %s, got %s", n+1, test.Err, err)
+		} else if !reflect.DeepEqual(test.Output, stat) {
+			t.Errorf("test %d: expecting to get %v, got %v", n+1, test.Output, stat)
+		}
+	}
+}

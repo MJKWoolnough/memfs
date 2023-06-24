@@ -17,52 +17,40 @@ func TestOpen(t *testing.T) {
 		Err  error
 	}{
 		{ // 1
-			FS: FS{
-				dnode: &dnode{},
-				root:  "/",
-			},
+			FS:   FS{},
 			Path: "/file",
 			Err:  fs.ErrPermission,
 		},
 		{ // 2
 			FS: FS{
-				dnode: &dnode{
-					mode: fs.ModeDir | fs.ModePerm,
-				},
-				root: "/",
+				mode: fs.ModeDir | fs.ModePerm,
 			},
 			Path: "/file",
 			Err:  fs.ErrNotExist,
 		},
 		{ // 3
 			FS: FS{
-				dnode: &dnode{
-					entries: []*dirEnt{
-						{
-							directoryEntry: &inode{},
-							name:           "file",
-						},
+				entries: []*dirEnt{
+					{
+						directoryEntry: &inode{},
+						name:           "file",
 					},
 				},
-				root: "/",
 			},
 			Path: "/file",
 			Err:  fs.ErrPermission,
 		},
 		{ // 4
 			FS: FS{
-				dnode: &dnode{
-					entries: []*dirEnt{
-						{
-							directoryEntry: &inode{
-								mode: fs.ModeDir | fs.ModePerm,
-							},
-							name: "file",
+				entries: []*dirEnt{
+					{
+						directoryEntry: &inode{
+							mode: fs.ModeDir | fs.ModePerm,
 						},
+						name: "file",
 					},
-					mode: fs.ModeDir | fs.ModePerm,
 				},
-				root: "/",
+				mode: fs.ModeDir | fs.ModePerm,
 			},
 			Path: "/file",
 			File: &file{
@@ -75,45 +63,39 @@ func TestOpen(t *testing.T) {
 		},
 		{ // 5
 			FS: FS{
-				dnode: &dnode{
-					entries: []*dirEnt{
-						{
-							directoryEntry: &inode{
-								mode: fs.ModeDir | fs.ModePerm,
-							},
-							name: "otherFile",
+				entries: []*dirEnt{
+					{
+						directoryEntry: &inode{
+							mode: fs.ModeDir | fs.ModePerm,
 						},
+						name: "otherFile",
 					},
-					mode: fs.ModeDir | fs.ModePerm,
 				},
-				root: "/",
+				mode: fs.ModeDir | fs.ModePerm,
 			},
 			Path: "/file",
 			Err:  fs.ErrNotExist,
 		},
 		{ // 6
 			FS: FS{
-				dnode: &dnode{
-					entries: []*dirEnt{
-						{
-							directoryEntry: &dnode{
-								name: "dir",
-								entries: []*dirEnt{
-									{
-										directoryEntry: &inode{
-											mode: fs.ModeDir | fs.ModePerm,
-										},
-										name: "deepFile",
-									},
-								},
-								mode: fs.ModeDir | fs.ModePerm,
-							},
+				entries: []*dirEnt{
+					{
+						directoryEntry: &dnode{
 							name: "dir",
+							entries: []*dirEnt{
+								{
+									directoryEntry: &inode{
+										mode: fs.ModeDir | fs.ModePerm,
+									},
+									name: "deepFile",
+								},
+							},
+							mode: fs.ModeDir | fs.ModePerm,
 						},
+						name: "dir",
 					},
-					mode: fs.ModeDir | fs.ModePerm,
 				},
-				root: "/",
+				mode: fs.ModeDir | fs.ModePerm,
 			},
 			Path: "/dir/deepFile",
 			File: &file{
@@ -142,36 +124,27 @@ func TestFSReadDir(t *testing.T) {
 		Err    error
 	}{
 		{ // 1
-			FS: FS{
-				dnode: &dnode{},
-				root:  "/",
-			},
+			FS:  FS{},
 			Err: fs.ErrPermission,
 		},
 		{ // 2
 			FS: FS{
-				dnode: &dnode{
-					mode: fs.ModeDir | fs.ModePerm,
-				},
-				root: "/",
+				mode: fs.ModeDir | fs.ModePerm,
 			},
 			Output: []fs.DirEntry{},
 		},
 		{ // 3
 			FS: FS{
-				dnode: &dnode{
-					entries: []*dirEnt{
-						{
-							directoryEntry: &inode{
-								modtime: time.Unix(1, 0),
-								mode:    2,
-							},
-							name: "test",
+				entries: []*dirEnt{
+					{
+						directoryEntry: &inode{
+							modtime: time.Unix(1, 0),
+							mode:    2,
 						},
+						name: "test",
 					},
-					mode: fs.ModeDir | fs.ModePerm,
 				},
-				root: "/",
+				mode: fs.ModeDir | fs.ModePerm,
 			},
 			Output: []fs.DirEntry{
 				&dirEnt{
@@ -185,26 +158,23 @@ func TestFSReadDir(t *testing.T) {
 		},
 		{ // 4
 			FS: FS{
-				dnode: &dnode{
-					entries: []*dirEnt{
-						{
-							directoryEntry: &inode{
-								modtime: time.Unix(1, 0),
-								mode:    2,
-							},
-							name: "test",
+				entries: []*dirEnt{
+					{
+						directoryEntry: &inode{
+							modtime: time.Unix(1, 0),
+							mode:    2,
 						},
-						{
-							directoryEntry: &inode{
-								modtime: time.Unix(3, 0),
-								mode:    4,
-							},
-							name: "test2",
-						},
+						name: "test",
 					},
-					mode: fs.ModeDir | fs.ModePerm,
+					{
+						directoryEntry: &inode{
+							modtime: time.Unix(3, 0),
+							mode:    4,
+						},
+						name: "test2",
+					},
 				},
-				root: "/",
+				mode: fs.ModeDir | fs.ModePerm,
 			},
 			Output: []fs.DirEntry{
 				&dirEnt{
@@ -225,36 +195,33 @@ func TestFSReadDir(t *testing.T) {
 		},
 		{ // 5
 			FS: FS{
-				dnode: &dnode{
-					entries: []*dirEnt{
-						{
-							directoryEntry: &inode{
-								modtime: time.Unix(1, 0),
-								mode:    2,
-							},
-							name: "test",
+				entries: []*dirEnt{
+					{
+						directoryEntry: &inode{
+							modtime: time.Unix(1, 0),
+							mode:    2,
 						},
-						{
-							directoryEntry: &dnode{
-								name: "test2",
-								entries: []*dirEnt{
-									{
-										directoryEntry: &inode{
-											modtime: time.Unix(3, 0),
-											mode:    4,
-										},
-										name: "test3",
-									},
-								},
-								modtime: time.Unix(5, 0),
-								mode:    fs.ModeDir | fs.ModePerm,
-							},
-							name: "test2",
-						},
+						name: "test",
 					},
-					mode: fs.ModeDir | fs.ModePerm,
+					{
+						directoryEntry: &dnode{
+							name: "test2",
+							entries: []*dirEnt{
+								{
+									directoryEntry: &inode{
+										modtime: time.Unix(3, 0),
+										mode:    4,
+									},
+									name: "test3",
+								},
+							},
+							modtime: time.Unix(5, 0),
+							mode:    fs.ModeDir | fs.ModePerm,
+						},
+						name: "test2",
+					},
 				},
-				root: "/",
+				mode: fs.ModeDir | fs.ModePerm,
 			},
 			Path: "/",
 			Output: []fs.DirEntry{
@@ -286,36 +253,33 @@ func TestFSReadDir(t *testing.T) {
 		},
 		{ // 6
 			FS: FS{
-				dnode: &dnode{
-					entries: []*dirEnt{
-						{
-							directoryEntry: &inode{
-								modtime: time.Unix(1, 0),
-								mode:    2,
-							},
-							name: "test",
+				entries: []*dirEnt{
+					{
+						directoryEntry: &inode{
+							modtime: time.Unix(1, 0),
+							mode:    2,
 						},
-						{
-							directoryEntry: &dnode{
-								name: "test2",
-								entries: []*dirEnt{
-									{
-										directoryEntry: &inode{
-											modtime: time.Unix(3, 0),
-											mode:    4,
-										},
-										name: "test3",
-									},
-								},
-								modtime: time.Unix(5, 0),
-								mode:    fs.ModeDir | fs.ModePerm,
-							},
-							name: "test2",
-						},
+						name: "test",
 					},
-					mode: fs.ModeDir | fs.ModePerm,
+					{
+						directoryEntry: &dnode{
+							name: "test2",
+							entries: []*dirEnt{
+								{
+									directoryEntry: &inode{
+										modtime: time.Unix(3, 0),
+										mode:    4,
+									},
+									name: "test3",
+								},
+							},
+							modtime: time.Unix(5, 0),
+							mode:    fs.ModeDir | fs.ModePerm,
+						},
+						name: "test2",
+					},
 				},
-				root: "/",
+				mode: fs.ModeDir | fs.ModePerm,
 			},
 			Path: "/test2",
 			Output: []fs.DirEntry{
@@ -330,36 +294,33 @@ func TestFSReadDir(t *testing.T) {
 		},
 		{ // 7
 			FS: FS{
-				dnode: &dnode{
-					entries: []*dirEnt{
-						{
-							directoryEntry: &inode{
-								modtime: time.Unix(1, 0),
-								mode:    2,
-							},
-							name: "test",
+				entries: []*dirEnt{
+					{
+						directoryEntry: &inode{
+							modtime: time.Unix(1, 0),
+							mode:    2,
 						},
-						{
-							directoryEntry: &dnode{
-								name: "test2",
-								entries: []*dirEnt{
-									{
-										directoryEntry: &inode{
-											modtime: time.Unix(3, 0),
-											mode:    4,
-										},
-										name: "test3",
-									},
-								},
-								modtime: time.Unix(5, 0),
-								mode:    fs.ModeDir,
-							},
-							name: "test2",
-						},
+						name: "test",
 					},
-					mode: fs.ModeDir | fs.ModePerm,
+					{
+						directoryEntry: &dnode{
+							name: "test2",
+							entries: []*dirEnt{
+								{
+									directoryEntry: &inode{
+										modtime: time.Unix(3, 0),
+										mode:    4,
+									},
+									name: "test3",
+								},
+							},
+							modtime: time.Unix(5, 0),
+							mode:    fs.ModeDir,
+						},
+						name: "test2",
+					},
 				},
-				root: "/",
+				mode: fs.ModeDir | fs.ModePerm,
 			},
 			Path: "/test2",
 			Err:  fs.ErrPermission,
@@ -382,112 +343,91 @@ func TestReadFile(t *testing.T) {
 		Err    error
 	}{
 		{ // 1
-			FS: FS{
-				dnode: &dnode{},
-				root:  "/",
-			},
+			FS:  FS{},
 			Err: fs.ErrPermission,
 		},
 		{ // 2
 			FS: FS{
-				dnode: &dnode{
-					mode: fs.ModeDir | fs.ModePerm,
-				},
-				root: "/",
+				mode: fs.ModeDir | fs.ModePerm,
 			},
 			Err: fs.ErrInvalid,
 		},
 		{ // 3
 			FS: FS{
-				dnode: &dnode{
-					mode: fs.ModeDir | fs.ModePerm,
-				},
-				root: "/",
+				mode: fs.ModeDir | fs.ModePerm,
 			},
 			Path: "/file",
 			Err:  fs.ErrNotExist,
 		},
 		{ // 4
 			FS: FS{
-				dnode: &dnode{
-					entries: []*dirEnt{
-						{
-							directoryEntry: &inode{},
-							name:           "notFile",
-						},
+				entries: []*dirEnt{
+					{
+						directoryEntry: &inode{},
+						name:           "notFile",
 					},
-					mode: fs.ModeDir | fs.ModePerm,
 				},
-				root: "/",
+				mode: fs.ModeDir | fs.ModePerm,
 			},
 			Path: "/file",
 			Err:  fs.ErrNotExist,
 		},
 		{ // 5
 			FS: FS{
-				dnode: &dnode{
-					entries: []*dirEnt{
-						{
-							directoryEntry: &inode{},
-							name:           "file",
-						},
+				entries: []*dirEnt{
+					{
+						directoryEntry: &inode{},
+						name:           "file",
 					},
-					mode: fs.ModeDir | fs.ModePerm,
 				},
-				root: "/",
+				mode: fs.ModeDir | fs.ModePerm,
 			},
 			Path: "/file",
 			Err:  fs.ErrPermission,
 		},
 		{ // 6
 			FS: FS{
-				dnode: &dnode{
-					entries: []*dirEnt{
-						{
-							directoryEntry: &inode{
-								data: []byte("DATA"),
-								mode: fs.ModePerm,
-							},
-							name: "file",
+				entries: []*dirEnt{
+					{
+						directoryEntry: &inode{
+							data: []byte("DATA"),
+							mode: fs.ModePerm,
 						},
+						name: "file",
 					},
-					mode: fs.ModeDir | fs.ModePerm,
 				},
-				root: "/",
+				mode: fs.ModeDir | fs.ModePerm,
 			},
 			Path:   "/file",
 			Output: []byte("DATA"),
 		},
 		{ // 7
 			FS: FS{
-				dnode: &dnode{
-					entries: []*dirEnt{
-						{
-							directoryEntry: &inode{
-								data: []byte("DATA"),
-								mode: fs.ModePerm,
-							},
-							name: "file",
+				entries: []*dirEnt{
+					{
+						directoryEntry: &inode{
+							data: []byte("DATA"),
+							mode: fs.ModePerm,
 						},
-						{
-							directoryEntry: &dnode{
-								entries: []*dirEnt{
-									{
-										directoryEntry: &inode{
-											data: []byte("MORE DATA"),
-											mode: fs.ModePerm,
-										},
-										name: "file2",
-									},
-								},
-								mode: fs.ModeDir | fs.ModePerm,
-							},
-							name: "DIR",
-						},
+						name: "file",
 					},
-					mode: fs.ModeDir | fs.ModePerm,
+					{
+						directoryEntry: &dnode{
+							entries: []*dirEnt{
+								{
+									directoryEntry: &inode{
+										data: []byte("MORE DATA"),
+										mode: fs.ModePerm,
+									},
+									name: "file2",
+								},
+							},
+							mode: fs.ModeDir | fs.ModePerm,
+						},
+						name: "DIR",
+					},
 				},
-				root: "/",
+				mode: fs.ModeDir | fs.ModePerm,
 			},
 			Path:   "/DIR/file2",
 			Output: []byte("MORE DATA"),
@@ -510,19 +450,13 @@ func TestStat(t *testing.T) {
 		Err    error
 	}{
 		{ // 1
-			FS: FS{
-				dnode: &dnode{},
-				root:  "/",
-			},
+			FS:  FS{},
 			Err: fs.ErrPermission,
 		},
 		{ // 2
 			FS: FS{
-				dnode: &dnode{
-					modtime: time.Unix(1, 2),
-					mode:    fs.ModeDir | fs.ModePerm,
-				},
-				root: "/",
+				modtime: time.Unix(1, 2),
+				mode:    fs.ModeDir | fs.ModePerm,
 			},
 			Output: &dirEnt{
 				directoryEntry: &dnode{
@@ -534,45 +468,36 @@ func TestStat(t *testing.T) {
 		},
 		{ // 3
 			FS: FS{
-				dnode: &dnode{
-					mode: fs.ModeDir | fs.ModePerm,
-				},
-				root: "/",
+				mode: fs.ModeDir | fs.ModePerm,
 			},
 			Path: "/file",
 			Err:  fs.ErrNotExist,
 		},
 		{ // 4
 			FS: FS{
-				dnode: &dnode{
-					entries: []*dirEnt{
-						{
-							directoryEntry: &inode{},
-							name:           "notFile",
-						},
+				entries: []*dirEnt{
+					{
+						directoryEntry: &inode{},
+						name:           "notFile",
 					},
-					mode: fs.ModeDir | fs.ModePerm,
 				},
-				root: "/",
+				mode: fs.ModeDir | fs.ModePerm,
 			},
 			Path: "/file",
 			Err:  fs.ErrNotExist,
 		},
 		{ // 5
 			FS: FS{
-				dnode: &dnode{
-					entries: []*dirEnt{
-						{
-							directoryEntry: &inode{
-								modtime: time.Unix(1, 2),
-								mode:    3,
-							},
-							name: "file",
+				entries: []*dirEnt{
+					{
+						directoryEntry: &inode{
+							modtime: time.Unix(1, 2),
+							mode:    3,
 						},
+						name: "file",
 					},
-					mode: fs.ModeDir | fs.ModePerm,
 				},
-				root: "/",
+				mode: fs.ModeDir | fs.ModePerm,
 			},
 			Path: "/file",
 			Output: &dirEnt{
@@ -585,27 +510,24 @@ func TestStat(t *testing.T) {
 		},
 		{ // 6
 			FS: FS{
-				dnode: &dnode{
-					entries: []*dirEnt{
-						{
-							directoryEntry: &inode{
-								modtime: time.Unix(1, 2),
-								mode:    3,
-							},
-							name: "file",
+				entries: []*dirEnt{
+					{
+						directoryEntry: &inode{
+							modtime: time.Unix(1, 2),
+							mode:    3,
 						},
-						{
-							directoryEntry: &dnode{
-								name:    "dir",
-								modtime: time.Unix(4, 5),
-								mode:    6,
-							},
-							name: "dir",
-						},
+						name: "file",
 					},
-					mode: fs.ModeDir | fs.ModePerm,
+					{
+						directoryEntry: &dnode{
+							name:    "dir",
+							modtime: time.Unix(4, 5),
+							mode:    6,
+						},
+						name: "dir",
+					},
 				},
-				root: "/",
+				mode: fs.ModeDir | fs.ModePerm,
 			},
 			Path: "/dir",
 			Output: &dirEnt{
@@ -619,72 +541,66 @@ func TestStat(t *testing.T) {
 		},
 		{ // 7
 			FS: FS{
-				dnode: &dnode{
-					entries: []*dirEnt{
-						{
-							directoryEntry: &inode{
-								modtime: time.Unix(1, 2),
-								mode:    3,
-							},
-							name: "file",
+				entries: []*dirEnt{
+					{
+						directoryEntry: &inode{
+							modtime: time.Unix(1, 2),
+							mode:    3,
 						},
-						{
-							directoryEntry: &dnode{
-								name: "dir",
-								entries: []*dirEnt{
-									{
-										directoryEntry: &inode{
-											modtime: time.Unix(4, 5),
-											mode:    6,
-										},
-										name: "anotherFile",
-									},
-								},
-								modtime: time.Unix(7, 8),
-								mode:    9,
-							},
-							name: "dir",
-						},
+						name: "file",
 					},
-					mode: fs.ModeDir | fs.ModePerm,
+					{
+						directoryEntry: &dnode{
+							name: "dir",
+							entries: []*dirEnt{
+								{
+									directoryEntry: &inode{
+										modtime: time.Unix(4, 5),
+										mode:    6,
+									},
+									name: "anotherFile",
+								},
+							},
+							modtime: time.Unix(7, 8),
+							mode:    9,
+						},
+						name: "dir",
+					},
 				},
-				root: "/",
+				mode: fs.ModeDir | fs.ModePerm,
 			},
 			Path: "/dir/anotherFile",
 			Err:  fs.ErrPermission,
 		},
 		{ // 8
 			FS: FS{
-				dnode: &dnode{
-					entries: []*dirEnt{
-						{
-							directoryEntry: &inode{
-								modtime: time.Unix(1, 2),
-								mode:    3,
-							},
-							name: "file",
+				entries: []*dirEnt{
+					{
+						directoryEntry: &inode{
+							modtime: time.Unix(1, 2),
+							mode:    3,
 						},
-						{
-							directoryEntry: &dnode{
-								name: "dir",
-								entries: []*dirEnt{
-									{
-										directoryEntry: &inode{
-											modtime: time.Unix(4, 5),
-											mode:    6,
-										},
-										name: "anotherFile",
-									},
-								},
-								modtime: time.Unix(7, 8),
-								mode:    fs.ModeDir | fs.ModePerm,
-							},
-							name: "dir",
-						},
+						name: "file",
 					},
-					mode: fs.ModeDir | fs.ModePerm,
+					{
+						directoryEntry: &dnode{
+							name: "dir",
+							entries: []*dirEnt{
+								{
+									directoryEntry: &inode{
+										modtime: time.Unix(4, 5),
+										mode:    6,
+									},
+									name: "anotherFile",
+								},
+							},
+							modtime: time.Unix(7, 8),
+							mode:    fs.ModeDir | fs.ModePerm,
+						},
+						name: "dir",
+					},
 				},
-				root: "/",
+				mode: fs.ModeDir | fs.ModePerm,
 			},
 			Path: "/dir/anotherFile",
 			Output: &dirEnt{

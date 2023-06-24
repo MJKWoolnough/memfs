@@ -182,6 +182,10 @@ func (f *FS) Mkdir(path string, perm fs.FileMode) error {
 		return err
 	}
 
+	if d.mode&0o222 == 0 {
+		return fs.ErrPermission
+	}
+
 	if d.get(child) != nil {
 		return fs.ErrExist
 	}

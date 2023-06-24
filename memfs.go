@@ -177,22 +177,6 @@ func (f *FS) Stat(path string) (fs.FileInfo, error) {
 	return de.Info()
 }
 
-func (f *FS) Sub(dir string) (fs.FS, error) {
-	dn, err := f.getDirEnt(dir)
-	if err != nil {
-		return nil, err
-	}
-
-	if dn.mode&0o110 == 0 {
-		return nil, fs.ErrPermission
-	}
-
-	return &FS{
-		dnode: dn,
-		root:  filepath.Join(f.root, dir),
-	}, nil
-}
-
 func (f *FS) Mkdir(path string, perm fs.FileMode) error {
 	parent, child := filepath.Split(path)
 	d, err := f.getDirEnt(parent)

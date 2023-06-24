@@ -202,7 +202,7 @@ func (f *FS) Mkdir(path string, perm fs.FileMode) error {
 }
 
 func (f *FS) MkdirAll(path string, perm fs.FileMode) error {
-	path = filepath.Clean(path)
+	path = filepath.Join("/", path)
 	last := 0
 
 	for {

@@ -817,3 +817,233 @@ func fixTimes(d *dnode, now time.Time) {
 		}
 	}
 }
+
+func TestMkdirAll(t *testing.T) {
+	now := time.Now()
+	for n, test := range [...]struct {
+		FS        FS
+		Path      string
+		PathPerms fs.FileMode
+		Output    FS
+		Err       error
+	}{
+		{ // 1
+			FS: FS{},
+			Output: FS{
+				modtime: now,
+			},
+			Err: fs.ErrInvalid,
+		},
+		{ // 2
+			FS: FS{
+				modtime: now,
+				mode:    fs.ModeDir | fs.ModePerm,
+			},
+			Output: FS{
+				modtime: now,
+				mode:    fs.ModeDir | fs.ModePerm,
+			},
+			Err: fs.ErrInvalid,
+		},
+		{ // 3
+			FS: FS{
+				modtime: now,
+				mode:    fs.ModeDir | fs.ModePerm,
+			},
+			Output: FS{
+				modtime: now,
+				mode:    fs.ModeDir | fs.ModePerm,
+			},
+			Path: "/",
+			Err:  fs.ErrInvalid,
+		},
+		{ // 4
+			FS: FS{
+				modtime: now,
+				mode:    fs.ModeDir | fs.ModePerm,
+			},
+			Output: FS{
+				modtime: now,
+				entries: []*dirEnt{
+					{
+						directoryEntry: &dnode{
+							name:    "a",
+							modtime: now,
+							mode:    fs.ModeDir,
+						},
+						name: "a",
+					},
+				},
+				mode: fs.ModeDir | fs.ModePerm,
+			},
+			Path: "/a",
+		},
+		{ // 5
+			FS: FS{
+				modtime: now,
+				mode:    fs.ModeDir | fs.ModePerm,
+			},
+			Output: FS{
+				modtime: now,
+				entries: []*dirEnt{
+					{
+						directoryEntry: &dnode{
+							name:    "a",
+							modtime: now,
+							mode:    fs.ModeDir,
+						},
+						name: "a",
+					},
+				},
+				mode: fs.ModeDir | fs.ModePerm,
+			},
+			Path: "/a/b",
+			Err:  fs.ErrPermission,
+		},
+		{ // 6
+			FS: FS{
+				modtime: now,
+				entries: []*dirEnt{
+					{
+						directoryEntry: &dnode{
+							name:    "a",
+							modtime: now,
+							mode:    fs.ModeDir,
+						},
+						name: "a",
+					},
+				},
+				mode: fs.ModeDir | fs.ModePerm,
+			},
+			Output: FS{
+				modtime: now,
+				entries: []*dirEnt{
+					{
+						directoryEntry: &dnode{
+							name:    "a",
+							modtime: now,
+							mode:    fs.ModeDir,
+						},
+						name: "a",
+					},
+				},
+				mode: fs.ModeDir | fs.ModePerm,
+			},
+			Path: "/a/b",
+			Err:  fs.ErrPermission,
+		},
+		{ // 7
+			FS: FS{
+				modtime: now,
+				entries: []*dirEnt{
+					{
+						directoryEntry: &inode{
+							modtime: now,
+							mode:    fs.ModePerm,
+						},
+						name: "a",
+					},
+				},
+				mode: fs.ModeDir | fs.ModePerm,
+			},
+			Output: FS{
+				modtime: now,
+				entries: []*dirEnt{
+					{
+						directoryEntry: &inode{
+							modtime: now,
+							mode:    fs.ModePerm,
+						},
+						name: "a",
+					},
+				},
+				mode: fs.ModeDir | fs.ModePerm,
+			},
+			Path: "/a/b",
+			Err:  fs.ErrInvalid,
+		},
+		{ // 8
+			FS: FS{
+				modtime: now,
+				entries: []*dirEnt{
+					{
+						directoryEntry: &dnode{
+							name:    "a",
+							modtime: now,
+							mode:    fs.ModeDir | fs.ModePerm,
+						},
+						name: "a",
+					},
+				},
+				mode: fs.ModeDir | fs.ModePerm,
+			},
+			Output: FS{
+				modtime: now,
+				entries: []*dirEnt{
+					{
+						directoryEntry: &dnode{
+							name: "a",
+							entries: []*dirEnt{
+								{
+									directoryEntry: &dnode{
+										name:    "b",
+										modtime: now,
+										mode:    fs.ModeDir | 0o123,
+									},
+									name: "b",
+								},
+							},
+							modtime: now,
+							mode:    fs.ModeDir | fs.ModePerm,
+						},
+						name: "a",
+					},
+				},
+				mode: fs.ModeDir | fs.ModePerm,
+			},
+			Path:      "/a/b",
+			PathPerms: 0o123,
+		},
+		{ // 9
+			FS: FS{
+				modtime: now,
+				mode:    fs.ModeDir | fs.ModePerm,
+			},
+			Output: FS{
+				modtime: now,
+				entries: []*dirEnt{
+					{
+						directoryEntry: &dnode{
+							name: "a",
+							entries: []*dirEnt{
+								{
+									directoryEntry: &dnode{
+										name:    "b",
+										modtime: now,
+										mode:    fs.ModeDir | 0o765,
+									},
+									name: "b",
+								},
+							},
+							modtime: now,
+							mode:    fs.ModeDir | 0o765,
+						},
+						name: "a",
+					},
+				},
+				mode: fs.ModeDir | fs.ModePerm,
+			},
+			Path:      "/a/b",
+			PathPerms: 0o765,
+		},
+	} {
+		if err := test.FS.MkdirAll(test.Path, test.PathPerms); !errors.Is(test.Err, err) {
+			t.Errorf("test %d: expecting error %s, got %s", n+1, test.Err, err)
+		} else {
+			fixTimes((*dnode)(&test.FS), now)
+			if !reflect.DeepEqual(test.Output, test.FS) {
+				t.Errorf("test %d: expecting to get %v, got %v", n+1, test.Output, test.FS)
+			}
+		}
+	}
+}

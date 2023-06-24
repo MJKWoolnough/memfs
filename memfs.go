@@ -173,6 +173,10 @@ func (f *FS) Stat(path string) (fs.FileInfo, error) {
 
 func (f *FS) Mkdir(path string, perm fs.FileMode) error {
 	parent, child := filepath.Split(path)
+	if child == "" {
+		return fs.ErrInvalid
+	}
+
 	d, err := f.getDirEnt(parent)
 	if err != nil {
 		return err

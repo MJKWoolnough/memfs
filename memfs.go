@@ -10,23 +10,17 @@ import (
 
 const separator = string(filepath.Separator)
 
-type FS struct {
-	dnode *dnode
-	root  string
-}
+type FS dnode
 
 func New() *FS {
 	return &FS{
-		dnode: &dnode{
-			modtime: time.Now(),
-			mode:    fs.ModeDir | fs.ModePerm,
-		},
-		root: "/",
+		modtime: time.Now(),
+		mode:    fs.ModeDir | fs.ModePerm,
 	}
 }
 
 func (f *FS) joinRoot(path string) string {
-	return filepath.Join(f.root, path)
+	return filepath.Join("/", path)
 }
 
 func (f *FS) Open(path string) (fs.File, error) {
@@ -61,8 +55,8 @@ func (f *FS) getResolvedDirEnt(path string, remainingRedirects *uint8) (*dirEnt,
 	dir, base := filepath.Split(path)
 	if dir == "" || dir == "/" {
 		de = &dirEnt{
-			directoryEntry: f.dnode,
-			name:           f.root,
+			directoryEntry: (*dnode)(f),
+			name:           "/",
 		}
 	} else {
 		var err error

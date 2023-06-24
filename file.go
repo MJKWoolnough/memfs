@@ -271,6 +271,10 @@ func (f *file) WriteByte(c byte) error {
 	return nil
 }
 
+func (f *file) WriteRune(r rune) (int, error) {
+	return f.Write(utf8.AppendRune([]byte{}, r))
+}
+
 func (f *file) Close() error {
 	err := f.validTo(opClose, false)
 

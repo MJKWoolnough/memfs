@@ -795,6 +795,10 @@ func TestMkdir(t *testing.T) {
 }
 
 func fixTimes(d *dnode, now time.Time) {
+	if d.modtime.Sub(now) > 10*time.Second {
+		return
+	}
+
 	d.modtime = now
 	for _, e := range d.entries {
 		if de, ok := e.directoryEntry.(*dnode); ok {

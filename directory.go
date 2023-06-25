@@ -35,19 +35,19 @@ func (d *dirEnt) Sys() any {
 }
 
 type dnode struct {
-	name    string
 	entries []*dirEnt
 	modtime time.Time
 	mode    fs.FileMode
 }
 
-func (d *dnode) open(_ string, _ opMode) (fs.File, error) {
+func (d *dnode) open(name string, _ opMode) (fs.File, error) {
 	if d.mode&0o444 == 0 {
 		return nil, fs.ErrPermission
 	}
 
 	return &directory{
 		dnode: d,
+		name:  name,
 	}, nil
 }
 
@@ -83,7 +83,8 @@ func (d *dnode) setTimes(_, mtime time.Time) {
 
 type directory struct {
 	*dnode
-	pos int
+	name string
+	pos  int
 }
 
 func (d *directory) Info() (fs.FileInfo, error) {

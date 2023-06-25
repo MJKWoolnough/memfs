@@ -81,7 +81,6 @@ func TestOpen(t *testing.T) {
 				entries: []*dirEnt{
 					{
 						directoryEntry: &dnode{
-							name: "dir",
 							entries: []*dirEnt{
 								{
 									directoryEntry: &inode{
@@ -205,7 +204,6 @@ func TestFSReadDir(t *testing.T) {
 					},
 					{
 						directoryEntry: &dnode{
-							name: "test2",
 							entries: []*dirEnt{
 								{
 									directoryEntry: &inode{
@@ -234,7 +232,6 @@ func TestFSReadDir(t *testing.T) {
 				},
 				&dirEnt{
 					directoryEntry: &dnode{
-						name: "test2",
 						entries: []*dirEnt{
 							{
 								directoryEntry: &inode{
@@ -263,7 +260,6 @@ func TestFSReadDir(t *testing.T) {
 					},
 					{
 						directoryEntry: &dnode{
-							name: "test2",
 							entries: []*dirEnt{
 								{
 									directoryEntry: &inode{
@@ -304,7 +300,6 @@ func TestFSReadDir(t *testing.T) {
 					},
 					{
 						directoryEntry: &dnode{
-							name: "test2",
 							entries: []*dirEnt{
 								{
 									directoryEntry: &inode{
@@ -520,7 +515,6 @@ func TestStat(t *testing.T) {
 					},
 					{
 						directoryEntry: &dnode{
-							name:    "dir",
 							modtime: time.Unix(4, 5),
 							mode:    6,
 						},
@@ -532,7 +526,6 @@ func TestStat(t *testing.T) {
 			Path: "/dir",
 			Output: &dirEnt{
 				directoryEntry: &dnode{
-					name:    "dir",
 					modtime: time.Unix(4, 5),
 					mode:    6,
 				},
@@ -551,7 +544,6 @@ func TestStat(t *testing.T) {
 					},
 					{
 						directoryEntry: &dnode{
-							name: "dir",
 							entries: []*dirEnt{
 								{
 									directoryEntry: &inode{
@@ -584,7 +576,6 @@ func TestStat(t *testing.T) {
 					},
 					{
 						directoryEntry: &dnode{
-							name: "dir",
 							entries: []*dirEnt{
 								{
 									directoryEntry: &inode{
@@ -670,7 +661,6 @@ func TestMkdir(t *testing.T) {
 				entries: []*dirEnt{
 					{
 						directoryEntry: &dnode{
-							name:    "a",
 							modtime: now,
 							mode:    fs.ModeDir,
 						},
@@ -699,7 +689,6 @@ func TestMkdir(t *testing.T) {
 				entries: []*dirEnt{
 					{
 						directoryEntry: &dnode{
-							name:    "a",
 							modtime: now,
 							mode:    fs.ModeDir,
 						},
@@ -713,7 +702,6 @@ func TestMkdir(t *testing.T) {
 				entries: []*dirEnt{
 					{
 						directoryEntry: &dnode{
-							name:    "a",
 							modtime: now,
 							mode:    fs.ModeDir,
 						},
@@ -761,7 +749,6 @@ func TestMkdir(t *testing.T) {
 				entries: []*dirEnt{
 					{
 						directoryEntry: &dnode{
-							name:    "a",
 							modtime: now,
 							mode:    fs.ModeDir | fs.ModePerm,
 						},
@@ -775,11 +762,9 @@ func TestMkdir(t *testing.T) {
 				entries: []*dirEnt{
 					{
 						directoryEntry: &dnode{
-							name: "a",
 							entries: []*dirEnt{
 								{
 									directoryEntry: &dnode{
-										name:    "b",
 										modtime: now,
 										mode:    fs.ModeDir | 0o123,
 									},
@@ -867,7 +852,6 @@ func TestMkdirAll(t *testing.T) {
 				entries: []*dirEnt{
 					{
 						directoryEntry: &dnode{
-							name:    "a",
 							modtime: now,
 							mode:    fs.ModeDir,
 						},
@@ -888,7 +872,6 @@ func TestMkdirAll(t *testing.T) {
 				entries: []*dirEnt{
 					{
 						directoryEntry: &dnode{
-							name:    "a",
 							modtime: now,
 							mode:    fs.ModeDir,
 						},
@@ -906,7 +889,6 @@ func TestMkdirAll(t *testing.T) {
 				entries: []*dirEnt{
 					{
 						directoryEntry: &dnode{
-							name:    "a",
 							modtime: now,
 							mode:    fs.ModeDir,
 						},
@@ -920,7 +902,6 @@ func TestMkdirAll(t *testing.T) {
 				entries: []*dirEnt{
 					{
 						directoryEntry: &dnode{
-							name:    "a",
 							modtime: now,
 							mode:    fs.ModeDir,
 						},
@@ -968,7 +949,6 @@ func TestMkdirAll(t *testing.T) {
 				entries: []*dirEnt{
 					{
 						directoryEntry: &dnode{
-							name:    "a",
 							modtime: now,
 							mode:    fs.ModeDir | fs.ModePerm,
 						},
@@ -982,11 +962,9 @@ func TestMkdirAll(t *testing.T) {
 				entries: []*dirEnt{
 					{
 						directoryEntry: &dnode{
-							name: "a",
 							entries: []*dirEnt{
 								{
 									directoryEntry: &dnode{
-										name:    "b",
 										modtime: now,
 										mode:    fs.ModeDir | 0o123,
 									},
@@ -1014,11 +992,9 @@ func TestMkdirAll(t *testing.T) {
 				entries: []*dirEnt{
 					{
 						directoryEntry: &dnode{
-							name: "a",
 							entries: []*dirEnt{
 								{
 									directoryEntry: &dnode{
-										name:    "b",
 										modtime: now,
 										mode:    fs.ModeDir | 0o765,
 									},

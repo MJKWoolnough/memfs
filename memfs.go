@@ -231,6 +231,9 @@ type File interface {
 
 func (f *FS) Create(path string) (File, error) {
 	dirName, fileName := filepath.Split(path)
+	if fileName == "" {
+		return nil, fs.ErrInvalid
+	}
 
 	d, err := f.getDirEnt(dirName)
 	if err != nil {

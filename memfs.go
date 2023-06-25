@@ -192,7 +192,6 @@ func (f *FS) Mkdir(path string, perm fs.FileMode) error {
 
 	d.entries = append(d.entries, &dirEnt{
 		directoryEntry: &dnode{
-			name:    child,
 			modtime: time.Now(),
 			mode:    fs.ModeDir | perm,
 		},

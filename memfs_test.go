@@ -622,11 +622,9 @@ func TestMkdir(t *testing.T) {
 		Err       error
 	}{
 		{ // 1
-			FS: FS{},
-			Output: FS{
-				modtime: now,
-			},
-			Err: fs.ErrInvalid,
+			FS:     FS{},
+			Output: FS{},
+			Err:    fs.ErrInvalid,
 		},
 		{ // 2
 			FS: FS{
@@ -795,7 +793,7 @@ func TestMkdir(t *testing.T) {
 }
 
 func fixTimes(d *dnode, now time.Time) {
-	if d.modtime.Sub(now) > 10*time.Second {
+	if dt := d.modtime.Sub(now); dt > 10*time.Second || dt < -10*time.Second {
 		return
 	}
 
@@ -817,11 +815,9 @@ func TestMkdirAll(t *testing.T) {
 		Err       error
 	}{
 		{ // 1
-			FS: FS{},
-			Output: FS{
-				modtime: now,
-			},
-			Err: fs.ErrInvalid,
+			FS:     FS{},
+			Output: FS{},
+			Err:    fs.ErrInvalid,
 		},
 		{ // 2
 			FS: FS{

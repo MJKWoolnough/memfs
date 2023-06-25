@@ -242,6 +242,10 @@ func (f *FS) Create(path string) (File, error) {
 
 	existingFile := d.get(fileName)
 	if existingFile == nil {
+		if d.mode&0o222 == 0 {
+			return nil, fs.ErrPermission
+		}
+
 		i := &inode{
 			modtime: time.Now(),
 			mode:    fs.ModePerm,

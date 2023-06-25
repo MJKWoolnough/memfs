@@ -197,6 +197,8 @@ func (f *FS) Mkdir(path string, perm fs.FileMode) error {
 		},
 		name: child,
 	})
+	d.modtime = time.Now()
+
 	return nil
 }
 
@@ -254,6 +256,7 @@ func (f *FS) Create(path string) (File, error) {
 			directoryEntry: i,
 			name:           fileName,
 		})
+		d.modtime = i.modtime
 
 		return &file{
 			name:   fileName,
@@ -302,6 +305,7 @@ func (f *FS) Link(oldPath, newPath string) error {
 		directoryEntry: oe,
 		name:           fileName,
 	})
+	d.modtime = time.Now()
 
 	return nil
 }
@@ -327,6 +331,7 @@ func (f *FS) Symlink(oldPath, newPath string) error {
 		},
 		name: fileName,
 	})
+	d.modtime = time.Now()
 
 	return nil
 }
@@ -360,6 +365,7 @@ func (f *FS) Rename(oldPath, newPath string) error {
 		directoryEntry: oldFile.directoryEntry,
 		name:           newFileName,
 	})
+	nd.modtime = time.Now()
 
 	return nil
 }

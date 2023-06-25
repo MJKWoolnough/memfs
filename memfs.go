@@ -272,6 +272,7 @@ func (f *FS) Create(path string) (File, error) {
 		return nil, fs.ErrInvalid
 	}
 
+	ef.modtime = time.Now()
 	ef.data = ef.data[:0]
 
 	return ef, nil

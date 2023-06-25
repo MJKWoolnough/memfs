@@ -227,6 +227,7 @@ func (f *file) Write(p []byte) (int, error) {
 	n := copy(f.data[f.pos:], p)
 	f.pos += int64(n)
 	f.lastRead = 0
+	f.modtime = time.Now()
 
 	return n, nil
 }
@@ -239,6 +240,7 @@ func (f *file) WriteAt(p []byte, off int64) (int, error) {
 	f.grow(int(off) + len(p))
 
 	n := copy(f.data[off:], p)
+	f.modtime = time.Now()
 
 	return n, nil
 }
@@ -253,6 +255,7 @@ func (f *file) WriteString(str string) (int, error) {
 	n := copy(f.data[f.pos:], str)
 	f.pos += int64(n)
 	f.lastRead = 0
+	f.modtime = time.Now()
 
 	return n, nil
 }
@@ -267,6 +270,7 @@ func (f *file) WriteByte(c byte) error {
 	f.data[f.pos] = c
 	f.pos++
 	f.lastRead = 0
+	f.modtime = time.Now()
 
 	return nil
 }

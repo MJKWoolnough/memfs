@@ -792,15 +792,20 @@ func TestMkdir(t *testing.T) {
 	}
 }
 
+func withinRange(dt time.Duration) bool {
+	return dt > -10*time.Second && dt < 10*time.Second
+}
+
 func fixTimes(d *dnode, now time.Time) {
-	if dt := d.modtime.Sub(now); dt > 10*time.Second || dt < -10*time.Second {
-		return
+	if withinRange(d.modtime.Sub(now)) {
+		d.modtime = now
 	}
 
-	d.modtime = now
 	for _, e := range d.entries {
 		if de, ok := e.directoryEntry.(*dnode); ok {
 			fixTimes(de, now)
+		} else if f, ok := e.directoryEntry.(*inode); ok && withinRange(f.modtime.Sub(now)) {
+			f.modtime = now
 		}
 	}
 }

@@ -65,6 +65,7 @@ func (d *dnode) remove(name string) error {
 	for n, de := range d.entries {
 		if de.name == name {
 			d.entries = append(d.entries[:n], d.entries[n+1:]...)
+			d.modtime = time.Now()
 
 			return nil
 		}

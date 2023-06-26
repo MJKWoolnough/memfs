@@ -323,6 +323,8 @@ func (f *FS) Symlink(oldPath, newPath string) error {
 	d, err := f.getDirEnt(dirName)
 	if err != nil {
 		return err
+	} else if d.mode&0o222 == 0 {
+		return fs.ErrPermission
 	}
 
 	existingFile := d.get(fileName)

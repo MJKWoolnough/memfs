@@ -309,7 +309,7 @@ func (f *FS) Link(oldPath, newPath string) error {
 	}
 
 	d.entries = append(d.entries, &dirEnt{
-		directoryEntry: oe,
+		directoryEntry: oe.directoryEntry,
 		name:           fileName,
 	})
 	d.modtime = time.Now()

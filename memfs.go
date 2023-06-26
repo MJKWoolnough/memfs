@@ -351,6 +351,8 @@ func (f *FS) Rename(oldPath, newPath string) error {
 	od, err := f.getDirEnt(oldDirName)
 	if err != nil {
 		return err
+	} else if od.mode&0o222 == 0 {
+		return fs.ErrPermission
 	}
 
 	oldFile := od.get(oldFileName)
@@ -363,6 +365,8 @@ func (f *FS) Rename(oldPath, newPath string) error {
 	nd, err := f.getDirEnt(newDirName)
 	if err != nil {
 		return err
+	} else if nd.mode&0o222 == 0 {
+		return fs.ErrPermission
 	}
 
 	if nd.get(oldFileName) != nil {

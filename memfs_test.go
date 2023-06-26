@@ -1028,3 +1028,201 @@ func TestMkdirAll(t *testing.T) {
 		}
 	}
 }
+
+func TestCreate(t *testing.T) {
+	now := time.Now()
+	for n, test := range [...]struct {
+		FS         FS
+		Path       string
+		PathPerms  fs.FileMode
+		OutputFS   FS
+		OutputFile fs.File
+		Err        error
+	}{
+		{ // 1
+			FS:       FS{},
+			OutputFS: FS{},
+			Err:      fs.ErrInvalid,
+		},
+		{ // 2
+			FS: FS{
+				mode: fs.ModeDir | fs.ModePerm,
+			},
+			OutputFS: FS{
+				mode: fs.ModeDir | fs.ModePerm,
+			},
+			Err: fs.ErrInvalid,
+		},
+		{ // 3
+			FS:       FS{},
+			OutputFS: FS{},
+			Path:     "/a",
+			Err:      fs.ErrPermission,
+		},
+		{ // 4
+			FS: FS{
+				mode: fs.ModeDir | fs.ModePerm,
+			},
+			OutputFS: FS{
+				mode: fs.ModeDir | fs.ModePerm,
+			},
+			Path: "/",
+			Err:  fs.ErrInvalid,
+		},
+		{ // 5
+			FS: FS{
+				modtime: now.Add(-20 * time.Second),
+				mode:    fs.ModeDir | fs.ModePerm,
+			},
+			OutputFS: FS{
+				entries: []*dirEnt{
+					{
+						directoryEntry: &inode{
+							modtime: now,
+							mode:    fs.ModePerm,
+						},
+						name: "a",
+					},
+				},
+				modtime: now,
+				mode:    fs.ModeDir | fs.ModePerm,
+			},
+			OutputFile: &file{
+				inode: &inode{
+					modtime: now,
+					mode:    fs.ModePerm,
+				},
+				name:   "a",
+				opMode: opRead | opWrite | opSeek,
+			},
+			Path: "/a",
+		},
+		{ // 6
+			FS: FS{
+				entries: []*dirEnt{
+					{
+						directoryEntry: &inode{
+							data:    []byte("Hello"),
+							modtime: now.Add(-20 * time.Second),
+							mode:    fs.ModePerm,
+						},
+						name: "a",
+					},
+				},
+				modtime: now.Add(-20 * time.Second),
+				mode:    fs.ModeDir | fs.ModePerm,
+			},
+			OutputFS: FS{
+				entries: []*dirEnt{
+					{
+						directoryEntry: &inode{
+							data:    ([]byte("Hello"))[:0],
+							modtime: now,
+							mode:    fs.ModePerm,
+						},
+						name: "a",
+					},
+				},
+				modtime: now.Add(-20 * time.Second),
+				mode:    fs.ModeDir | fs.ModePerm,
+			},
+			OutputFile: &file{
+				inode: &inode{
+					data:    ([]byte("Hello"))[:0],
+					modtime: now,
+					mode:    fs.ModePerm,
+				},
+				name:   "a",
+				opMode: opRead | opWrite | opSeek,
+			},
+			Path: "/a",
+		},
+		{ // 7
+			FS: FS{
+				entries: []*dirEnt{
+					{
+						directoryEntry: &dnode{
+							modtime: now.Add(-20 * time.Second),
+							mode:    fs.ModeDir | fs.ModePerm,
+						},
+						name: "a",
+					},
+				},
+				modtime: now,
+				mode:    fs.ModeDir | fs.ModePerm,
+			},
+			OutputFS: FS{
+				entries: []*dirEnt{
+					{
+						directoryEntry: &dnode{
+							entries: []*dirEnt{
+								{
+									directoryEntry: &inode{
+										modtime: now,
+										mode:    fs.ModePerm,
+									},
+									name: "b",
+								},
+							},
+							modtime: now,
+							mode:    fs.ModeDir | fs.ModePerm,
+						},
+						name: "a",
+					},
+				},
+				modtime: now,
+				mode:    fs.ModeDir | fs.ModePerm,
+			},
+			OutputFile: &file{
+				inode: &inode{
+					modtime: now,
+					mode:    fs.ModePerm,
+				},
+				name:   "b",
+				opMode: opRead | opWrite | opSeek,
+			},
+			Path: "/a/b",
+		},
+		{ // 8
+			FS: FS{
+				entries: []*dirEnt{
+					{
+						directoryEntry: &dnode{
+							modtime: now.Add(-20 * time.Second),
+							mode:    fs.ModeDir | 0o444,
+						},
+						name: "a",
+					},
+				},
+				modtime: now,
+				mode:    fs.ModeDir | fs.ModePerm,
+			},
+			OutputFS: FS{
+				entries: []*dirEnt{
+					{
+						directoryEntry: &dnode{
+							modtime: now.Add(-20 * time.Second),
+							mode:    fs.ModeDir | 0o444,
+						},
+						name: "a",
+					},
+				},
+				modtime: now,
+				mode:    fs.ModeDir | fs.ModePerm,
+			},
+			Err:  fs.ErrPermission,
+			Path: "/a/b",
+		},
+	} {
+		if f, err := test.FS.Create(test.Path); !errors.Is(test.Err, err) {
+			t.Errorf("test %d: expecting error %s, got %s", n+1, test.Err, err)
+		} else {
+			fixTimes((*dnode)(&test.FS), now)
+			if !reflect.DeepEqual(test.OutputFile, f) {
+				t.Errorf("test %d: expecting to get file %v, got %v", n+1, test.OutputFile, f)
+			} else if !reflect.DeepEqual(test.OutputFS, test.FS) {
+				t.Errorf("test %d: expecting to get FS %v, got %v", n+1, test.OutputFS, test.FS)
+			}
+		}
+	}
+}

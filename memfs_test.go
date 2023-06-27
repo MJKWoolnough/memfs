@@ -1722,3 +1722,249 @@ func TestSymlink(t *testing.T) {
 		}
 	}
 }
+
+func TestSymlinkResolveFile(t *testing.T) {
+	for n, test := range [...]struct {
+		FS     FS
+		Path   string
+		Output []byte
+		Err    error
+	}{
+		{ // 1
+			FS: FS{
+				entries: []*dirEnt{
+					{
+						name: "a",
+						directoryEntry: &inode{
+							data: []byte("Hello"),
+							mode: fs.ModePerm,
+						},
+					},
+					{
+						name: "b",
+						directoryEntry: &inode{
+							data: []byte("/a"),
+							mode: fs.ModeSymlink | fs.ModePerm,
+						},
+					},
+				},
+				mode: fs.ModeDir | fs.ModePerm,
+			},
+			Path:   "/b",
+			Output: []byte("Hello"),
+		},
+		{ // 2
+			FS: FS{
+				entries: []*dirEnt{
+					{
+						name: "a",
+						directoryEntry: &inode{
+							data: []byte("Hello"),
+							mode: fs.ModePerm,
+						},
+					},
+					{
+						name: "b",
+						directoryEntry: &inode{
+							data: []byte("/c"),
+							mode: fs.ModeSymlink | fs.ModePerm,
+						},
+					},
+				},
+				mode: fs.ModeDir | fs.ModePerm,
+			},
+			Path: "/b",
+			Err:  fs.ErrNotExist,
+		},
+		{ // 3
+			FS: FS{
+				entries: []*dirEnt{
+					{
+						name: "a",
+						directoryEntry: &inode{
+							data: []byte("Hello"),
+						},
+					},
+					{
+						name: "b",
+						directoryEntry: &inode{
+							data: []byte("/a"),
+							mode: fs.ModeSymlink | fs.ModePerm,
+						},
+					},
+				},
+				mode: fs.ModeDir | fs.ModePerm,
+			},
+			Path: "/b",
+			Err:  fs.ErrPermission,
+		},
+		{ // 4
+			FS: FS{
+				entries: []*dirEnt{
+					{
+						name: "a",
+						directoryEntry: &dnode{
+							mode: fs.ModeDir | fs.ModePerm,
+							entries: []*dirEnt{
+								{
+									name: "b",
+									directoryEntry: &inode{
+										data: []byte("World"),
+										mode: fs.ModePerm,
+									},
+								},
+							},
+						},
+					},
+					{
+						name: "c",
+						directoryEntry: &inode{
+							data: []byte("/a/b"),
+							mode: fs.ModeSymlink | fs.ModePerm,
+						},
+					},
+				},
+				mode: fs.ModeDir | fs.ModePerm,
+			},
+			Path:   "/c",
+			Output: []byte("World"),
+		},
+		{ // 5
+			FS: FS{
+				entries: []*dirEnt{
+					{
+						name: "a",
+						directoryEntry: &dnode{
+							mode: fs.ModeDir | fs.ModePerm,
+							entries: []*dirEnt{
+								{
+									name: "b",
+									directoryEntry: &inode{
+										data: []byte("World"),
+										mode: fs.ModePerm,
+									},
+								},
+							},
+						},
+					},
+					{
+						name: "c",
+						directoryEntry: &inode{
+							data: []byte("a/b"),
+							mode: fs.ModeSymlink | fs.ModePerm,
+						},
+					},
+				},
+				mode: fs.ModeDir | fs.ModePerm,
+			},
+			Path:   "/c",
+			Output: []byte("World"),
+		},
+		{ // 6
+			FS: FS{
+				entries: []*dirEnt{
+					{
+						name: "a",
+						directoryEntry: &dnode{
+							mode: fs.ModeDir | fs.ModePerm,
+							entries: []*dirEnt{
+								{
+									name: "b",
+									directoryEntry: &inode{
+										data: []byte("/c"),
+										mode: fs.ModeSymlink | fs.ModePerm,
+									},
+								},
+							},
+						},
+					},
+					{
+						name: "c",
+						directoryEntry: &inode{
+							data: []byte("FooBar"),
+							mode: fs.ModePerm,
+						},
+					},
+				},
+				mode: fs.ModeDir | fs.ModePerm,
+			},
+			Path:   "/a/b",
+			Output: []byte("FooBar"),
+		},
+		{ // 7
+			FS: FS{
+				entries: []*dirEnt{
+					{
+						name: "a",
+						directoryEntry: &dnode{
+							mode: fs.ModeDir | fs.ModePerm,
+							entries: []*dirEnt{
+								{
+									name: "b",
+									directoryEntry: &inode{
+										data: []byte("../c"),
+										mode: fs.ModeSymlink | fs.ModePerm,
+									},
+								},
+							},
+						},
+					},
+					{
+						name: "c",
+						directoryEntry: &inode{
+							data: []byte("FooBar"),
+							mode: fs.ModePerm,
+						},
+					},
+				},
+				mode: fs.ModeDir | fs.ModePerm,
+			},
+			Path:   "/a/b",
+			Output: []byte("FooBar"),
+		},
+		{ // 8
+			FS: FS{
+				entries: []*dirEnt{
+					{
+						name: "a",
+						directoryEntry: &dnode{
+							mode: fs.ModeDir | fs.ModePerm,
+							entries: []*dirEnt{
+								{
+									name: "b",
+									directoryEntry: &inode{
+										data: []byte("../c"),
+										mode: fs.ModeSymlink | fs.ModePerm,
+									},
+								},
+							},
+						},
+					},
+					{
+						name: "c",
+						directoryEntry: &inode{
+							data: []byte("d"),
+							mode: fs.ModeSymlink | fs.ModePerm,
+						},
+					},
+					{
+						name: "d",
+						directoryEntry: &inode{
+							data: []byte("Baz"),
+							mode: fs.ModePerm,
+						},
+					},
+				},
+				mode: fs.ModeDir | fs.ModePerm,
+			},
+			Path:   "/a/b",
+			Output: []byte("Baz"),
+		},
+	} {
+		if output, err := test.FS.ReadFile(test.Path); !errors.Is(err, test.Err) {
+			t.Errorf("test %d: expecting error %s, got %s", n+1, test.Err, err)
+		} else if !bytes.Equal(test.Output, output) {
+			t.Errorf("test %d: expecting to get %v, got %v", n+1, test.Output, output)
+		}
+	}
+}

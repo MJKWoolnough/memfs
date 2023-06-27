@@ -1968,3 +1968,132 @@ func TestSymlinkResolveFile(t *testing.T) {
 		}
 	}
 }
+
+func TestSymlinkResolveDir(t *testing.T) {
+	for n, test := range [...]struct {
+		FS     FS
+		Path   string
+		Output []fs.DirEntry
+		Err    error
+	}{
+		{ // 1
+			FS: FS{
+				entries: []*dirEnt{
+					{
+						name: "a",
+						directoryEntry: &dnode{
+							entries: []*dirEnt{
+								{
+									name: "b",
+									directoryEntry: &inode{
+										data: []byte("Foo"),
+										mode: fs.ModePerm,
+									},
+								},
+								{
+									name: "c",
+									directoryEntry: &inode{
+										data: []byte("Bar"),
+										mode: fs.ModePerm,
+									},
+								},
+								{
+									name: "d",
+									directoryEntry: &inode{
+										data: []byte("Baz"),
+										mode: fs.ModePerm,
+									},
+								},
+							},
+							mode: fs.ModeDir | fs.ModePerm,
+						},
+					},
+					{
+						name: "e",
+						directoryEntry: &inode{
+							data: []byte("/f"),
+							mode: fs.ModeSymlink | fs.ModePerm,
+						},
+					},
+				},
+				mode: fs.ModeDir | fs.ModePerm,
+			},
+			Path: "/e",
+			Err:  fs.ErrNotExist,
+		},
+		{ // 1
+			FS: FS{
+				entries: []*dirEnt{
+					{
+						name: "a",
+						directoryEntry: &dnode{
+							entries: []*dirEnt{
+								{
+									name: "b",
+									directoryEntry: &inode{
+										data: []byte("Foo"),
+										mode: fs.ModePerm,
+									},
+								},
+								{
+									name: "c",
+									directoryEntry: &inode{
+										data: []byte("Bar"),
+										mode: fs.ModePerm,
+									},
+								},
+								{
+									name: "d",
+									directoryEntry: &inode{
+										data: []byte("Baz"),
+										mode: fs.ModePerm,
+									},
+								},
+							},
+							mode: fs.ModeDir | fs.ModePerm,
+						},
+					},
+					{
+						name: "e",
+						directoryEntry: &inode{
+							data: []byte("/a"),
+							mode: fs.ModeSymlink | fs.ModePerm,
+						},
+					},
+				},
+				mode: fs.ModeDir | fs.ModePerm,
+			},
+			Path: "/e",
+			Output: []fs.DirEntry{
+				&dirEnt{
+					name: "b",
+					directoryEntry: &inode{
+						data: []byte("Foo"),
+						mode: fs.ModePerm,
+					},
+				},
+				&dirEnt{
+					name: "c",
+					directoryEntry: &inode{
+						data: []byte("Bar"),
+						mode: fs.ModePerm,
+					},
+				},
+				&dirEnt{
+					name: "d",
+					directoryEntry: &inode{
+						data: []byte("Baz"),
+						mode: fs.ModePerm,
+					},
+				},
+			},
+		},
+	} {
+		de, err := test.FS.ReadDir(test.Path)
+		if !errors.Is(test.Err, err) {
+			t.Errorf("test %d: expecting error %s, got %s", n+1, test.Err, err)
+		} else if !reflect.DeepEqual(test.Output, de) {
+			t.Errorf("test %d: expecting to get %v, got %v", n+1, test.Output, de)
+		}
+	}
+}

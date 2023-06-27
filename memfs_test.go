@@ -1471,3 +1471,254 @@ func TestLink(t *testing.T) {
 		}
 	}
 }
+
+func TestSymlink(t *testing.T) {
+	now := time.Now()
+	for n, test := range [...]struct {
+		FS       FS
+		From, To string
+		Output   FS
+		Err      error
+	}{
+		{ // 1
+			FS:     FS{},
+			Output: FS{},
+			Err:    fs.ErrInvalid,
+		},
+		{ // 2
+			FS: FS{
+				mode: fs.ModeDir | fs.ModePerm,
+			},
+			Output: FS{
+				mode: fs.ModeDir | fs.ModePerm,
+			},
+			Err: fs.ErrInvalid,
+		},
+		{ // 3
+			FS: FS{
+				mode: fs.ModeDir | fs.ModePerm,
+			},
+			Output: FS{
+				mode: fs.ModeDir | fs.ModePerm,
+			},
+			From: "/a",
+			Err:  fs.ErrInvalid,
+		},
+		{ // 4
+			FS: FS{
+				entries: []*dirEnt{
+					{
+						name:           "a",
+						directoryEntry: &inode{},
+					},
+				},
+				mode: fs.ModeDir | fs.ModePerm,
+			},
+			Output: FS{
+				entries: []*dirEnt{
+					{
+						name:           "a",
+						directoryEntry: &inode{},
+					},
+				},
+				mode: fs.ModeDir | fs.ModePerm,
+			},
+			From: "/a",
+			Err:  fs.ErrInvalid,
+		},
+		{ // 5
+			FS: FS{
+				entries: []*dirEnt{
+					{
+						name:           "a",
+						directoryEntry: &inode{},
+					},
+				},
+				mode: fs.ModeDir | fs.ModePerm,
+			},
+			Output: FS{
+				entries: []*dirEnt{
+					{
+						name:           "a",
+						directoryEntry: &inode{},
+					},
+				},
+				mode: fs.ModeDir | fs.ModePerm,
+			},
+			From: "/a",
+			To:   "/a",
+			Err:  fs.ErrExist,
+		},
+		{ // 6
+			FS: FS{
+				entries: []*dirEnt{
+					{
+						name: "a",
+						directoryEntry: &inode{
+							data: []byte("Hello"),
+						},
+					},
+				},
+				mode: fs.ModeDir,
+			},
+			Output: FS{
+				entries: []*dirEnt{
+					{
+						name: "a",
+						directoryEntry: &inode{
+							data: []byte("Hello"),
+						},
+					},
+				},
+				mode: fs.ModeDir,
+			},
+			From: "/a",
+			To:   "/b",
+			Err:  fs.ErrPermission,
+		},
+		{ // 7
+			FS: FS{
+				entries: []*dirEnt{
+					{
+						name: "a",
+						directoryEntry: &inode{
+							data: []byte("Hello"),
+						},
+					},
+				},
+				mode: fs.ModeDir | fs.ModePerm,
+			},
+			Output: FS{
+				entries: []*dirEnt{
+					{
+						name: "a",
+						directoryEntry: &inode{
+							data: []byte("Hello"),
+						},
+					},
+					{
+						name: "b",
+						directoryEntry: &inode{
+							data:    []byte("/a"),
+							modtime: now,
+							mode:    fs.ModeSymlink | fs.ModePerm,
+						},
+					},
+				},
+				mode:    fs.ModeDir | fs.ModePerm,
+				modtime: now,
+			},
+			From: "/a",
+			To:   "/b",
+		},
+		{ // 8
+			FS: FS{
+				entries: []*dirEnt{
+					{
+						name: "a",
+						directoryEntry: &dnode{
+							entries: []*dirEnt{
+								{
+									name: "b",
+									directoryEntry: &inode{
+										data: []byte("Hello"),
+									},
+								},
+							},
+							mode: fs.ModeDir | fs.ModePerm,
+						},
+					},
+				},
+				mode: fs.ModeDir | fs.ModePerm,
+			},
+			Output: FS{
+				entries: []*dirEnt{
+					{
+						name: "a",
+						directoryEntry: &dnode{
+							entries: []*dirEnt{
+								{
+									name: "b",
+									directoryEntry: &inode{
+										data: []byte("Hello"),
+									},
+								},
+							},
+							mode: fs.ModeDir | fs.ModePerm,
+						},
+					},
+					{
+						name: "c",
+						directoryEntry: &inode{
+							data:    []byte("/a/b"),
+							mode:    fs.ModeSymlink | fs.ModePerm,
+							modtime: now,
+						},
+					},
+				},
+				mode:    fs.ModeDir | fs.ModePerm,
+				modtime: now,
+			},
+			From: "/a/b",
+			To:   "/c",
+		},
+		{ // 9
+			FS: FS{
+				entries: []*dirEnt{
+					{
+						name: "a",
+						directoryEntry: &inode{
+							data: []byte("Hello"),
+						},
+					},
+					{
+						name: "b",
+						directoryEntry: &dnode{
+							mode: fs.ModeDir | fs.ModePerm,
+						},
+					},
+				},
+				mode: fs.ModeDir | fs.ModePerm,
+			},
+			Output: FS{
+				entries: []*dirEnt{
+					{
+						name: "a",
+						directoryEntry: &inode{
+							data: []byte("Hello"),
+						},
+					},
+					{
+						name: "b",
+						directoryEntry: &dnode{
+							entries: []*dirEnt{
+								{
+									name: "c",
+									directoryEntry: &inode{
+										data:    []byte("/a"),
+										modtime: now,
+										mode:    fs.ModeSymlink | fs.ModePerm,
+									},
+								},
+							},
+							mode:    fs.ModeDir | fs.ModePerm,
+							modtime: now,
+						},
+					},
+				},
+				mode: fs.ModeDir | fs.ModePerm,
+			},
+			From: "/a",
+			To:   "/b/c",
+		},
+	} {
+		if err := test.FS.Symlink(test.From, test.To); !errors.Is(err, test.Err) {
+			t.Errorf("test %d: expecting error %s, got %s", n+1, test.Err, err)
+		} else {
+			fixTimes((*dnode)(&test.FS), now)
+			if !reflect.DeepEqual(test.Output, test.FS) {
+				t.Errorf("test %d: expecting to get FS %v, got %v", n+1, test.Output, test.FS)
+			}
+		}
+	}
+}

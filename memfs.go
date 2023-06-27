@@ -364,6 +364,9 @@ func (f *FS) Rename(oldPath, newPath string) error {
 	}
 
 	newDirName, newFileName := filepath.Split(newPath)
+	if newFileName == "" {
+		return fs.ErrInvalid
+	}
 
 	nd, err := f.getDirEnt(newDirName)
 	if err != nil {

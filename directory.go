@@ -62,6 +62,10 @@ func (d *dnode) get(name string) *dirEnt {
 }
 
 func (d *dnode) remove(name string) error {
+	if d.mode&0o222 == 0 {
+		return fs.ErrPermission
+	}
+
 	for n, de := range d.entries {
 		if de.name == name {
 			d.entries = append(d.entries[:n], d.entries[n+1:]...)

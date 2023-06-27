@@ -75,7 +75,7 @@ func (d *dnode) remove(name string) error {
 }
 
 func (d *dnode) setMode(mode fs.FileMode) {
-	d.mode = mode
+	d.mode = fs.ModeDir | mode
 }
 
 func (d *dnode) setTimes(_, mtime time.Time) {

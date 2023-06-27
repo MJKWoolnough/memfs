@@ -394,8 +394,7 @@ func (f *FS) Remove(path string) error {
 		return err
 	}
 
-	de := d.get(fileName)
-	if de.IsDir() {
+	if de := d.get(fileName); de != nil && de.IsDir() {
 		dir, _ := de.directoryEntry.(*dnode)
 
 		if len(dir.entries) > 0 {

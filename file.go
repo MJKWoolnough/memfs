@@ -35,7 +35,7 @@ func (i *inode) open(name string, mode opMode) (fs.File, error) {
 }
 
 func (i *inode) setMode(mode fs.FileMode) {
-	i.mode = mode
+	i.mode = i.mode&fs.ModeSymlink | mode
 }
 
 func (i *inode) setTimes(_, mtime time.Time) {

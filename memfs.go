@@ -319,6 +319,9 @@ func (f *FS) Link(oldPath, newPath string) error {
 
 func (f *FS) Symlink(oldPath, newPath string) error {
 	dirName, fileName := filepath.Split(newPath)
+	if fileName == "" {
+		return fs.ErrInvalid
+	}
 
 	d, err := f.getDirEnt(dirName)
 	if err != nil {

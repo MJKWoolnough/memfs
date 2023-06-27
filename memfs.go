@@ -70,18 +70,15 @@ func (f *FS) getResolvedDirEnt(path string, remainingRedirects *uint8) (*dirEnt,
 		return nil, fs.ErrPermission
 	} else if !mode.IsDir() {
 		return nil, fs.ErrInvalid
-	} else if mode&fs.ModeSymlink == 0 {
-		d, _ := de.directoryEntry.(*dnode)
+	}
 
-		if base == "" {
-			return de, nil
-		}
+	d, _ := de.directoryEntry.(*dnode)
 
-		de := d.get(base)
-		if de == nil {
-			return nil, fs.ErrNotExist
-		}
-
+	if base == "" {
+		return de, nil
+	} else if de = d.get(base); de == nil {
+		return nil, fs.ErrNotExist
+	} else if de.Mode()&fs.ModeSymlink == 0 {
 		return de, nil
 	} else if *remainingRedirects == 0 {
 		return nil, fs.ErrInvalid
@@ -93,11 +90,11 @@ func (f *FS) getResolvedDirEnt(path string, remainingRedirects *uint8) (*dirEnt,
 
 	link := string(se.data)
 
-	if !strings.HasPrefix("/", link) {
+	if !strings.HasPrefix(link, "/") {
 		link = filepath.Join(dir, link)
 	}
 
-	return f.getResolvedDirEnt(path, remainingRedirects)
+	return f.getResolvedDirEnt(link, remainingRedirects)
 }
 
 func (f *FS) getEntry(path string) (*dirEnt, error) {

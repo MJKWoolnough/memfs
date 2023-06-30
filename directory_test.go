@@ -135,6 +135,7 @@ func TestDnodeRemove(t *testing.T) {
 				name: "4",
 			},
 		},
+		mode: fs.ModeDir | fs.ModePerm,
 	}
 
 	if err := d.remove("2"); err != nil {

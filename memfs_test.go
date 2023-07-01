@@ -322,7 +322,7 @@ func TestFSReadDir(t *testing.T) {
 		},
 	} {
 		de, err := test.FS.ReadDir(test.Path)
-		if !errors.Is(test.Err, err) {
+		if !errors.Is(err, test.Err) {
 			t.Errorf("test %d: expecting error %s, got %s", n+1, test.Err, err)
 		} else if !reflect.DeepEqual(test.Output, de) {
 			t.Errorf("test %d: expecting to get %v, got %v", n+1, test.Output, de)
@@ -429,7 +429,7 @@ func TestReadFile(t *testing.T) {
 		},
 	} {
 		data, err := test.FS.ReadFile(test.Path)
-		if !errors.Is(test.Err, err) {
+		if !errors.Is(err, test.Err) {
 			t.Errorf("test %d: expecting error %s, got %s", n+1, test.Err, err)
 		} else if !bytes.Equal(test.Output, data) {
 			t.Errorf("test %d: expecting to get %v, got %v", n+1, test.Output, data)
@@ -604,7 +604,7 @@ func TestStat(t *testing.T) {
 		},
 	} {
 		stat, err := test.FS.Stat(test.Path)
-		if !errors.Is(test.Err, err) {
+		if !errors.Is(err, test.Err) {
 			t.Errorf("test %d: expecting error %s, got %s", n+1, test.Err, err)
 		} else if !reflect.DeepEqual(test.Output, stat) {
 			t.Errorf("test %d: expecting to get %v, got %v", n+1, test.Output, stat)
@@ -781,7 +781,7 @@ func TestMkdir(t *testing.T) {
 			PathPerms: 0o123,
 		},
 	} {
-		if err := test.FS.Mkdir(test.Path, test.PathPerms); !errors.Is(test.Err, err) {
+		if err := test.FS.Mkdir(test.Path, test.PathPerms); !errors.Is(err, test.Err) {
 			t.Errorf("test %d: expecting error %s, got %s", n+1, test.Err, err)
 		} else {
 			fixTimes((*dnode)(&test.FS), now)
@@ -1018,7 +1018,7 @@ func TestMkdirAll(t *testing.T) {
 			PathPerms: 0o765,
 		},
 	} {
-		if err := test.FS.MkdirAll(test.Path, test.PathPerms); !errors.Is(test.Err, err) {
+		if err := test.FS.MkdirAll(test.Path, test.PathPerms); !errors.Is(err, test.Err) {
 			t.Errorf("test %d: expecting error %s, got %s", n+1, test.Err, err)
 		} else {
 			fixTimes((*dnode)(&test.FS), now)
@@ -1214,7 +1214,7 @@ func TestCreate(t *testing.T) {
 			Path: "/a/b",
 		},
 	} {
-		if f, err := test.FS.Create(test.Path); !errors.Is(test.Err, err) {
+		if f, err := test.FS.Create(test.Path); !errors.Is(err, test.Err) {
 			t.Errorf("test %d: expecting error %s, got %s", n+1, test.Err, err)
 		} else {
 			fixTimes((*dnode)(&test.FS), now)
@@ -2090,7 +2090,7 @@ func TestSymlinkResolveDir(t *testing.T) {
 		},
 	} {
 		de, err := test.FS.ReadDir(test.Path)
-		if !errors.Is(test.Err, err) {
+		if !errors.Is(err, test.Err) {
 			t.Errorf("test %d: expecting error %s, got %s", n+1, test.Err, err)
 		} else if !reflect.DeepEqual(test.Output, de) {
 			t.Errorf("test %d: expecting to get %v, got %v", n+1, test.Output, de)

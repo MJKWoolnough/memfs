@@ -172,7 +172,11 @@ func (f *FS) ReadFile(path string) ([]byte, error) {
 
 	inode, ok := de.directoryEntry.(*inode)
 	if !ok {
-		return nil, fs.ErrInvalid
+		return nil, &fs.PathError{
+			Op:   "readfile",
+			Path: path,
+			Err:  fs.ErrInvalid,
+		}
 	}
 
 	if inode.mode&0o444 == 0 {

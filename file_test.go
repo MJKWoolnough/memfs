@@ -229,7 +229,7 @@ Tests:
 
 		for i := range test.Data {
 			b, err := f.ReadByte()
-			if !errors.Is(test.Err, err) {
+			if !errors.Is(err, test.Err) {
 				t.Errorf("test %d.%d: expecting error %s, got %s", n+1, i+1, test.Err, err)
 			} else if test.Err != nil {
 				continue Tests
@@ -243,7 +243,7 @@ Tests:
 		}
 
 		b, err := f.ReadByte()
-		if !errors.Is(io.EOF, err) {
+		if !errors.Is(err, io.EOF) {
 			t.Errorf("test %d.%d: expecting error %s, got %s", n+1, len(test.Data)+1, io.EOF, err)
 		} else if b != 0 {
 			t.Errorf("test %d.%d: expecting to read byte %d, got %d", n+1, len(test.Data)+1, 0, b)
@@ -867,7 +867,7 @@ Tests:
 
 		for i := range test.Data {
 			err := f.WriteByte(test.Data[i])
-			if !errors.Is(test.Err, err) {
+			if !errors.Is(err, test.Err) {
 				t.Errorf("test %d.%d: expecting error %s, got %s", n+1, i+1, test.Err, err)
 			} else if test.Err != nil {
 				continue Tests

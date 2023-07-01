@@ -50,13 +50,21 @@ type file struct {
 	pos      int64
 }
 
-func (f *file) validTo(m opMode, needValidPos bool) error {
+func (f *file) validTo(op string, m opMode, needValidPos bool) error {
 	if f.opMode == opClose {
-		return fs.ErrClosed
+		return &fs.PathError{
+			Op:   op,
+			Path: f.name,
+			Err:  fs.ErrClosed,
+		}
 	}
 
 	if f.opMode&m != m {
-		return fs.ErrInvalid
+		return &fs.PathError{
+			Op:   op,
+			Path: f.name,
+			Err:  fs.ErrInvalid,
+		}
 	}
 
 	if needValidPos && f.pos >= int64(len(f.data)) {
@@ -75,7 +83,7 @@ func (f *file) Stat() (fs.FileInfo, error) {
 }
 
 func (f *file) Read(p []byte) (int, error) {
-	if err := f.validTo(opRead, true); err != nil {
+	if err := f.validTo("read", opRead, true); err != nil {
 		return 0, err
 	}
 
@@ -88,7 +96,7 @@ func (f *file) Read(p []byte) (int, error) {
 }
 
 func (f *file) ReadAt(p []byte, off int64) (int, error) {
-	if err := f.validTo(opRead|opSeek, false); err != nil {
+	if err := f.validTo("readat", opRead|opSeek, false); err != nil {
 		return 0, err
 	}
 
@@ -106,7 +114,7 @@ func (f *file) ReadAt(p []byte, off int64) (int, error) {
 }
 
 func (f *file) ReadByte() (byte, error) {
-	if err := f.validTo(opRead, true); err != nil {
+	if err := f.validTo("readbyte", opRead, true); err != nil {
 		return 0, err
 	}
 
@@ -119,12 +127,16 @@ func (f *file) ReadByte() (byte, error) {
 }
 
 func (f *file) UnreadByte() error {
-	if err := f.validTo(opRead|opSeek, false); err != nil {
+	if err := f.validTo("unreadbyte", opRead|opSeek, false); err != nil {
 		return err
 	}
 
 	if f.lastRead != 1 {
-		return fs.ErrInvalid
+		return &fs.PathError{
+			Op:   "unreadbyte",
+			Path: f.name,
+			Err:  fs.ErrInvalid,
+		}
 	}
 
 	f.lastRead = 0
@@ -134,7 +146,7 @@ func (f *file) UnreadByte() error {
 }
 
 func (f *file) ReadRune() (rune, int, error) {
-	if err := f.validTo(opRead, true); err != nil {
+	if err := f.validTo("readrune", opRead, true); err != nil {
 		return 0, 0, err
 	}
 
@@ -147,12 +159,16 @@ func (f *file) ReadRune() (rune, int, error) {
 }
 
 func (f *file) UnreadRune() error {
-	if err := f.validTo(opRead|opSeek, false); err != nil {
+	if err := f.validTo("unreadrune", opRead|opSeek, false); err != nil {
 		return err
 	}
 
 	if f.lastRead == 0 {
-		return fs.ErrInvalid
+		return &fs.PathError{
+			Op:   "unreadrune",
+			Path: f.name,
+			Err:  fs.ErrInvalid,
+		}
 	}
 
 	f.pos -= int64(f.lastRead)
@@ -162,7 +178,7 @@ func (f *file) UnreadRune() error {
 }
 
 func (f *file) WriteTo(w io.Writer) (int64, error) {
-	if err := f.validTo(opRead, true); err != nil {
+	if err := f.validTo("writeto", opRead, true); err != nil {
 		return 0, err
 	}
 
@@ -174,7 +190,7 @@ func (f *file) WriteTo(w io.Writer) (int64, error) {
 }
 
 func (f *file) Seek(offset int64, whence int) (int64, error) {
-	if err := f.validTo(opSeek, false); err != nil {
+	if err := f.validTo("seek", opSeek, false); err != nil {
 		return 0, err
 	}
 
@@ -186,7 +202,11 @@ func (f *file) Seek(offset int64, whence int) (int64, error) {
 	case io.SeekEnd:
 		f.pos = int64(len(f.data)) + offset
 	default:
-		return 0, fs.ErrInvalid
+		return 0, &fs.PathError{
+			Op:   "seek",
+			Path: f.name,
+			Err:  fs.ErrInvalid,
+		}
 	}
 
 	f.lastRead = 0
@@ -194,7 +214,11 @@ func (f *file) Seek(offset int64, whence int) (int64, error) {
 	if f.pos < 0 {
 		f.pos = 0
 
-		return f.pos, fs.ErrInvalid
+		return f.pos, &fs.PathError{
+			Op:   "seek",
+			Path: f.name,
+			Err:  fs.ErrInvalid,
+		}
 	}
 
 	return f.pos, nil
@@ -218,7 +242,7 @@ func (f *file) grow(size int) {
 }
 
 func (f *file) Write(p []byte) (int, error) {
-	if err := f.validTo(opWrite, false); err != nil {
+	if err := f.validTo("write", opWrite, false); err != nil {
 		return 0, err
 	}
 
@@ -233,7 +257,7 @@ func (f *file) Write(p []byte) (int, error) {
 }
 
 func (f *file) WriteAt(p []byte, off int64) (int, error) {
-	if err := f.validTo(opWrite|opSeek, false); err != nil {
+	if err := f.validTo("writeat", opWrite|opSeek, false); err != nil {
 		return 0, err
 	}
 
@@ -246,7 +270,7 @@ func (f *file) WriteAt(p []byte, off int64) (int, error) {
 }
 
 func (f *file) WriteString(str string) (int, error) {
-	if err := f.validTo(opWrite, false); err != nil {
+	if err := f.validTo("writestring", opWrite, false); err != nil {
 		return 0, err
 	}
 
@@ -261,7 +285,7 @@ func (f *file) WriteString(str string) (int, error) {
 }
 
 func (f *file) WriteByte(c byte) error {
-	if err := f.validTo(opWrite, false); err != nil {
+	if err := f.validTo("writebyte", opWrite, false); err != nil {
 		return err
 	}
 
@@ -276,11 +300,24 @@ func (f *file) WriteByte(c byte) error {
 }
 
 func (f *file) WriteRune(r rune) (int, error) {
-	return f.Write(utf8.AppendRune([]byte{}, r))
+	if err := f.validTo("writerune", opWrite, false); err != nil {
+		return 0, err
+	}
+
+	p := utf8.AppendRune([]byte{}, r)
+
+	f.grow(int(f.pos) + len(p))
+
+	n := copy(f.data[f.pos:], p)
+	f.pos += int64(n)
+	f.lastRead = 0
+	f.modtime = time.Now()
+
+	return n, nil
 }
 
 func (f *file) Close() error {
-	err := f.validTo(opClose, false)
+	err := f.validTo("close", opClose, false)
 
 	f.opMode = opClose
 	f.pos = 0

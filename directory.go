@@ -101,7 +101,11 @@ func (d *directory) Stat() (fs.FileInfo, error) {
 }
 
 func (d *directory) Read(_ []byte) (int, error) {
-	return 0, fs.ErrInvalid
+	return 0, &fs.PathError{
+		Op:   "read",
+		Path: d.name,
+		Err:  fs.ErrInvalid,
+	}
 }
 
 func (d *directory) Close() error {

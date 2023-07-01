@@ -5,6 +5,7 @@ import (
 	"errors"
 	"io"
 	"io/fs"
+	"reflect"
 	"strings"
 	"testing"
 )
@@ -27,7 +28,10 @@ func TestRead(t *testing.T) {
 		Err  error
 	}{
 		{
-			Err: fs.ErrClosed,
+			Err: &fs.PathError{
+				Op:  "read",
+				Err: fs.ErrClosed,
+			},
 		},
 		{
 			Mode: opRead,
@@ -42,7 +46,10 @@ func TestRead(t *testing.T) {
 		},
 		{
 			Mode: opSeek,
-			Err:  fs.ErrInvalid,
+			Err: &fs.PathError{
+				Op:  "read",
+				Err: fs.ErrInvalid,
+			},
 		},
 	} {
 		f := file{
@@ -53,7 +60,7 @@ func TestRead(t *testing.T) {
 		}
 
 		data, err := io.ReadAll(&f)
-		if !errors.Is(err, test.Err) {
+		if !reflect.DeepEqual(err, test.Err) {
 			t.Errorf("test %d: expecting error %s, got %s", n+1, test.Err, err)
 		} else if bytes.Compare(data, test.Data) != 0 {
 			t.Errorf("test %d: expecting bytes %v, got %v", n+1, test.Data, data)
@@ -81,7 +88,11 @@ func TestReadAt(t *testing.T) {
 			Output: [][]byte{
 				[]byte("H"),
 			},
-			Err: fs.ErrInvalid,
+			Err: &fs.PathError{
+				Op:   "readat",
+				Path: "",
+				Err:  fs.ErrInvalid,
+			},
 		},
 		{
 			Mode: opSeek,
@@ -92,7 +103,11 @@ func TestReadAt(t *testing.T) {
 			Output: [][]byte{
 				[]byte("H"),
 			},
-			Err: fs.ErrInvalid,
+			Err: &fs.PathError{
+				Op:   "readat",
+				Path: "",
+				Err:  fs.ErrInvalid,
+			},
 		},
 		{
 			Mode: opRead | opSeek,
@@ -134,7 +149,7 @@ func TestReadAt(t *testing.T) {
 			for m, toRead := range test.Read {
 				buf := make([]byte, toRead[0])
 				l, err := f.ReadAt(buf, toRead[1])
-				if !errors.Is(err, test.Err) {
+				if !reflect.DeepEqual(err, test.Err) {
 					t.Errorf("test %d.%d.%d: expecting error %s, got %s", n+1, o, m+1, test.Err, err)
 
 					return false
@@ -209,11 +224,19 @@ Tests:
 		Err  error
 	}{
 		{
-			Err: fs.ErrInvalid,
+			Err: &fs.PathError{
+				Op:   "readbyte",
+				Path: "",
+				Err:  fs.ErrInvalid,
+			},
 		},
 		{
 			Data: []byte{'a'},
-			Err:  fs.ErrClosed,
+			Err: &fs.PathError{
+				Op:   "readbyte",
+				Path: "",
+				Err:  fs.ErrClosed,
+			},
 		},
 		{
 			Data: []byte("abc"),
@@ -229,7 +252,7 @@ Tests:
 
 		for i := range test.Data {
 			b, err := f.ReadByte()
-			if !errors.Is(err, test.Err) {
+			if !reflect.DeepEqual(err, test.Err) {
 				t.Errorf("test %d.%d: expecting error %s, got %s", n+1, i+1, test.Err, err)
 			} else if test.Err != nil {
 				continue Tests
@@ -262,7 +285,11 @@ func TestUnreadByte(t *testing.T) {
 	f.ReadByte()
 
 	err := f.UnreadByte()
-	if !errors.Is(err, fs.ErrInvalid) {
+	if !reflect.DeepEqual(err, &fs.PathError{
+		Op:   "unreadbyte",
+		Path: "",
+		Err:  fs.ErrInvalid,
+	}) {
 		t.Errorf("test 1: expecting ErrClosed, got %s", err)
 
 		return
@@ -299,7 +326,11 @@ func TestUnreadByte(t *testing.T) {
 	}
 
 	err = f.UnreadByte()
-	if !errors.Is(err, fs.ErrInvalid) {
+	if !reflect.DeepEqual(err, &fs.PathError{
+		Op:   "unreadbyte",
+		Path: "",
+		Err:  fs.ErrInvalid,
+	}) {
 		t.Errorf("test 6: expecting ErrInvalid error, got %s", err)
 
 		return
@@ -331,7 +362,11 @@ func TestUnreadByte(t *testing.T) {
 	f.Read([]byte{0})
 
 	err = f.UnreadByte()
-	if !errors.Is(err, fs.ErrInvalid) {
+	if !reflect.DeepEqual(err, &fs.PathError{
+		Op:   "unreadbyte",
+		Path: "",
+		Err:  fs.ErrInvalid,
+	}) {
 		t.Errorf("test 10: expecting nil error, got %s", err)
 
 		return
@@ -445,7 +480,11 @@ func TestUnreadRune(t *testing.T) {
 	f.ReadRune()
 
 	err := f.UnreadRune()
-	if !errors.Is(err, fs.ErrInvalid) {
+	if !reflect.DeepEqual(err, &fs.PathError{
+		Op:   "unreadrune",
+		Path: "",
+		Err:  fs.ErrInvalid,
+	}) {
 		t.Errorf("test 1: expecting ErrClosed, got %s", err)
 
 		return
@@ -483,7 +522,11 @@ func TestUnreadRune(t *testing.T) {
 	}
 
 	err = f.UnreadRune()
-	if !errors.Is(err, fs.ErrInvalid) {
+	if !reflect.DeepEqual(err, &fs.PathError{
+		Op:   "unreadrune",
+		Path: "",
+		Err:  fs.ErrInvalid,
+	}) {
 		t.Errorf("test 6: expecting ErrInvalid error, got %s", err)
 
 		return
@@ -513,7 +556,11 @@ func TestUnreadRune(t *testing.T) {
 	f.Read([]byte{0})
 
 	err = f.UnreadRune()
-	if !errors.Is(err, fs.ErrInvalid) {
+	if !reflect.DeepEqual(err, &fs.PathError{
+		Op:   "unreadrune",
+		Path: "",
+		Err:  fs.ErrInvalid,
+	}) {
 		t.Errorf("test 10: expecting nil error, got %s", err)
 
 		return
@@ -563,7 +610,11 @@ func TestWriteTo(t *testing.T) {
 	var sb strings.Builder
 
 	_, err := f.WriteTo(&sb)
-	if !errors.Is(err, fs.ErrClosed) {
+	if !reflect.DeepEqual(err, &fs.PathError{
+		Op:   "writeto",
+		Path: "",
+		Err:  fs.ErrClosed,
+	}) {
 		t.Errorf("test 1: expecting to get error ErrClosed, got %s", err)
 	}
 
@@ -618,7 +669,11 @@ func TestSeek(t *testing.T) {
 			Offset: -1,
 			Whence: io.SeekStart,
 			Pos:    0,
-			Err:    fs.ErrInvalid,
+			Err: &fs.PathError{
+				Op:   "seek",
+				Path: "",
+				Err:  fs.ErrInvalid,
+			},
 		},
 		{
 			Offset: 10,
@@ -634,7 +689,11 @@ func TestSeek(t *testing.T) {
 			Offset: -1,
 			Whence: io.SeekStart,
 			Pos:    0,
-			Err:    fs.ErrInvalid,
+			Err: &fs.PathError{
+				Op:   "seek",
+				Path: "",
+				Err:  fs.ErrInvalid,
+			},
 		},
 		{
 			Offset: 10,
@@ -678,7 +737,7 @@ func TestSeek(t *testing.T) {
 		},
 	} {
 		pos, err := f.Seek(test.Offset, test.Whence)
-		if !errors.Is(err, test.Err) {
+		if !reflect.DeepEqual(err, test.Err) {
 			t.Errorf("test %d: expecting error %s, got %s", n+1, test.Err, err)
 		} else if pos != test.Pos {
 			t.Errorf("test %d: expecting pos %d, got %d", n+1, test.Pos, pos)
@@ -700,7 +759,11 @@ func TestWrite(t *testing.T) {
 	}
 
 	n, err := f.Write(toWrite[:10])
-	if !errors.Is(err, fs.ErrClosed) {
+	if !reflect.DeepEqual(err, &fs.PathError{
+		Op:   "write",
+		Path: "",
+		Err:  fs.ErrClosed,
+	}) {
 		t.Errorf("test 1: expecting ErrClosed, got %s", err)
 	} else if n != 0 {
 		t.Errorf("test 1: expecting to write 0 bytes, wrote %d", n)
@@ -739,7 +802,11 @@ func TestWriteAt(t *testing.T) {
 	}
 
 	n, err := f.WriteAt([]byte{0}, 0)
-	if !errors.Is(err, fs.ErrClosed) {
+	if !reflect.DeepEqual(err, &fs.PathError{
+		Op:   "writeat",
+		Path: "",
+		Err:  fs.ErrClosed,
+	}) {
 		t.Errorf("test 1: expecting ErrClosed, got %s", err)
 	} else if n != 0 {
 		t.Errorf("test 1: expecting to write 0 bytes, wrote %d", n)
@@ -784,7 +851,7 @@ func TestWriteAt(t *testing.T) {
 		},
 	} {
 		m, err := f.WriteAt(test.ToWrite, test.Pos)
-		if !errors.Is(test.Err, err) {
+		if !reflect.DeepEqual(test.Err, err) {
 			t.Errorf("test %d: expecting error %s, got %s", n+1, test.Err, err)
 		} else if m != test.N {
 			t.Errorf("test %d: expecting to write %d bytes, wrote %d", n+1, test.N, m)
@@ -808,7 +875,11 @@ func TestWriteString(t *testing.T) {
 	}
 
 	n, err := f.WriteString(string(toWrite[:10]))
-	if !errors.Is(err, fs.ErrClosed) {
+	if !reflect.DeepEqual(err, &fs.PathError{
+		Op:   "writestring",
+		Path: "",
+		Err:  fs.ErrClosed,
+	}) {
 		t.Errorf("test 1: expecting ErrClosed, got %s", err)
 	} else if n != 0 {
 		t.Errorf("test 1: expecting to write 0 bytes, wrote %d", n)
@@ -847,11 +918,19 @@ Tests:
 		Err  error
 	}{
 		{
-			Err: fs.ErrInvalid,
+			Err: &fs.PathError{
+				Op:   "writebyte",
+				Path: "",
+				Err:  fs.ErrInvalid,
+			},
 		},
 		{
 			Data: []byte{'a'},
-			Err:  fs.ErrClosed,
+			Err: &fs.PathError{
+				Op:   "writebyte",
+				Path: "",
+				Err:  fs.ErrClosed,
+			},
 		},
 		{
 			Data: []byte("abc"),
@@ -867,7 +946,7 @@ Tests:
 
 		for i := range test.Data {
 			err := f.WriteByte(test.Data[i])
-			if !errors.Is(err, test.Err) {
+			if !reflect.DeepEqual(err, test.Err) {
 				t.Errorf("test %d.%d: expecting error %s, got %s", n+1, i+1, test.Err, err)
 			} else if test.Err != nil {
 				continue Tests
@@ -901,7 +980,11 @@ func TestClose(t *testing.T) {
 	}
 
 	_, err = f.WriteString("1")
-	if !errors.Is(err, fs.ErrClosed) {
+	if !reflect.DeepEqual(err, &fs.PathError{
+		Op:   "writestring",
+		Path: "",
+		Err:  fs.ErrClosed,
+	}) {
 		t.Errorf("test 3: expecting ErrClosed error, got %s", err)
 	}
 
@@ -922,7 +1005,11 @@ func TestClose(t *testing.T) {
 	}
 
 	_, err = f.Read(buf[:])
-	if !errors.Is(err, fs.ErrClosed) {
+	if !reflect.DeepEqual(err, &fs.PathError{
+		Op:   "read",
+		Path: "",
+		Err:  fs.ErrClosed,
+	}) {
 		t.Errorf("test 6: expecting ErrClosed error, got %s", err)
 	}
 
@@ -941,7 +1028,11 @@ func TestClose(t *testing.T) {
 	}
 
 	pos, err = f.Seek(1, io.SeekStart)
-	if !errors.Is(err, fs.ErrClosed) {
+	if !reflect.DeepEqual(err, &fs.PathError{
+		Op:   "seek",
+		Path: "",
+		Err:  fs.ErrClosed,
+	}) {
 		t.Errorf("test 9: expecting ErrClosed error, got %s", err)
 	}
 }

@@ -213,15 +213,15 @@ func (f *FS) Stat(path string) (fs.FileInfo, error) {
 }
 
 func (f *FS) Mkdir(path string, perm fs.FileMode) error {
-	return f.mkdir("mkdir", path, perm)
+	return f.mkdir("mkdir", path, path, perm)
 }
 
-func (f *FS) mkdir(op, path string, perm fs.FileMode) error {
+func (f *FS) mkdir(op, opath, path string, perm fs.FileMode) error {
 	parent, child := filepath.Split(path)
 	if child == "" {
 		return &fs.PathError{
 			Op:   op,
-			Path: path,
+			Path: opath,
 			Err:  fs.ErrInvalid,
 		}
 	}
@@ -230,7 +230,7 @@ func (f *FS) mkdir(op, path string, perm fs.FileMode) error {
 	if err != nil {
 		return &fs.PathError{
 			Op:   op,
-			Path: path,
+			Path: opath,
 			Err:  err,
 		}
 	}
@@ -238,7 +238,7 @@ func (f *FS) mkdir(op, path string, perm fs.FileMode) error {
 	if d.mode&0o222 == 0 {
 		return &fs.PathError{
 			Op:   op,
-			Path: path,
+			Path: opath,
 			Err:  fs.ErrPermission,
 		}
 	}
@@ -246,7 +246,7 @@ func (f *FS) mkdir(op, path string, perm fs.FileMode) error {
 	if d.get(child) != nil {
 		return &fs.PathError{
 			Op:   op,
-			Path: path,
+			Path: opath,
 			Err:  fs.ErrExist,
 		}
 	}
@@ -264,11 +264,11 @@ func (f *FS) mkdir(op, path string, perm fs.FileMode) error {
 }
 
 func (f *FS) MkdirAll(path string, perm fs.FileMode) error {
-	path = filepath.Join("/", path)
+	cpath := filepath.Join("/", path)
 	last := 0
 
 	for {
-		pos := strings.IndexRune(path[last:], filepath.Separator)
+		pos := strings.IndexRune(cpath[last:], filepath.Separator)
 		if pos < 0 {
 			break
 		} else if pos == 0 {
@@ -279,16 +279,12 @@ func (f *FS) MkdirAll(path string, perm fs.FileMode) error {
 
 		last += pos
 
-		if err := f.Mkdir(path[:last], perm); err != nil && !errors.Is(err, fs.ErrExist) {
-			return &fs.PathError{
-				Op:   "mkdirall",
-				Path: path,
-				Err:  err,
-			}
+		if err := f.mkdir("mkdirall", path, cpath[:last], perm); err != nil && !errors.Is(err, fs.ErrExist) {
+			return err
 		}
 	}
 
-	return f.mkdir("mkdirall", path, perm)
+	return f.mkdir("mkdirall", path, cpath, perm)
 }
 
 type File interface {

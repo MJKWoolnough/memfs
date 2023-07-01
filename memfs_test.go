@@ -2097,3 +2097,110 @@ func TestSymlinkResolveDir(t *testing.T) {
 		}
 	}
 }
+
+func TestRemove(t *testing.T) {
+	now := time.Now()
+	for n, test := range [...]struct {
+		FS     FS
+		Path   string
+		Output FS
+		Err    error
+	}{
+		{ // 1
+			Err: fs.ErrPermission,
+		},
+		{ // 2
+			FS: FS{
+				mode: fs.ModeDir | fs.ModePerm,
+			},
+			Path: "/file",
+			Output: FS{
+				mode: fs.ModeDir | fs.ModePerm,
+			},
+			Err: fs.ErrNotExist,
+		},
+		{ // 3
+			FS: FS{
+				entries: []*dirEnt{
+					{
+						directoryEntry: &inode{},
+						name:           "file",
+					},
+				},
+				mode: fs.ModeDir | fs.ModePerm,
+			},
+			Path: "/file",
+			Output: FS{
+				entries: []*dirEnt{},
+				modtime: now,
+				mode:    fs.ModeDir | fs.ModePerm,
+			},
+		},
+		{ // 4
+			FS: FS{
+				entries: []*dirEnt{
+					{
+						directoryEntry: &dnode{
+							mode: fs.ModeDir | fs.ModePerm,
+						},
+						name: "dir",
+					},
+				},
+				mode: fs.ModeDir | fs.ModePerm,
+			},
+			Path: "/dir",
+			Output: FS{
+				entries: []*dirEnt{},
+				modtime: now,
+				mode:    fs.ModeDir | fs.ModePerm,
+			},
+		},
+		{ // 5
+			FS: FS{
+				entries: []*dirEnt{
+					{
+						directoryEntry: &dnode{
+							entries: []*dirEnt{
+								{
+									directoryEntry: &inode{},
+									name:           "file",
+								},
+							},
+							mode: fs.ModeDir | fs.ModePerm,
+						},
+						name: "dir",
+					},
+				},
+				mode: fs.ModeDir | fs.ModePerm,
+			},
+			Path: "/dir",
+			Output: FS{
+				entries: []*dirEnt{
+					{
+						directoryEntry: &dnode{
+							entries: []*dirEnt{
+								{
+									directoryEntry: &inode{},
+									name:           "file",
+								},
+							},
+							mode: fs.ModeDir | fs.ModePerm,
+						},
+						name: "dir",
+					},
+				},
+				mode: fs.ModeDir | fs.ModePerm,
+			},
+			Err: fs.ErrInvalid,
+		},
+	} {
+		if err := test.FS.Remove(test.Path); !errors.Is(err, test.Err) {
+			t.Errorf("test %d: expecting error %s, got %s", n+1, test.Err, err)
+		} else {
+			fixTimes((*dnode)(&test.FS), now)
+			if !reflect.DeepEqual(test.Output, test.FS) {
+				t.Errorf("test %d: expecting to get FS %v, got %v", n+1, test.Output, test.FS)
+			}
+		}
+	}
+}

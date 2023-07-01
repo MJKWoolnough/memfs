@@ -26,12 +26,25 @@ func (f *FS) joinRoot(path string) string {
 func (f *FS) Open(path string) (fs.File, error) {
 	de, err := f.getEntry(path)
 	if err != nil {
-		return nil, err
+		return nil, &fs.PathError{
+			Op:   "open",
+			Path: path,
+			Err:  err,
+		}
 	}
 
 	_, fileName := filepath.Split(path)
 
-	return de.open(fileName, opRead|opSeek)
+	of, err := de.open(fileName, opRead|opSeek)
+	if err != nil {
+		return nil, &fs.PathError{
+			Op:   "open",
+			Path: path,
+			Err:  err,
+		}
+	}
+
+	return of, nil
 }
 
 func (f *FS) getDirEnt(path string) (*dnode, error) {
@@ -123,11 +136,19 @@ func (f *FS) getLEntry(path string) (*dirEnt, error) {
 func (f *FS) ReadDir(path string) ([]fs.DirEntry, error) {
 	d, err := f.getDirEnt(path)
 	if err != nil {
-		return nil, err
+		return nil, &fs.PathError{
+			Op:   "readdir",
+			Path: path,
+			Err:  err,
+		}
 	}
 
 	if d.mode&0o444 == 0 {
-		return nil, fs.ErrPermission
+		return nil, &fs.PathError{
+			Op:   "readdir",
+			Path: path,
+			Err:  fs.ErrPermission,
+		}
 	}
 
 	dirs := make([]fs.DirEntry, len(d.entries))
@@ -142,7 +163,11 @@ func (f *FS) ReadDir(path string) ([]fs.DirEntry, error) {
 func (f *FS) ReadFile(path string) ([]byte, error) {
 	de, err := f.getEntry(path)
 	if err != nil {
-		return nil, err
+		return nil, &fs.PathError{
+			Op:   "readfile",
+			Path: path,
+			Err:  err,
+		}
 	}
 
 	inode, ok := de.directoryEntry.(*inode)
@@ -151,7 +176,11 @@ func (f *FS) ReadFile(path string) ([]byte, error) {
 	}
 
 	if inode.mode&0o444 == 0 {
-		return nil, fs.ErrPermission
+		return nil, &fs.PathError{
+			Op:   "readfile",
+			Path: path,
+			Err:  fs.ErrPermission,
+		}
 	}
 
 	data := make([]byte, len(inode.data))
@@ -164,29 +193,62 @@ func (f *FS) ReadFile(path string) ([]byte, error) {
 func (f *FS) Stat(path string) (fs.FileInfo, error) {
 	de, err := f.getEntry(path)
 	if err != nil {
-		return nil, err
+		return nil, &fs.PathError{
+			Op:   "stat",
+			Path: path,
+			Err:  err,
+		}
 	}
 
-	return de.Info()
+	fi, err := de.Info()
+	if err != nil {
+		return nil, &fs.PathError{
+			Op:   "stat",
+			Path: path,
+			Err:  err,
+		}
+	}
+
+	return fi, nil
 }
 
 func (f *FS) Mkdir(path string, perm fs.FileMode) error {
+	return f.mkdir("mkdir", path, perm)
+}
+
+func (f *FS) mkdir(op, path string, perm fs.FileMode) error {
 	parent, child := filepath.Split(path)
 	if child == "" {
-		return fs.ErrInvalid
+		return &fs.PathError{
+			Op:   op,
+			Path: path,
+			Err:  fs.ErrInvalid,
+		}
 	}
 
 	d, err := f.getDirEnt(parent)
 	if err != nil {
-		return err
+		return &fs.PathError{
+			Op:   op,
+			Path: path,
+			Err:  err,
+		}
 	}
 
 	if d.mode&0o222 == 0 {
-		return fs.ErrPermission
+		return &fs.PathError{
+			Op:   op,
+			Path: path,
+			Err:  fs.ErrPermission,
+		}
 	}
 
 	if d.get(child) != nil {
-		return fs.ErrExist
+		return &fs.PathError{
+			Op:   op,
+			Path: path,
+			Err:  fs.ErrExist,
+		}
 	}
 
 	d.entries = append(d.entries, &dirEnt{
@@ -218,11 +280,15 @@ func (f *FS) MkdirAll(path string, perm fs.FileMode) error {
 		last += pos
 
 		if err := f.Mkdir(path[:last], perm); err != nil && !errors.Is(err, fs.ErrExist) {
-			return err
+			return &fs.PathError{
+				Op:   "mkdirall",
+				Path: path,
+				Err:  err,
+			}
 		}
 	}
 
-	return f.Mkdir(path, perm)
+	return f.mkdir("mkdirall", path, perm)
 }
 
 type File interface {
@@ -233,18 +299,30 @@ type File interface {
 func (f *FS) Create(path string) (File, error) {
 	dirName, fileName := filepath.Split(path)
 	if fileName == "" {
-		return nil, fs.ErrInvalid
+		return nil, &fs.PathError{
+			Op:   "create",
+			Path: path,
+			Err:  fs.ErrInvalid,
+		}
 	}
 
 	d, err := f.getDirEnt(dirName)
 	if err != nil {
-		return nil, err
+		return nil, &fs.PathError{
+			Op:   "create",
+			Path: path,
+			Err:  err,
+		}
 	}
 
 	existingFile := d.get(fileName)
 	if existingFile == nil {
 		if d.mode&0o222 == 0 {
-			return nil, fs.ErrPermission
+			return nil, &fs.PathError{
+				Op:   "create",
+				Path: path,
+				Err:  fs.ErrPermission,
+			}
 		}
 
 		i := &inode{
@@ -266,12 +344,20 @@ func (f *FS) Create(path string) (File, error) {
 
 	of, err := existingFile.open(fileName, opRead|opWrite|opSeek)
 	if err != nil {
-		return nil, err
+		return nil, &fs.PathError{
+			Op:   "create",
+			Path: path,
+			Err:  err,
+		}
 	}
 
 	ef, ok := of.(*file)
 	if !ok {
-		return nil, fs.ErrInvalid
+		return nil, &fs.PathError{
+			Op:   "create",
+			Path: path,
+			Err:  fs.ErrInvalid,
+		}
 	}
 
 	ef.modtime = time.Now()
@@ -283,26 +369,46 @@ func (f *FS) Create(path string) (File, error) {
 func (f *FS) Link(oldPath, newPath string) error {
 	oe, err := f.getLEntry(oldPath)
 	if err != nil {
-		return err
+		return &fs.PathError{
+			Op:   "link",
+			Path: oldPath,
+			Err:  err,
+		}
 	} else if oe.IsDir() {
-		return fs.ErrInvalid
+		return &fs.PathError{
+			Op:   "link",
+			Path: oldPath,
+			Err:  fs.ErrInvalid,
+		}
 	}
 
 	dirName, fileName := filepath.Split(newPath)
 	if fileName == "" {
-		return fs.ErrInvalid
+		return &fs.PathError{
+			Op:   "link",
+			Path: newPath,
+			Err:  fs.ErrInvalid,
+		}
 	}
 
 	d, err := f.getDirEnt(dirName)
 	if err != nil {
 		return err
 	} else if d.mode&0o222 == 0 {
-		return fs.ErrPermission
+		return &fs.PathError{
+			Op:   "link",
+			Path: newPath,
+			Err:  fs.ErrPermission,
+		}
 	}
 
 	existingFile := d.get(fileName)
 	if existingFile != nil {
-		return fs.ErrExist
+		return &fs.PathError{
+			Op:   "link",
+			Path: newPath,
+			Err:  fs.ErrExist,
+		}
 	}
 
 	d.entries = append(d.entries, &dirEnt{
@@ -317,19 +423,35 @@ func (f *FS) Link(oldPath, newPath string) error {
 func (f *FS) Symlink(oldPath, newPath string) error {
 	dirName, fileName := filepath.Split(newPath)
 	if fileName == "" {
-		return fs.ErrInvalid
+		return &fs.PathError{
+			Op:   "symlink",
+			Path: newPath,
+			Err:  fs.ErrInvalid,
+		}
 	}
 
 	d, err := f.getDirEnt(dirName)
 	if err != nil {
-		return err
+		return &fs.PathError{
+			Op:   "symlink",
+			Path: newPath,
+			Err:  err,
+		}
 	} else if d.mode&0o222 == 0 {
-		return fs.ErrPermission
+		return &fs.PathError{
+			Op:   "symlink",
+			Path: newPath,
+			Err:  fs.ErrPermission,
+		}
 	}
 
 	existingFile := d.get(fileName)
 	if existingFile != nil {
-		return fs.ErrExist
+		return &fs.PathError{
+			Op:   "symlink",
+			Path: newPath,
+			Err:  fs.ErrExist,
+		}
 	}
 
 	d.entries = append(d.entries, &dirEnt{
@@ -350,30 +472,58 @@ func (f *FS) Rename(oldPath, newPath string) error {
 
 	od, err := f.getDirEnt(oldDirName)
 	if err != nil {
-		return err
+		return &fs.PathError{
+			Op:   "rename",
+			Path: oldPath,
+			Err:  err,
+		}
 	} else if od.mode&0o222 == 0 {
-		return fs.ErrPermission
+		return &fs.PathError{
+			Op:   "rename",
+			Path: oldPath,
+			Err:  fs.ErrPermission,
+		}
 	}
 
 	oldFile := od.get(oldFileName)
 	if oldFile == nil {
-		return fs.ErrNotExist
+		return &fs.PathError{
+			Op:   "rename",
+			Path: oldPath,
+			Err:  fs.ErrNotExist,
+		}
 	}
 
 	newDirName, newFileName := filepath.Split(newPath)
 	if newFileName == "" {
-		return fs.ErrInvalid
+		return &fs.PathError{
+			Op:   "rename",
+			Path: newPath,
+			Err:  fs.ErrInvalid,
+		}
 	}
 
 	nd, err := f.getDirEnt(newDirName)
 	if err != nil {
-		return err
+		return &fs.PathError{
+			Op:   "rename",
+			Path: newPath,
+			Err:  err,
+		}
 	} else if nd.mode&0o222 == 0 {
-		return fs.ErrPermission
+		return &fs.PathError{
+			Op:   "rename",
+			Path: newPath,
+			Err:  fs.ErrPermission,
+		}
 	}
 
 	if nd.get(oldFileName) != nil {
-		return fs.ErrExist
+		return &fs.PathError{
+			Op:   "rename",
+			Path: oldPath,
+			Err:  fs.ErrExist,
+		}
 	}
 
 	od.remove(oldFileName)
@@ -391,18 +541,34 @@ func (f *FS) Remove(path string) error {
 
 	d, err := f.getDirEnt(dirName)
 	if err != nil {
-		return err
+		return &fs.PathError{
+			Op:   "remove",
+			Path: path,
+			Err:  err,
+		}
 	}
 
 	if de := d.get(fileName); de != nil && de.IsDir() {
 		dir, _ := de.directoryEntry.(*dnode)
 
 		if len(dir.entries) > 0 {
-			return fs.ErrInvalid
+			return &fs.PathError{
+				Op:   "remove",
+				Path: path,
+				Err:  fs.ErrInvalid,
+			}
 		}
 	}
 
-	return d.remove(fileName)
+	if err := d.remove(fileName); err != nil {
+		return &fs.PathError{
+			Op:   "remove",
+			Path: path,
+			Err:  err,
+		}
+	}
+
+	return nil
 }
 
 func (f *FS) RemoveAll(path string) error {
@@ -410,29 +576,62 @@ func (f *FS) RemoveAll(path string) error {
 
 	d, err := f.getDirEnt(dirName)
 	if err != nil {
-		return err
+		return &fs.PathError{
+			Op:   "removeall",
+			Path: path,
+			Err:  err,
+		}
 	}
 
-	return d.remove(fileName)
+	if err := d.remove(fileName); err != nil {
+		return &fs.PathError{
+			Op:   "removeall",
+			Path: path,
+			Err:  err,
+		}
+	}
+
+	return nil
 }
 
 func (f *FS) LStat(path string) (fs.FileInfo, error) {
 	de, err := f.getLEntry(path)
 	if err != nil {
-		return nil, err
+		return nil, &fs.PathError{
+			Op:   "lstat",
+			Path: path,
+			Err:  err,
+		}
 	}
 
-	return de.Info()
+	fi, err := de.Info()
+	if err != nil {
+		return nil, &fs.PathError{
+			Op:   "lstat",
+			Path: path,
+			Err:  err,
+		}
+	}
+
+	return fi, nil
 }
 
 func (f *FS) Readlink(path string) (string, error) {
 	de, err := f.getLEntry(path)
 	if err != nil {
-		return "", err
+		return "", &fs.PathError{
+			Op:   "readlink",
+			Path: path,
+			Err:  err,
+		}
 	}
 
 	if de.Mode()&fs.ModeSymlink == 0 {
-		return "", fs.ErrInvalid
+		return "", &fs.PathError{
+			Op:   "readlink",
+			Path: path,
+			Err:  fs.ErrInvalid,
+		}
 	}
 
 	s, _ := de.directoryEntry.(*inode)
@@ -441,15 +640,25 @@ func (f *FS) Readlink(path string) (string, error) {
 }
 
 func (f *FS) Chown(path string, uid, gid int) error {
-	_, err := f.getEntry(path)
+	if _, err := f.getEntry(path); err != nil {
+		return &fs.PathError{
+			Op:   "chown",
+			Path: path,
+			Err:  err,
+		}
+	}
 
-	return err
+	return nil
 }
 
 func (f *FS) Chmod(path string, mode fs.FileMode) error {
 	de, err := f.getEntry(path)
 	if err != nil {
-		return err
+		return &fs.PathError{
+			Op:   "chmod",
+			Path: path,
+			Err:  err,
+		}
 	}
 
 	de.setMode(mode & fs.ModePerm)
@@ -458,15 +667,25 @@ func (f *FS) Chmod(path string, mode fs.FileMode) error {
 }
 
 func (f *FS) Lchown(path string, uid, gid int) error {
-	_, err := f.getLEntry(path)
+	if _, err := f.getLEntry(path); err != nil {
+		return &fs.PathError{
+			Op:   "lchown",
+			Path: path,
+			Err:  err,
+		}
+	}
 
-	return err
+	return nil
 }
 
 func (f *FS) Chtimes(path string, atime time.Time, mtime time.Time) error {
 	de, err := f.getEntry(path)
 	if err != nil {
-		return err
+		return &fs.PathError{
+			Op:   "chtimes",
+			Path: path,
+			Err:  err,
+		}
 	}
 
 	de.setTimes(atime, mtime)

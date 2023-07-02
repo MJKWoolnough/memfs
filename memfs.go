@@ -485,9 +485,7 @@ func (f *FS) Rename(oldPath, newPath string) error {
 }
 
 func (f *FS) Remove(path string) error {
-	dirName, fileName := filepath.Split(path)
-
-	d, err := f.getDirEnt(dirName)
+	d, de, err := f.getEntryWithParent(path, mustExist)
 	if err != nil {
 		return &fs.PathError{
 			Op:   "remove",
@@ -496,7 +494,7 @@ func (f *FS) Remove(path string) error {
 		}
 	}
 
-	if de := d.get(fileName); de != nil && de.IsDir() {
+	if de.IsDir() {
 		dir, _ := de.directoryEntry.(*dnode)
 
 		if len(dir.entries) > 0 {
@@ -508,7 +506,7 @@ func (f *FS) Remove(path string) error {
 		}
 	}
 
-	if err := d.remove(fileName); err != nil {
+	if err := d.remove(de.name); err != nil {
 		return &fs.PathError{
 			Op:   "remove",
 			Path: path,

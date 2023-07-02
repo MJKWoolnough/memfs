@@ -393,7 +393,11 @@ func (f *FS) Link(oldPath, newPath string) error {
 
 	d, err := f.getDirEnt(dirName)
 	if err != nil {
-		return err
+		return &fs.PathError{
+			Op:   "link",
+			Path: newPath,
+			Err:  err,
+		}
 	} else if d.mode&0o222 == 0 {
 		return &fs.PathError{
 			Op:   "link",

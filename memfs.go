@@ -415,16 +415,7 @@ func (f *FS) Link(oldPath, newPath string) error {
 }
 
 func (f *FS) Symlink(oldPath, newPath string) error {
-	dirName, fileName := filepath.Split(newPath)
-	if fileName == "" {
-		return &fs.PathError{
-			Op:   "symlink",
-			Path: newPath,
-			Err:  fs.ErrInvalid,
-		}
-	}
-
-	d, err := f.getDirEnt(dirName)
+	d, _, err := f.getEntryWithParent(newPath, mustNotExist)
 	if err != nil {
 		return &fs.PathError{
 			Op:   "symlink",
@@ -439,22 +430,13 @@ func (f *FS) Symlink(oldPath, newPath string) error {
 		}
 	}
 
-	existingFile := d.get(fileName)
-	if existingFile != nil {
-		return &fs.PathError{
-			Op:   "symlink",
-			Path: newPath,
-			Err:  fs.ErrExist,
-		}
-	}
-
 	d.entries = append(d.entries, &dirEnt{
 		directoryEntry: &inode{
 			data:    []byte(filepath.Clean(oldPath)),
 			modtime: time.Now(),
 			mode:    fs.ModeSymlink | fs.ModePerm,
 		},
-		name: fileName,
+		name: filepath.Base(newPath),
 	})
 	d.modtime = time.Now()
 

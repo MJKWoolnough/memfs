@@ -390,16 +390,7 @@ func (f *FS) Link(oldPath, newPath string) error {
 		}
 	}
 
-	dirName, fileName := filepath.Split(newPath)
-	if fileName == "" {
-		return &fs.PathError{
-			Op:   "link",
-			Path: newPath,
-			Err:  fs.ErrInvalid,
-		}
-	}
-
-	d, err := f.getDirEnt(dirName)
+	d, _, err := f.getEntryWithParent(newPath, mustNotExist)
 	if err != nil {
 		return &fs.PathError{
 			Op:   "link",
@@ -414,18 +405,9 @@ func (f *FS) Link(oldPath, newPath string) error {
 		}
 	}
 
-	existingFile := d.get(fileName)
-	if existingFile != nil {
-		return &fs.PathError{
-			Op:   "link",
-			Path: newPath,
-			Err:  fs.ErrExist,
-		}
-	}
-
 	d.entries = append(d.entries, &dirEnt{
 		directoryEntry: oe.directoryEntry,
-		name:           fileName,
+		name:           filepath.Base(newPath),
 	})
 	d.modtime = time.Now()
 

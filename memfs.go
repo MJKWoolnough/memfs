@@ -444,9 +444,7 @@ func (f *FS) Symlink(oldPath, newPath string) error {
 }
 
 func (f *FS) Rename(oldPath, newPath string) error {
-	oldDirName, oldFileName := filepath.Split(oldPath)
-
-	od, err := f.getDirEnt(oldDirName)
+	od, oldFile, err := f.getEntryWithParent(oldPath, mustExist)
 	if err != nil {
 		return &fs.PathError{
 			Op:   "rename",
@@ -461,25 +459,7 @@ func (f *FS) Rename(oldPath, newPath string) error {
 		}
 	}
 
-	oldFile := od.get(oldFileName)
-	if oldFile == nil {
-		return &fs.PathError{
-			Op:   "rename",
-			Path: oldPath,
-			Err:  fs.ErrNotExist,
-		}
-	}
-
-	newDirName, newFileName := filepath.Split(newPath)
-	if newFileName == "" {
-		return &fs.PathError{
-			Op:   "rename",
-			Path: newPath,
-			Err:  fs.ErrInvalid,
-		}
-	}
-
-	nd, err := f.getDirEnt(newDirName)
+	nd, _, err := f.getEntryWithParent(newPath, mustNotExist)
 	if err != nil {
 		return &fs.PathError{
 			Op:   "rename",
@@ -494,18 +474,10 @@ func (f *FS) Rename(oldPath, newPath string) error {
 		}
 	}
 
-	if nd.get(oldFileName) != nil {
-		return &fs.PathError{
-			Op:   "rename",
-			Path: oldPath,
-			Err:  fs.ErrExist,
-		}
-	}
-
-	od.remove(oldFileName)
+	od.remove(oldFile.name)
 	nd.entries = append(nd.entries, &dirEnt{
 		directoryEntry: oldFile.directoryEntry,
-		name:           newFileName,
+		name:           filepath.Base(newPath),
 	})
 	nd.modtime = time.Now()
 

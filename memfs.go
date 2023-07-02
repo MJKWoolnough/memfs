@@ -254,16 +254,7 @@ func (f *FS) Mkdir(path string, perm fs.FileMode) error {
 }
 
 func (f *FS) mkdir(op, opath, path string, perm fs.FileMode) error {
-	parent, child := filepath.Split(path)
-	if child == "" {
-		return &fs.PathError{
-			Op:   op,
-			Path: opath,
-			Err:  fs.ErrInvalid,
-		}
-	}
-
-	d, err := f.getDirEnt(parent)
+	d, _, err := f.getEntryWithParent(path, mustNotExist)
 	if err != nil {
 		return &fs.PathError{
 			Op:   op,
@@ -280,20 +271,12 @@ func (f *FS) mkdir(op, opath, path string, perm fs.FileMode) error {
 		}
 	}
 
-	if d.get(child) != nil {
-		return &fs.PathError{
-			Op:   op,
-			Path: opath,
-			Err:  fs.ErrExist,
-		}
-	}
-
 	d.entries = append(d.entries, &dirEnt{
 		directoryEntry: &dnode{
 			modtime: time.Now(),
 			mode:    fs.ModeDir | perm,
 		},
-		name: child,
+		name: filepath.Base(path),
 	})
 	d.modtime = time.Now()
 

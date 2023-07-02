@@ -19,14 +19,22 @@ func TestOpen(t *testing.T) {
 		{ // 1
 			FS:   FS{},
 			Path: "/file",
-			Err:  fs.ErrPermission,
+			Err: &fs.PathError{
+				Op:   "open",
+				Path: "/file",
+				Err:  fs.ErrPermission,
+			},
 		},
 		{ // 2
 			FS: FS{
 				mode: fs.ModeDir | fs.ModePerm,
 			},
 			Path: "/file",
-			Err:  fs.ErrNotExist,
+			Err: &fs.PathError{
+				Op:   "open",
+				Path: "/file",
+				Err:  fs.ErrNotExist,
+			},
 		},
 		{ // 3
 			FS: FS{
@@ -38,7 +46,11 @@ func TestOpen(t *testing.T) {
 				},
 			},
 			Path: "/file",
-			Err:  fs.ErrPermission,
+			Err: &fs.PathError{
+				Op:   "open",
+				Path: "/file",
+				Err:  fs.ErrPermission,
+			},
 		},
 		{ // 4
 			FS: FS{
@@ -74,7 +86,11 @@ func TestOpen(t *testing.T) {
 				mode: fs.ModeDir | fs.ModePerm,
 			},
 			Path: "/file",
-			Err:  fs.ErrNotExist,
+			Err: &fs.PathError{
+				Op:   "open",
+				Path: "/file",
+				Err:  fs.ErrNotExist,
+			},
 		},
 		{ // 6
 			FS: FS{
@@ -107,7 +123,7 @@ func TestOpen(t *testing.T) {
 		},
 	} {
 		f, err := test.FS.Open(test.Path)
-		if !errors.Is(err, test.Err) {
+		if !reflect.DeepEqual(err, test.Err) {
 			t.Errorf("test %d: expecting error %s, got %s", n+1, test.Err, err)
 		} else if !reflect.DeepEqual(f, test.File) {
 			t.Errorf("test %d: expected file %v, got %v", n+1, test.File, f)
@@ -123,8 +139,12 @@ func TestFSReadDir(t *testing.T) {
 		Err    error
 	}{
 		{ // 1
-			FS:  FS{},
-			Err: fs.ErrPermission,
+			FS: FS{},
+			Err: &fs.PathError{
+				Op:   "readdir",
+				Path: "",
+				Err:  fs.ErrPermission,
+			},
 		},
 		{ // 2
 			FS: FS{
@@ -318,11 +338,15 @@ func TestFSReadDir(t *testing.T) {
 				mode: fs.ModeDir | fs.ModePerm,
 			},
 			Path: "/test2",
-			Err:  fs.ErrPermission,
+			Err: &fs.PathError{
+				Op:   "readdir",
+				Path: "/test2",
+				Err:  fs.ErrPermission,
+			},
 		},
 	} {
 		de, err := test.FS.ReadDir(test.Path)
-		if !errors.Is(err, test.Err) {
+		if !reflect.DeepEqual(err, test.Err) {
 			t.Errorf("test %d: expecting error %s, got %s", n+1, test.Err, err)
 		} else if !reflect.DeepEqual(test.Output, de) {
 			t.Errorf("test %d: expecting to get %v, got %v", n+1, test.Output, de)
@@ -338,21 +362,33 @@ func TestReadFile(t *testing.T) {
 		Err    error
 	}{
 		{ // 1
-			FS:  FS{},
-			Err: fs.ErrPermission,
+			FS: FS{},
+			Err: &fs.PathError{
+				Op:   "readfile",
+				Path: "",
+				Err:  fs.ErrPermission,
+			},
 		},
 		{ // 2
 			FS: FS{
 				mode: fs.ModeDir | fs.ModePerm,
 			},
-			Err: fs.ErrInvalid,
+			Err: &fs.PathError{
+				Op:   "readfile",
+				Path: "",
+				Err:  fs.ErrInvalid,
+			},
 		},
 		{ // 3
 			FS: FS{
 				mode: fs.ModeDir | fs.ModePerm,
 			},
 			Path: "/file",
-			Err:  fs.ErrNotExist,
+			Err: &fs.PathError{
+				Op:   "readfile",
+				Path: "/file",
+				Err:  fs.ErrNotExist,
+			},
 		},
 		{ // 4
 			FS: FS{
@@ -365,7 +401,11 @@ func TestReadFile(t *testing.T) {
 				mode: fs.ModeDir | fs.ModePerm,
 			},
 			Path: "/file",
-			Err:  fs.ErrNotExist,
+			Err: &fs.PathError{
+				Op:   "readfile",
+				Path: "/file",
+				Err:  fs.ErrNotExist,
+			},
 		},
 		{ // 5
 			FS: FS{
@@ -378,7 +418,11 @@ func TestReadFile(t *testing.T) {
 				mode: fs.ModeDir | fs.ModePerm,
 			},
 			Path: "/file",
-			Err:  fs.ErrPermission,
+			Err: &fs.PathError{
+				Op:   "readfile",
+				Path: "/file",
+				Err:  fs.ErrPermission,
+			},
 		},
 		{ // 6
 			FS: FS{
@@ -429,7 +473,7 @@ func TestReadFile(t *testing.T) {
 		},
 	} {
 		data, err := test.FS.ReadFile(test.Path)
-		if !errors.Is(err, test.Err) {
+		if !reflect.DeepEqual(err, test.Err) {
 			t.Errorf("test %d: expecting error %s, got %s", n+1, test.Err, err)
 		} else if !bytes.Equal(test.Output, data) {
 			t.Errorf("test %d: expecting to get %v, got %v", n+1, test.Output, data)
@@ -445,8 +489,12 @@ func TestStat(t *testing.T) {
 		Err    error
 	}{
 		{ // 1
-			FS:  FS{},
-			Err: fs.ErrPermission,
+			FS: FS{},
+			Err: &fs.PathError{
+				Op:   "stat",
+				Path: "",
+				Err:  fs.ErrPermission,
+			},
 		},
 		{ // 2
 			FS: FS{
@@ -466,7 +514,11 @@ func TestStat(t *testing.T) {
 				mode: fs.ModeDir | fs.ModePerm,
 			},
 			Path: "/file",
-			Err:  fs.ErrNotExist,
+			Err: &fs.PathError{
+				Op:   "stat",
+				Path: "/file",
+				Err:  fs.ErrNotExist,
+			},
 		},
 		{ // 4
 			FS: FS{
@@ -479,7 +531,11 @@ func TestStat(t *testing.T) {
 				mode: fs.ModeDir | fs.ModePerm,
 			},
 			Path: "/file",
-			Err:  fs.ErrNotExist,
+			Err: &fs.PathError{
+				Op:   "stat",
+				Path: "/file",
+				Err:  fs.ErrNotExist,
+			},
 		},
 		{ // 5
 			FS: FS{
@@ -562,7 +618,11 @@ func TestStat(t *testing.T) {
 				mode: fs.ModeDir | fs.ModePerm,
 			},
 			Path: "/dir/anotherFile",
-			Err:  fs.ErrPermission,
+			Err: &fs.PathError{
+				Op:   "stat",
+				Path: "/dir/anotherFile",
+				Err:  fs.ErrPermission,
+			},
 		},
 		{ // 8
 			FS: FS{
@@ -604,7 +664,7 @@ func TestStat(t *testing.T) {
 		},
 	} {
 		stat, err := test.FS.Stat(test.Path)
-		if !errors.Is(err, test.Err) {
+		if !reflect.DeepEqual(err, test.Err) {
 			t.Errorf("test %d: expecting error %s, got %s", n+1, test.Err, err)
 		} else if !reflect.DeepEqual(test.Output, stat) {
 			t.Errorf("test %d: expecting to get %v, got %v", n+1, test.Output, stat)
@@ -624,7 +684,11 @@ func TestMkdir(t *testing.T) {
 		{ // 1
 			FS:     FS{},
 			Output: FS{},
-			Err:    fs.ErrInvalid,
+			Err: &fs.PathError{
+				Op:   "mkdir",
+				Path: "",
+				Err:  fs.ErrInvalid,
+			},
 		},
 		{ // 2
 			FS: FS{
@@ -635,7 +699,11 @@ func TestMkdir(t *testing.T) {
 				modtime: now,
 				mode:    fs.ModeDir | fs.ModePerm,
 			},
-			Err: fs.ErrInvalid,
+			Err: &fs.PathError{
+				Op:   "mkdir",
+				Path: "",
+				Err:  fs.ErrInvalid,
+			},
 		},
 		{ // 3
 			FS: FS{
@@ -647,7 +715,11 @@ func TestMkdir(t *testing.T) {
 				mode:    fs.ModeDir | fs.ModePerm,
 			},
 			Path: "/",
-			Err:  fs.ErrInvalid,
+			Err: &fs.PathError{
+				Op:   "mkdir",
+				Path: "/",
+				Err:  fs.ErrInvalid,
+			},
 		},
 		{ // 4
 			FS: FS{
@@ -679,7 +751,11 @@ func TestMkdir(t *testing.T) {
 				mode:    fs.ModeDir | fs.ModePerm,
 			},
 			Path: "/a/b",
-			Err:  fs.ErrNotExist,
+			Err: &fs.PathError{
+				Op:   "mkdir",
+				Path: "/a/b",
+				Err:  fs.ErrNotExist,
+			},
 		},
 		{ // 6
 			FS: FS{
@@ -709,7 +785,11 @@ func TestMkdir(t *testing.T) {
 				mode: fs.ModeDir | fs.ModePerm,
 			},
 			Path: "/a/b",
-			Err:  fs.ErrPermission,
+			Err: &fs.PathError{
+				Op:   "mkdir",
+				Path: "/a/b",
+				Err:  fs.ErrPermission,
+			},
 		},
 		{ // 7
 			FS: FS{
@@ -739,7 +819,11 @@ func TestMkdir(t *testing.T) {
 				mode: fs.ModeDir | fs.ModePerm,
 			},
 			Path: "/a/b",
-			Err:  fs.ErrInvalid,
+			Err: &fs.PathError{
+				Op:   "mkdir",
+				Path: "/a/b",
+				Err:  fs.ErrInvalid,
+			},
 		},
 		{ // 8
 			FS: FS{
@@ -781,7 +865,7 @@ func TestMkdir(t *testing.T) {
 			PathPerms: 0o123,
 		},
 	} {
-		if err := test.FS.Mkdir(test.Path, test.PathPerms); !errors.Is(err, test.Err) {
+		if err := test.FS.Mkdir(test.Path, test.PathPerms); !reflect.DeepEqual(err, test.Err) {
 			t.Errorf("test %d: expecting error %s, got %s", n+1, test.Err, err)
 		} else {
 			fixTimes((*dnode)(&test.FS), now)
@@ -822,7 +906,11 @@ func TestMkdirAll(t *testing.T) {
 		{ // 1
 			FS:     FS{},
 			Output: FS{},
-			Err:    fs.ErrInvalid,
+			Err: &fs.PathError{
+				Op:   "mkdirall",
+				Path: "",
+				Err:  fs.ErrInvalid,
+			},
 		},
 		{ // 2
 			FS: FS{
@@ -833,7 +921,11 @@ func TestMkdirAll(t *testing.T) {
 				modtime: now,
 				mode:    fs.ModeDir | fs.ModePerm,
 			},
-			Err: fs.ErrInvalid,
+			Err: &fs.PathError{
+				Op:   "mkdirall",
+				Path: "",
+				Err:  fs.ErrInvalid,
+			},
 		},
 		{ // 3
 			FS: FS{
@@ -845,7 +937,11 @@ func TestMkdirAll(t *testing.T) {
 				mode:    fs.ModeDir | fs.ModePerm,
 			},
 			Path: "/",
-			Err:  fs.ErrInvalid,
+			Err: &fs.PathError{
+				Op:   "mkdirall",
+				Path: "/",
+				Err:  fs.ErrInvalid,
+			},
 		},
 		{ // 4
 			FS: FS{
@@ -886,7 +982,11 @@ func TestMkdirAll(t *testing.T) {
 				mode: fs.ModeDir | fs.ModePerm,
 			},
 			Path: "/a/b",
-			Err:  fs.ErrPermission,
+			Err: &fs.PathError{
+				Op:   "mkdirall",
+				Path: "/a/b",
+				Err:  fs.ErrPermission,
+			},
 		},
 		{ // 6
 			FS: FS{
@@ -916,7 +1016,11 @@ func TestMkdirAll(t *testing.T) {
 				mode: fs.ModeDir | fs.ModePerm,
 			},
 			Path: "/a/b",
-			Err:  fs.ErrPermission,
+			Err: &fs.PathError{
+				Op:   "mkdirall",
+				Path: "/a/b",
+				Err:  fs.ErrPermission,
+			},
 		},
 		{ // 7
 			FS: FS{
@@ -946,7 +1050,11 @@ func TestMkdirAll(t *testing.T) {
 				mode: fs.ModeDir | fs.ModePerm,
 			},
 			Path: "/a/b",
-			Err:  fs.ErrInvalid,
+			Err: &fs.PathError{
+				Op:   "mkdirall",
+				Path: "/a/b",
+				Err:  fs.ErrInvalid,
+			},
 		},
 		{ // 8
 			FS: FS{
@@ -1018,7 +1126,7 @@ func TestMkdirAll(t *testing.T) {
 			PathPerms: 0o765,
 		},
 	} {
-		if err := test.FS.MkdirAll(test.Path, test.PathPerms); !errors.Is(err, test.Err) {
+		if err := test.FS.MkdirAll(test.Path, test.PathPerms); !reflect.DeepEqual(err, test.Err) {
 			t.Errorf("test %d: expecting error %s, got %s", n+1, test.Err, err)
 		} else {
 			fixTimes((*dnode)(&test.FS), now)
@@ -1042,7 +1150,11 @@ func TestCreate(t *testing.T) {
 		{ // 1
 			FS:       FS{},
 			OutputFS: FS{},
-			Err:      fs.ErrInvalid,
+			Err: &fs.PathError{
+				Op:   "create",
+				Path: "",
+				Err:  fs.ErrInvalid,
+			},
 		},
 		{ // 2
 			FS: FS{
@@ -1051,13 +1163,21 @@ func TestCreate(t *testing.T) {
 			OutputFS: FS{
 				mode: fs.ModeDir | fs.ModePerm,
 			},
-			Err: fs.ErrInvalid,
+			Err: &fs.PathError{
+				Op:   "create",
+				Path: "",
+				Err:  fs.ErrInvalid,
+			},
 		},
 		{ // 3
 			FS:       FS{},
 			OutputFS: FS{},
 			Path:     "/a",
-			Err:      fs.ErrPermission,
+			Err: &fs.PathError{
+				Op:   "create",
+				Path: "/a",
+				Err:  fs.ErrPermission,
+			},
 		},
 		{ // 4
 			FS: FS{
@@ -1067,7 +1187,11 @@ func TestCreate(t *testing.T) {
 				mode: fs.ModeDir | fs.ModePerm,
 			},
 			Path: "/",
-			Err:  fs.ErrInvalid,
+			Err: &fs.PathError{
+				Op:   "create",
+				Path: "/",
+				Err:  fs.ErrInvalid,
+			},
 		},
 		{ // 5
 			FS: FS{
@@ -1210,11 +1334,15 @@ func TestCreate(t *testing.T) {
 				modtime: now,
 				mode:    fs.ModeDir | fs.ModePerm,
 			},
-			Err:  fs.ErrPermission,
 			Path: "/a/b",
+			Err: &fs.PathError{
+				Op:   "create",
+				Path: "/a/b",
+				Err:  fs.ErrPermission,
+			},
 		},
 	} {
-		if f, err := test.FS.Create(test.Path); !errors.Is(err, test.Err) {
+		if f, err := test.FS.Create(test.Path); !reflect.DeepEqual(err, test.Err) {
 			t.Errorf("test %d: expecting error %s, got %s", n+1, test.Err, err)
 		} else {
 			fixTimes((*dnode)(&test.FS), now)
@@ -1238,7 +1366,11 @@ func TestLink(t *testing.T) {
 		{ // 1
 			FS:     FS{},
 			Output: FS{},
-			Err:    fs.ErrPermission,
+			Err: &fs.PathError{
+				Op:   "link",
+				Path: "",
+				Err:  fs.ErrPermission,
+			},
 		},
 		{ // 2
 			FS: FS{
@@ -1247,7 +1379,11 @@ func TestLink(t *testing.T) {
 			Output: FS{
 				mode: fs.ModeDir | fs.ModePerm,
 			},
-			Err: fs.ErrNotExist,
+			Err: &fs.PathError{
+				Op:   "link",
+				Path: "",
+				Err:  fs.ErrNotExist,
+			},
 		},
 		{ // 3
 			FS: FS{
@@ -1257,7 +1393,11 @@ func TestLink(t *testing.T) {
 				mode: fs.ModeDir | fs.ModePerm,
 			},
 			From: "/a",
-			Err:  fs.ErrNotExist,
+			Err: &fs.PathError{
+				Op:   "link",
+				Path: "/a",
+				Err:  fs.ErrNotExist,
+			},
 		},
 		{ // 4
 			FS: FS{
@@ -1279,7 +1419,11 @@ func TestLink(t *testing.T) {
 				mode: fs.ModeDir | fs.ModePerm,
 			},
 			From: "/a",
-			Err:  fs.ErrInvalid,
+			Err: &fs.PathError{
+				Op:   "link",
+				Path: "",
+				Err:  fs.ErrInvalid,
+			},
 		},
 		{ // 5
 			FS: FS{
@@ -1302,7 +1446,11 @@ func TestLink(t *testing.T) {
 			},
 			From: "/a",
 			To:   "/a",
-			Err:  fs.ErrExist,
+			Err: &fs.PathError{
+				Op:   "link",
+				Path: "/a",
+				Err:  fs.ErrExist,
+			},
 		},
 		{ // 6
 			FS: FS{
@@ -1329,7 +1477,11 @@ func TestLink(t *testing.T) {
 			},
 			From: "/a",
 			To:   "/b",
-			Err:  fs.ErrPermission,
+			Err: &fs.PathError{
+				Op:   "link",
+				Path: "/a",
+				Err:  fs.ErrPermission,
+			},
 		},
 		{ // 7
 			FS: FS{
@@ -1461,7 +1613,7 @@ func TestLink(t *testing.T) {
 			To:   "/b/c",
 		},
 	} {
-		if err := test.FS.Link(test.From, test.To); !errors.Is(err, test.Err) {
+		if err := test.FS.Link(test.From, test.To); !reflect.DeepEqual(err, test.Err) {
 			t.Errorf("test %d: expecting error %s, got %s", n+1, test.Err, err)
 		} else {
 			fixTimes((*dnode)(&test.FS), now)
@@ -1483,7 +1635,11 @@ func TestSymlink(t *testing.T) {
 		{ // 1
 			FS:     FS{},
 			Output: FS{},
-			Err:    fs.ErrInvalid,
+			Err: &fs.PathError{
+				Op:   "symlink",
+				Path: "",
+				Err:  fs.ErrInvalid,
+			},
 		},
 		{ // 2
 			FS: FS{
@@ -1492,7 +1648,11 @@ func TestSymlink(t *testing.T) {
 			Output: FS{
 				mode: fs.ModeDir | fs.ModePerm,
 			},
-			Err: fs.ErrInvalid,
+			Err: &fs.PathError{
+				Op:   "symlink",
+				Path: "",
+				Err:  fs.ErrInvalid,
+			},
 		},
 		{ // 3
 			FS: FS{
@@ -1502,7 +1662,11 @@ func TestSymlink(t *testing.T) {
 				mode: fs.ModeDir | fs.ModePerm,
 			},
 			From: "/a",
-			Err:  fs.ErrInvalid,
+			Err: &fs.PathError{
+				Op:   "symlink",
+				Path: "",
+				Err:  fs.ErrInvalid,
+			},
 		},
 		{ // 4
 			FS: FS{
@@ -1524,7 +1688,11 @@ func TestSymlink(t *testing.T) {
 				mode: fs.ModeDir | fs.ModePerm,
 			},
 			From: "/a",
-			Err:  fs.ErrInvalid,
+			Err: &fs.PathError{
+				Op:   "symlink",
+				Path: "",
+				Err:  fs.ErrInvalid,
+			},
 		},
 		{ // 5
 			FS: FS{
@@ -1547,7 +1715,11 @@ func TestSymlink(t *testing.T) {
 			},
 			From: "/a",
 			To:   "/a",
-			Err:  fs.ErrExist,
+			Err: &fs.PathError{
+				Op:   "symlink",
+				Path: "/a",
+				Err:  fs.ErrExist,
+			},
 		},
 		{ // 6
 			FS: FS{
@@ -1574,7 +1746,11 @@ func TestSymlink(t *testing.T) {
 			},
 			From: "/a",
 			To:   "/b",
-			Err:  fs.ErrPermission,
+			Err: &fs.PathError{
+				Op:   "symlink",
+				Path: "/b",
+				Err:  fs.ErrPermission,
+			},
 		},
 		{ // 7
 			FS: FS{
@@ -1712,7 +1888,7 @@ func TestSymlink(t *testing.T) {
 			To:   "/b/c",
 		},
 	} {
-		if err := test.FS.Symlink(test.From, test.To); !errors.Is(err, test.Err) {
+		if err := test.FS.Symlink(test.From, test.To); !reflect.DeepEqual(err, test.Err) {
 			t.Errorf("test %d: expecting error %s, got %s", n+1, test.Err, err)
 		} else {
 			fixTimes((*dnode)(&test.FS), now)
@@ -2107,7 +2283,11 @@ func TestRemove(t *testing.T) {
 		Err    error
 	}{
 		{ // 1
-			Err: fs.ErrPermission,
+			Err: &fs.PathError{
+				Op:   "remove",
+				Path: "",
+				Err:  fs.ErrPermission,
+			},
 		},
 		{ // 2
 			FS: FS{
@@ -2117,7 +2297,11 @@ func TestRemove(t *testing.T) {
 			Output: FS{
 				mode: fs.ModeDir | fs.ModePerm,
 			},
-			Err: fs.ErrNotExist,
+			Err: &fs.PathError{
+				Op:   "remove",
+				Path: "/file",
+				Err:  fs.ErrNotExist,
+			},
 		},
 		{ // 3
 			FS: FS{
@@ -2191,10 +2375,14 @@ func TestRemove(t *testing.T) {
 				},
 				mode: fs.ModeDir | fs.ModePerm,
 			},
-			Err: fs.ErrInvalid,
+			Err: &fs.PathError{
+				Op:   "remove",
+				Path: "/dir",
+				Err:  fs.ErrInvalid,
+			},
 		},
 	} {
-		if err := test.FS.Remove(test.Path); !errors.Is(err, test.Err) {
+		if err := test.FS.Remove(test.Path); !reflect.DeepEqual(err, test.Err) {
 			t.Errorf("test %d: expecting error %s, got %s", n+1, test.Err, err)
 		} else {
 			fixTimes((*dnode)(&test.FS), now)
@@ -2214,7 +2402,11 @@ func TestRemoveAll(t *testing.T) {
 		Err    error
 	}{
 		{ // 1
-			Err: fs.ErrPermission,
+			Err: &fs.PathError{
+				Op:   "removeall",
+				Path: "",
+				Err:  fs.ErrPermission,
+			},
 		},
 		{ // 2
 			FS: FS{
@@ -2224,7 +2416,11 @@ func TestRemoveAll(t *testing.T) {
 			Output: FS{
 				mode: fs.ModeDir | fs.ModePerm,
 			},
-			Err: fs.ErrNotExist,
+			Err: &fs.PathError{
+				Op:   "removeall",
+				Path: "/file",
+				Err:  fs.ErrNotExist,
+			},
 		},
 		{ // 3
 			FS: FS{
@@ -2288,7 +2484,7 @@ func TestRemoveAll(t *testing.T) {
 			},
 		},
 	} {
-		if err := test.FS.RemoveAll(test.Path); !errors.Is(err, test.Err) {
+		if err := test.FS.RemoveAll(test.Path); !reflect.DeepEqual(err, test.Err) {
 			t.Errorf("test %d: expecting error %s, got %s", n+1, test.Err, err)
 		} else {
 			fixTimes((*dnode)(&test.FS), now)

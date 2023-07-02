@@ -492,6 +492,12 @@ func (f *FS) Remove(path string) error {
 			Path: path,
 			Err:  err,
 		}
+	} else if d.mode&0o222 == 0 {
+		return &fs.PathError{
+			Op:   "remove",
+			Path: path,
+			Err:  fs.ErrPermission,
+		}
 	}
 
 	if de.IsDir() {

@@ -133,6 +133,39 @@ func (f *FS) getLEntry(path string) (*dirEnt, error) {
 	}
 }
 
+type exists byte
+
+const (
+	mustNotExist exists = iota
+	mustExist
+	doesntMatter
+)
+
+func (f *FS) getEntryWithParent(path string, exists exists) (*dnode, *dirEnt, error) {
+	parent, child := filepath.Split(path)
+	if child == "" {
+		return nil, nil, fs.ErrInvalid
+	}
+
+	d, err := f.getDirEnt(parent)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	if d.mode&0o444 == 0 {
+		return nil, nil, fs.ErrPermission
+	}
+
+	c := d.get(child)
+	if c == nil && exists == mustExist {
+		return nil, nil, fs.ErrNotExist
+	} else if c != nil && exists == mustNotExist {
+		return nil, nil, fs.ErrExist
+	}
+
+	return d, c, nil
+}
+
 func (f *FS) ReadDir(path string) ([]fs.DirEntry, error) {
 	d, err := f.getDirEnt(path)
 	if err != nil {

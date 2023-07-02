@@ -313,16 +313,7 @@ type File interface {
 }
 
 func (f *FS) Create(path string) (File, error) {
-	dirName, fileName := filepath.Split(path)
-	if fileName == "" {
-		return nil, &fs.PathError{
-			Op:   "create",
-			Path: path,
-			Err:  fs.ErrInvalid,
-		}
-	}
-
-	d, err := f.getDirEnt(dirName)
+	d, existingFile, err := f.getEntryWithParent(path, doesntMatter)
 	if err != nil {
 		return nil, &fs.PathError{
 			Op:   "create",
@@ -331,7 +322,8 @@ func (f *FS) Create(path string) (File, error) {
 		}
 	}
 
-	existingFile := d.get(fileName)
+	fileName := filepath.Base(path)
+
 	if existingFile == nil {
 		if d.mode&0o222 == 0 {
 			return nil, &fs.PathError{

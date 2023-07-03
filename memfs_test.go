@@ -2286,7 +2286,7 @@ func TestRemove(t *testing.T) {
 			Err: &fs.PathError{
 				Op:   "remove",
 				Path: "",
-				Err:  fs.ErrPermission,
+				Err:  fs.ErrInvalid,
 			},
 		},
 		{ // 2

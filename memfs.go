@@ -585,11 +585,17 @@ func (f *FS) Readlink(path string) (string, error) {
 		}
 	}
 
-	if de.Mode()&fs.ModeSymlink == 0 {
+	if mode := de.Mode(); mode&fs.ModeSymlink == 0 {
 		return "", &fs.PathError{
 			Op:   "readlink",
 			Path: path,
 			Err:  fs.ErrInvalid,
+		}
+	} else if mode&0o444 == 0 {
+		return "", &fs.PathError{
+			Op:   "readlink",
+			Path: path,
+			Err:  fs.ErrPermission,
 		}
 	}
 

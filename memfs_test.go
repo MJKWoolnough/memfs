@@ -1369,7 +1369,7 @@ func TestLink(t *testing.T) {
 			Err: &fs.PathError{
 				Op:   "link",
 				Path: "",
-				Err:  fs.ErrInvalid,
+				Err:  fs.ErrPermission,
 			},
 		},
 		{ // 2

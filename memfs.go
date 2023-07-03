@@ -126,6 +126,8 @@ func (f *FS) getLEntry(path string) (*dirEnt, error) {
 		return nil, err
 	} else if d, ok := de.directoryEntry.(*dnode); !ok {
 		return nil, fs.ErrInvalid
+	} else if d.mode&0o444 == 0 {
+		return nil, fs.ErrPermission
 	} else if e := d.get(fileName); e == nil {
 		return e, fs.ErrNotExist
 	} else {

@@ -2684,3 +2684,119 @@ func TestLStat(t *testing.T) {
 		}
 	}
 }
+
+func TestReadlink(t *testing.T) {
+	for n, test := range [...]struct {
+		FS     FS
+		Path   string
+		Output string
+		Err    error
+	}{
+		{ // 1
+			Err: &fs.PathError{
+				Op:   "readlink",
+				Path: "",
+				Err:  fs.ErrPermission,
+			},
+		},
+		{ // 2
+			FS: FS{
+				modtime: time.Unix(1, 2),
+				mode:    fs.ModeDir | fs.ModePerm,
+			},
+			Err: &fs.PathError{
+				Op:   "readlink",
+				Path: "",
+				Err:  fs.ErrInvalid,
+			},
+		},
+		{ // 3
+			FS: FS{
+				modtime: time.Unix(1, 2),
+				mode:    fs.ModeDir | fs.ModePerm,
+			},
+			Path: "/",
+			Err: &fs.PathError{
+				Op:   "readlink",
+				Path: "/",
+				Err:  fs.ErrInvalid,
+			},
+		},
+		{ // 4
+			FS: FS{
+				entries: []*dirEnt{
+					{
+						directoryEntry: &inode{},
+						name:           "a",
+					},
+				},
+				modtime: time.Unix(1, 2),
+				mode:    fs.ModeDir | fs.ModePerm,
+			},
+			Path: "/a",
+			Err: &fs.PathError{
+				Op:   "readlink",
+				Path: "/a",
+				Err:  fs.ErrInvalid,
+			},
+		},
+		{ // 5
+			FS: FS{
+				entries: []*dirEnt{
+					{
+						directoryEntry: &inode{
+							mode: fs.ModeSymlink,
+						},
+						name: "a",
+					},
+				},
+				modtime: time.Unix(1, 2),
+				mode:    fs.ModeDir | fs.ModePerm,
+			},
+			Path: "/a",
+			Err: &fs.PathError{
+				Op:   "readlink",
+				Path: "/a",
+				Err:  fs.ErrPermission,
+			},
+		},
+		{ // 6
+			FS: FS{
+				entries: []*dirEnt{
+					{
+						directoryEntry: &inode{
+							mode: fs.ModeSymlink | fs.ModePerm,
+						},
+						name: "a",
+					},
+				},
+				modtime: time.Unix(1, 2),
+				mode:    fs.ModeDir | fs.ModePerm,
+			},
+			Path: "/a",
+		},
+		{ // 7
+			FS: FS{
+				entries: []*dirEnt{
+					{
+						directoryEntry: &inode{
+							data: []byte("/other/path"),
+							mode: fs.ModeSymlink | fs.ModePerm,
+						},
+						name: "a",
+					},
+				},
+				modtime: time.Unix(1, 2),
+				mode:    fs.ModeDir | fs.ModePerm,
+			},
+			Path:   "/a",
+			Output: "/other/path",
+		},
+	} {
+		if f, err := test.FS.Readlink(test.Path); !reflect.DeepEqual(err, test.Err) {
+			t.Errorf("test %d: expecting error %s, got %s", n+1, test.Err, err)
+		} else if !reflect.DeepEqual(f, test.Output) {
+			t.Errorf("test %d: expected Link %v, got %v", n+1, test.Output, f)
+		}
+	}
+}

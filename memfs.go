@@ -118,15 +118,7 @@ func (f *FS) getEntry(path string) (*dirEnt, error) {
 
 func (f *FS) getLEntry(path string) (*dirEnt, error) {
 	jpath := f.joinRoot(path)
-	if jpath == "" || jpath == "/" {
-		return &dirEnt{
-			directoryEntry: (*dnode)(f),
-			name:           "/",
-		}, nil
-	}
-
 	dirName, fileName := filepath.Split(jpath)
-
 	redirectsRemaining := maxRedirects
 
 	de, err := f.getResolvedDirEnt(dirName, &redirectsRemaining)
@@ -136,6 +128,11 @@ func (f *FS) getLEntry(path string) (*dirEnt, error) {
 		return nil, fs.ErrInvalid
 	} else if d.mode&0o444 == 0 {
 		return nil, fs.ErrPermission
+	} else if jpath == "" || jpath == "/" {
+		return &dirEnt{
+			directoryEntry: (*dnode)(f),
+			name:           "/",
+		}, nil
 	} else if e := d.get(fileName); e == nil {
 		return e, fs.ErrNotExist
 	} else {

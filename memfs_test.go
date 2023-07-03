@@ -2494,3 +2494,193 @@ func TestRemoveAll(t *testing.T) {
 		}
 	}
 }
+
+func TestLStat(t *testing.T) {
+	for n, test := range [...]struct {
+		FS     FS
+		Path   string
+		Output fs.FileInfo
+		Err    error
+	}{
+		{ // 1
+			FS: FS{},
+			Err: &fs.PathError{
+				Op:   "lstat",
+				Path: "",
+				Err:  fs.ErrPermission,
+			},
+		},
+		{ // 2
+			FS: FS{
+				modtime: time.Unix(1, 2),
+				mode:    fs.ModeDir | fs.ModePerm,
+			},
+			Output: &dirEnt{
+				directoryEntry: &dnode{
+					modtime: time.Unix(1, 2),
+					mode:    fs.ModeDir | fs.ModePerm,
+				},
+				name: "/",
+			},
+		},
+		{ // 3
+			FS: FS{
+				mode: fs.ModeDir | fs.ModePerm,
+			},
+			Path: "/file",
+			Err: &fs.PathError{
+				Op:   "lstat",
+				Path: "/file",
+				Err:  fs.ErrNotExist,
+			},
+		},
+		{ // 4
+			FS: FS{
+				entries: []*dirEnt{
+					{
+						directoryEntry: &inode{},
+						name:           "notFile",
+					},
+				},
+				mode: fs.ModeDir | fs.ModePerm,
+			},
+			Path: "/file",
+			Err: &fs.PathError{
+				Op:   "lstat",
+				Path: "/file",
+				Err:  fs.ErrNotExist,
+			},
+		},
+		{ // 5
+			FS: FS{
+				entries: []*dirEnt{
+					{
+						directoryEntry: &inode{
+							modtime: time.Unix(1, 2),
+							mode:    fs.ModeSymlink | 3,
+						},
+						name: "file",
+					},
+				},
+				mode: fs.ModeDir | fs.ModePerm,
+			},
+			Path: "/file",
+			Output: &dirEnt{
+				directoryEntry: &inode{
+					modtime: time.Unix(1, 2),
+					mode:    fs.ModeSymlink | 3,
+				},
+				name: "file",
+			},
+		},
+		{ // 6
+			FS: FS{
+				entries: []*dirEnt{
+					{
+						directoryEntry: &inode{
+							modtime: time.Unix(1, 2),
+							mode:    3,
+						},
+						name: "file",
+					},
+					{
+						directoryEntry: &dnode{
+							modtime: time.Unix(4, 5),
+							mode:    6,
+						},
+						name: "dir",
+					},
+				},
+				mode: fs.ModeDir | fs.ModePerm,
+			},
+			Path: "/dir",
+			Output: &dirEnt{
+				directoryEntry: &dnode{
+					modtime: time.Unix(4, 5),
+					mode:    6,
+				},
+				name: "dir",
+			},
+		},
+		{ // 7
+			FS: FS{
+				entries: []*dirEnt{
+					{
+						directoryEntry: &inode{
+							modtime: time.Unix(1, 2),
+							mode:    3,
+						},
+						name: "file",
+					},
+					{
+						directoryEntry: &dnode{
+							entries: []*dirEnt{
+								{
+									directoryEntry: &inode{
+										modtime: time.Unix(4, 5),
+										mode:    6,
+									},
+									name: "anotherFile",
+								},
+							},
+							modtime: time.Unix(7, 8),
+							mode:    9,
+						},
+						name: "dir",
+					},
+				},
+				mode: fs.ModeDir | fs.ModePerm,
+			},
+			Path: "/dir/anotherFile",
+			Err: &fs.PathError{
+				Op:   "lstat",
+				Path: "/dir/anotherFile",
+				Err:  fs.ErrPermission,
+			},
+		},
+		{ // 8
+			FS: FS{
+				entries: []*dirEnt{
+					{
+						directoryEntry: &inode{
+							modtime: time.Unix(1, 2),
+							mode:    3,
+						},
+						name: "file",
+					},
+					{
+						directoryEntry: &dnode{
+							entries: []*dirEnt{
+								{
+									directoryEntry: &inode{
+										modtime: time.Unix(4, 5),
+										mode:    fs.ModeSymlink | 6,
+									},
+									name: "anotherFile",
+								},
+							},
+							modtime: time.Unix(7, 8),
+							mode:    fs.ModeDir | fs.ModePerm,
+						},
+						name: "dir",
+					},
+				},
+				mode: fs.ModeDir | fs.ModePerm,
+			},
+			Path: "/dir/anotherFile",
+			Output: &dirEnt{
+				directoryEntry: &inode{
+					modtime: time.Unix(4, 5),
+					mode:    fs.ModeSymlink | 6,
+				},
+				name: "anotherFile",
+			},
+		},
+	} {
+		if f, err := test.FS.LStat(test.Path); !reflect.DeepEqual(err, test.Err) {
+			t.Errorf("test %d: expecting error %s, got %s", n+1, test.Err, err)
+		} else if !reflect.DeepEqual(f, test.Output) {
+			t.Errorf("test %d: expected FileInfo %v, got %v", n+1, test.Output, f)
+		}
+	}
+}

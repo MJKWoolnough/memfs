@@ -2905,3 +2905,166 @@ func TestChown(t *testing.T) {
 		}
 	}
 }
+
+func TestChmod(t *testing.T) {
+	for n, test := range [...]struct {
+		FS     FS
+		Path   string
+		Mode   fs.FileMode
+		Output FS
+		Err    error
+	}{
+		{ // 1
+			Err: &fs.PathError{
+				Op:   "chmod",
+				Path: "",
+				Err:  fs.ErrPermission,
+			},
+		},
+		{ // 2
+			FS: FS{
+				modtime: time.Unix(1, 2),
+				mode:    fs.ModeDir | fs.ModePerm,
+			},
+			Output: FS{
+				modtime: time.Unix(1, 2),
+				mode:    fs.ModeDir,
+			},
+		},
+		{ // 3
+			FS: FS{
+				entries: []*dirEnt{
+					{
+						directoryEntry: &inode{},
+						name:           "a",
+					},
+				},
+				modtime: time.Unix(1, 2),
+				mode:    fs.ModeDir | fs.ModePerm,
+			},
+			Path: "/a",
+			Mode: 0o123,
+			Output: FS{
+				entries: []*dirEnt{
+					{
+						directoryEntry: &inode{
+							mode: 0o123,
+						},
+						name: "a",
+					},
+				},
+				modtime: time.Unix(1, 2),
+				mode:    fs.ModeDir | fs.ModePerm,
+			},
+		},
+		{ // 4
+			FS: FS{
+				entries: []*dirEnt{
+					{
+						directoryEntry: &dnode{
+							mode: fs.ModeDir,
+						},
+						name: "a",
+					},
+				},
+				modtime: time.Unix(1, 2),
+				mode:    fs.ModeDir | fs.ModePerm,
+			},
+			Path: "/a",
+			Mode: 0o123,
+			Output: FS{
+				entries: []*dirEnt{
+					{
+						directoryEntry: &dnode{
+							mode: fs.ModeDir | 0o123,
+						},
+						name: "a",
+					},
+				},
+				modtime: time.Unix(1, 2),
+				mode:    fs.ModeDir | fs.ModePerm,
+			},
+		},
+		{ // 5
+			FS: FS{
+				entries: []*dirEnt{
+					{
+						directoryEntry: &inode{
+							data: []byte("/b"),
+							mode: fs.ModeSymlink,
+						},
+						name: "a",
+					},
+				},
+				modtime: time.Unix(1, 2),
+				mode:    fs.ModeDir | fs.ModePerm,
+			},
+			Path: "/a",
+			Mode: 0o123,
+			Output: FS{
+				entries: []*dirEnt{
+					{
+						directoryEntry: &inode{
+							data: []byte("/b"),
+							mode: fs.ModeSymlink,
+						},
+						name: "a",
+					},
+				},
+				modtime: time.Unix(1, 2),
+				mode:    fs.ModeDir | fs.ModePerm,
+			},
+			Err: &fs.PathError{
+				Op:   "chmod",
+				Path: "/a",
+				Err:  fs.ErrPermission,
+			},
+		},
+		{ // 6
+			FS: FS{
+				entries: []*dirEnt{
+					{
+						directoryEntry: &inode{
+							data: []byte("/b"),
+							mode: fs.ModeSymlink | fs.ModePerm,
+						},
+						name: "a",
+					},
+					{
+						directoryEntry: &inode{},
+						name:           "b",
+					},
+				},
+				modtime: time.Unix(1, 2),
+				mode:    fs.ModeDir | fs.ModePerm,
+			},
+			Path: "/a",
+			Mode: 0o123,
+			Output: FS{
+				entries: []*dirEnt{
+					{
+						directoryEntry: &inode{
+							data: []byte("/b"),
+							mode: fs.ModeSymlink | fs.ModePerm,
+						},
+						name: "a",
+					},
+					{
+						directoryEntry: &inode{
+							mode: 0o123,
+						},
+						name: "b",
+					},
+				},
+				modtime: time.Unix(1, 2),
+				mode:    fs.ModeDir | fs.ModePerm,
+			},
+		},
+	} {
+		if err := test.FS.Chmod(test.Path, test.Mode); !reflect.DeepEqual(err, test.Err) {
+			t.Errorf("test %d: expecting error %s, got %s", n+1, test.Err, err)
+		} else if !reflect.DeepEqual(test.FS, test.Output) {
+			t.Errorf("test %d: expected %v, got %v", n+1, test.Output, test.FS)
+		}
+	}
+}

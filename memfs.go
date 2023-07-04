@@ -8,8 +8,6 @@ import (
 	"time"
 )
 
-const separator = string(filepath.Separator)
-
 type FS dnode
 
 func New() *FS {

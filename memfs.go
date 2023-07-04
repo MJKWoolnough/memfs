@@ -658,3 +658,18 @@ func (f *FS) Chtimes(path string, atime time.Time, mtime time.Time) error {
 
 	return nil
 }
+
+func (f *FS) Lchtimes(path string, atime time.Time, mtime time.Time) error {
+	de, err := f.getLEntry(path)
+	if err != nil {
+		return &fs.PathError{
+			Op:   "lchtimes",
+			Path: path,
+			Err:  err,
+		}
+	}
+
+	de.setTimes(atime, mtime)
+
+	return nil
+}

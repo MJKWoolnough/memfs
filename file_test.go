@@ -62,7 +62,7 @@ func TestRead(t *testing.T) {
 		data, err := io.ReadAll(&f)
 		if !reflect.DeepEqual(err, test.Err) {
 			t.Errorf("test %d: expecting error %s, got %s", n+1, test.Err, err)
-		} else if bytes.Compare(data, test.Data) != 0 {
+		} else if !bytes.Equal(data, test.Data) {
 			t.Errorf("test %d: expecting bytes %v, got %v", n+1, test.Data, data)
 		}
 	}

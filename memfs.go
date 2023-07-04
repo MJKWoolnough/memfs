@@ -95,6 +95,8 @@ func (f *FS) getResolvedDirEnt(path string, remainingRedirects *uint8) (*dirEnt,
 		return de, nil
 	} else if *remainingRedirects == 0 {
 		return nil, fs.ErrInvalid
+	} else if de.Mode()&0o444 == 0 {
+		return nil, fs.ErrPermission
 	}
 
 	*remainingRedirects--

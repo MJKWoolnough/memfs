@@ -460,12 +460,6 @@ func (f *FS) Rename(oldPath, newPath string) error {
 			Path: oldPath,
 			Err:  err,
 		}
-	} else if od.mode&0o222 == 0 {
-		return &fs.PathError{
-			Op:   "rename",
-			Path: oldPath,
-			Err:  fs.ErrPermission,
-		}
 	}
 
 	nd, _, err := f.getEntryWithParent(newPath, mustNotExist)
@@ -483,7 +477,14 @@ func (f *FS) Rename(oldPath, newPath string) error {
 		}
 	}
 
-	od.remove(oldFile.name)
+	if err := od.remove(oldFile.name); err != nil {
+		return &fs.PathError{
+			Op:   "rename",
+			Path: newPath,
+			Err:  err,
+		}
+	}
+
 	nd.entries = append(nd.entries, &dirEnt{
 		directoryEntry: oldFile.directoryEntry,
 		name:           filepath.Base(newPath),

@@ -2800,3 +2800,108 @@ func TestReadlink(t *testing.T) {
 		}
 	}
 }
+
+func TestChown(t *testing.T) {
+	for n, test := range [...]struct {
+		FS   FS
+		Path string
+		Err  error
+	}{
+		{ // 1
+			Err: &fs.PathError{
+				Op:   "chown",
+				Path: "",
+				Err:  fs.ErrPermission,
+			},
+		},
+		{ // 2
+			FS: FS{
+				modtime: time.Unix(1, 2),
+				mode:    fs.ModeDir | fs.ModePerm,
+			},
+		},
+		{ // 3
+			FS: FS{
+				modtime: time.Unix(1, 2),
+				mode:    fs.ModeDir | fs.ModePerm,
+			},
+			Path: "/a",
+			Err: &fs.PathError{
+				Op:   "chown",
+				Path: "/a",
+				Err:  fs.ErrNotExist,
+			},
+		},
+		{ // 5
+			FS: FS{
+				entries: []*dirEnt{
+					{
+						directoryEntry: &inode{},
+						name:           "a",
+					},
+				},
+				modtime: time.Unix(1, 2),
+				mode:    fs.ModeDir | fs.ModePerm,
+			},
+			Path: "/a",
+		},
+		{ // 6
+			FS: FS{
+				entries: []*dirEnt{
+					{
+						directoryEntry: &dnode{},
+						name:           "a",
+					},
+				},
+				modtime: time.Unix(1, 2),
+				mode:    fs.ModeDir | fs.ModePerm,
+			},
+			Path: "/a",
+		},
+		{ // 7
+			FS: FS{
+				entries: []*dirEnt{
+					{
+						directoryEntry: &inode{
+							data: []byte("/b"),
+							mode: fs.ModeSymlink | fs.ModePerm,
+						},
+						name: "a",
+					},
+				},
+				modtime: time.Unix(1, 2),
+				mode:    fs.ModeDir | fs.ModePerm,
+			},
+			Path: "/a",
+			Err: &fs.PathError{
+				Op:   "chown",
+				Path: "/a",
+				Err:  fs.ErrNotExist,
+			},
+		},
+		{ // 8
+			FS: FS{
+				entries: []*dirEnt{
+					{
+						directoryEntry: &inode{
+							data: []byte("/b"),
+							mode: fs.ModeSymlink | fs.ModePerm,
+						},
+						name: "a",
+					},
+					{
+						directoryEntry: &inode{},
+						name:           "b",
+					},
+				},
+				modtime: time.Unix(3, 4),
+				mode:    fs.ModeDir | fs.ModePerm,
+			},
+			Path: "/a",
+		},
+	} {
+		if err := test.FS.Chown(test.Path, 0, 0); !reflect.DeepEqual(err, test.Err) {
+			t.Errorf("test %d: expecting error %s, got %s", n+1, test.Err, err)
+		}
+	}
+}

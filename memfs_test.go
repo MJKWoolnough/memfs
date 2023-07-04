@@ -3148,3 +3148,164 @@ func TestLchown(t *testing.T) {
 		}
 	}
 }
+
+func TestChtimes(t *testing.T) {
+	for n, test := range [...]struct {
+		FS     FS
+		Path   string
+		MTime  time.Time
+		Output FS
+		Err    error
+	}{
+		{ // 1
+			Err: &fs.PathError{
+				Op:   "chtimes",
+				Path: "",
+				Err:  fs.ErrPermission,
+			},
+		},
+		{ // 2
+			FS: FS{
+				modtime: time.Unix(1, 2),
+				mode:    fs.ModeDir | fs.ModePerm,
+			},
+			Output: FS{
+				mode: fs.ModeDir | fs.ModePerm,
+			},
+		},
+		{ // 3
+			FS: FS{
+				modtime: time.Unix(1, 2),
+				mode:    fs.ModeDir | fs.ModePerm,
+			},
+			MTime: time.Unix(3, 4),
+			Output: FS{
+				modtime: time.Unix(3, 4),
+				mode:    fs.ModeDir | fs.ModePerm,
+			},
+		},
+		{ // 4
+			FS: FS{
+				modtime: time.Unix(1, 2),
+				mode:    fs.ModeDir | fs.ModePerm,
+			},
+			Path:  "/a",
+			MTime: time.Unix(3, 4),
+			Output: FS{
+				modtime: time.Unix(1, 2),
+				mode:    fs.ModeDir | fs.ModePerm,
+			},
+			Err: &fs.PathError{
+				Op:   "chtimes",
+				Path: "/a",
+				Err:  fs.ErrNotExist,
+			},
+		},
+		{ // 5
+			FS: FS{
+				entries: []*dirEnt{
+					{
+						directoryEntry: &inode{
+							modtime: time.Unix(3, 4),
+						},
+						name: "a",
+					},
+				},
+				modtime: time.Unix(1, 2),
+				mode:    fs.ModeDir | fs.ModePerm,
+			},
+			Path:  "/a",
+			MTime: time.Unix(5, 6),
+			Output: FS{
+				entries: []*dirEnt{
+					{
+						directoryEntry: &inode{
+							modtime: time.Unix(5, 6),
+						},
+						name: "a",
+					},
+				},
+				modtime: time.Unix(1, 2),
+				mode:    fs.ModeDir | fs.ModePerm,
+			},
+		},
+		{ // 6
+			FS: FS{
+				entries: []*dirEnt{
+					{
+						directoryEntry: &dnode{
+							modtime: time.Unix(3, 4),
+						},
+						name: "a",
+					},
+				},
+				modtime: time.Unix(1, 2),
+				mode:    fs.ModeDir | fs.ModePerm,
+			},
+			Path:  "/a",
+			MTime: time.Unix(5, 6),
+			Output: FS{
+				entries: []*dirEnt{
+					{
+						directoryEntry: &dnode{
+							modtime: time.Unix(5, 6),
+						},
+						name: "a",
+					},
+				},
+				modtime: time.Unix(1, 2),
+				mode:    fs.ModeDir | fs.ModePerm,
+			},
+		},
+		{ // 7
+			FS: FS{
+				entries: []*dirEnt{
+					{
+						directoryEntry: &inode{
+							data:    []byte("/b"),
+							mode:    fs.ModeSymlink | 0o444,
+							modtime: time.Unix(3, 4),
+						},
+						name: "a",
+					},
+					{
+						directoryEntry: &dnode{
+							modtime: time.Unix(5, 6),
+						},
+						name: "b",
+					},
+				},
+				modtime: time.Unix(1, 2),
+				mode:    fs.ModeDir | fs.ModePerm,
+			},
+			Path:  "/a",
+			MTime: time.Unix(7, 8),
+			Output: FS{
+				entries: []*dirEnt{
+					{
+						directoryEntry: &inode{
+							data:    []byte("/b"),
+							mode:    fs.ModeSymlink | 0o444,
+							modtime: time.Unix(3, 4),
+						},
+						name: "a",
+					},
+					{
+						directoryEntry: &dnode{
+							modtime: time.Unix(7, 8),
+						},
+						name: "b",
+					},
+				},
+				modtime: time.Unix(1, 2),
+				mode:    fs.ModeDir | fs.ModePerm,
+			},
+		},
+	} {
+		if err := test.FS.Chtimes(test.Path, time.Time{}, test.MTime); !reflect.DeepEqual(err, test.Err) {
+			t.Errorf("test %d: expecting error %s, got %s", n+1, test.Err, err)
+		} else if !reflect.DeepEqual(test.FS, test.Output) {
+			t.Errorf("test %d: expected %v, got %v", n+1, test.Output, test.FS)
+		}
+	}
+}

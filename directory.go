@@ -17,6 +17,11 @@ type directoryEntry interface {
 	setTimes(time.Time, time.Time)
 }
 
+type dNode interface {
+	get(string) *dirEnt
+	fs.FileInfo
+}
+
 type dirEnt struct {
 	directoryEntry
 	name string

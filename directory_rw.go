@@ -32,6 +32,13 @@ func (d *dnodeRW) get(name string) *dirEnt {
 	return d.dnode.get(name)
 }
 
+func (d *dnodeRW) set(de *dirEnt) {
+	d.mu.Lock()
+	defer d.mu.Unlock()
+
+	return d.dnode.set(de)
+}
+
 func (d *dnodeRW) hasEntries() bool {
 	d.mu.RLock()
 	defer d.mu.RUnlock()

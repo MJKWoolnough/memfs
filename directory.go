@@ -19,6 +19,7 @@ type directoryEntry interface {
 
 type dNode interface {
 	get(string) *dirEnt
+	set(*dirEnt)
 	hasEntries() bool
 	fs.FileInfo
 }
@@ -63,6 +64,17 @@ func (d *dnode) get(name string) *dirEnt {
 			return de
 		}
 	}
+
+	return nil
+}
+
+func (d *dnode) set(de *dirEnt) error {
+	if d.mode&0o222 == 0 {
+		return fs.ErrPermission
+	}
+
+	d.entries = append(d.entries, de)
+	d.modtime = time.Now()
 
 	return nil
 }

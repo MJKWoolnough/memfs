@@ -25,18 +25,18 @@ func (d *dnodeRW) open(name string, _ opMode) (fs.File, error) {
 	}, nil
 }
 
-func (d *dnodeRW) get(name string) *dirEnt {
+func (d *dnodeRW) getEntry(name string) *dirEnt {
 	d.mu.RLock()
 	defer d.mu.RUnlock()
 
-	return d.dnode.get(name)
+	return d.dnode.getEntry(name)
 }
 
-func (d *dnodeRW) set(de *dirEnt) error {
+func (d *dnodeRW) setEntry(de *dirEnt) error {
 	d.mu.Lock()
 	defer d.mu.Unlock()
 
-	return d.dnode.set(de)
+	return d.dnode.setEntry(de)
 }
 
 func (d *dnodeRW) hasEntries() bool {
@@ -53,7 +53,7 @@ func (d *dnodeRW) getEntries() ([]fs.DirEntry, error) {
 	return d.dnode.getEntries()
 }
 
-func (d *dnodeRW) remove(name string) error {
+func (d *dnodeRW) removeEntry(name string) error {
 	d.mu.Lock()
 	defer d.mu.Unlock()
 

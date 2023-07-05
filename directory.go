@@ -21,6 +21,7 @@ type dNode interface {
 	get(string) *dirEnt
 	set(*dirEnt)
 	hasEntries() bool
+	getEntries() ([]fs.DirEntry, error)
 	fs.FileInfo
 }
 
@@ -83,6 +84,20 @@ func (d *dnode) hasEntries() bool {
 	return len(d.entries) > 0
 }
 
+func (d *dnode) getEntries() ([]fs.DirEntry, error) {
+	if d.mode&0o444 == 0 {
+		return nil, fs.ErrPermission
+	}
+
+	dirs := make([]fs.DirEntry, len(d.entries))
+
+	for i := range d.entries {
+		dirs[i] = d.entries[i]
+	}
+
+	return dirs, nil
+}
+
 func (d *dnode) remove(name string) error {
 	if d.mode&0o222 == 0 {
 		return fs.ErrPermission
@@ -136,13 +151,13 @@ func (d *directory) Close() error {
 
 func (d *directory) ReadDir(n int) ([]fs.DirEntry, error) {
 	if n <= 0 {
-		dirs := make([]fs.DirEntry, len(d.entries))
-
-		for i := range d.entries {
-			dirs[i] = d.entries[i]
+		return d.getEntries()
+	} else if d.mode&0o444 == 0 {
+		return nil, &fs.PathError{
+			Op:   "readdir",
+			Path: d.name,
+			Err:  fs.ErrPermission,
 		}
-
-		return dirs, nil
 	}
 
 	left := len(d.entries) - d.pos

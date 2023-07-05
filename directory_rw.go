@@ -32,7 +32,7 @@ func (d *dnodeRW) get(name string) *dirEnt {
 	return d.dnode.get(name)
 }
 
-func (d *dnodeRW) set(de *dirEnt) {
+func (d *dnodeRW) set(de *dirEnt) error {
 	d.mu.Lock()
 	defer d.mu.Unlock()
 
@@ -44,6 +44,13 @@ func (d *dnodeRW) hasEntries() bool {
 	defer d.mu.RUnlock()
 
 	return d.dnode.hasEntries()
+}
+
+func (d *dnodeRW) getEntries() ([]fs.DirEntry, error) {
+	d.mu.RLock()
+	defer d.mu.RUnlock()
+
+	return d.dnode.getEntries()
 }
 
 func (d *dnodeRW) remove(name string) error {

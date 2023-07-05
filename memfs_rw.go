@@ -24,80 +24,36 @@ func (f *FSRW) ReadDir(path string) ([]fs.DirEntry, error) {
 		}
 	}
 
-	if d.mode&0o444 == 0 {
+	des, err := d.getEntries()
+	if err != nil {
 		return nil, &fs.PathError{
 			Op:   "readdir",
 			Path: path,
-			Err:  fs.ErrPermission,
+			Err:  err,
 		}
 	}
 
-	dirs := make([]fs.DirEntry, len(d.entries))
-
-	for i := range d.entries {
-		dirs[i] = d.entries[i]
-	}
-
-	return dirs, nil
+	return des, nil
 }
 
 func (f *FSRW) ReadFile(path string) ([]byte, error) {
-	de, err := f.getEntry(path)
-	if err != nil {
-		return nil, &fs.PathError{
-			Op:   "readfile",
-			Path: path,
-			Err:  err,
-		}
-	}
+	f.mu.RLock()
+	defer f.mu.RUnlock()
 
-	inode, ok := de.directoryEntry.(*inode)
-	if !ok {
-		return nil, &fs.PathError{
-			Op:   "readfile",
-			Path: path,
-			Err:  fs.ErrInvalid,
-		}
-	}
-
-	if inode.mode&0o444 == 0 {
-		return nil, &fs.PathError{
-			Op:   "readfile",
-			Path: path,
-			Err:  fs.ErrPermission,
-		}
-	}
-
-	data := make([]byte, len(inode.data))
-
-	copy(data, inode.data)
-
-	return data, nil
+	return f.FS.ReadFile(path)
 }
 
 func (f *FSRW) Stat(path string) (fs.FileInfo, error) {
-	de, err := f.getEntry(path)
-	if err != nil {
-		return nil, &fs.PathError{
-			Op:   "stat",
-			Path: path,
-			Err:  err,
-		}
-	}
+	f.mu.RLock()
+	defer f.mu.RUnlock()
 
-	fi, err := de.Info()
-	if err != nil {
-		return nil, &fs.PathError{
-			Op:   "stat",
-			Path: path,
-			Err:  err,
-		}
-	}
-
-	return fi, nil
+	return f.FS.Stat(path)
 }
 
 func (f *FSRW) Mkdir(path string, perm fs.FileMode) error {
+	f.mu.Lock()
+	defer f.mu.Unlock()
+
 	return f.mkdir("mkdir", path, path, perm)
 }
 
@@ -111,15 +67,7 @@ func (f *FSRW) mkdir(op, opath, path string, perm fs.FileMode) error {
 		}
 	}
 
-	if d.mode&0o222 == 0 {
-		return &fs.PathError{
-			Op:   op,
-			Path: opath,
-			Err:  fs.ErrPermission,
-		}
-	}
-
-	d.entries = append(d.entries, &dirEnt{
+	if err := d.setEntry(&dirEnt{
 		directoryEntry: &dnodeRW{
 			dnode: dnode{
 				modtime: time.Now(),
@@ -127,13 +75,21 @@ func (f *FSRW) mkdir(op, opath, path string, perm fs.FileMode) error {
 			},
 		},
 		name: filepath.Base(path),
-	})
-	d.modtime = time.Now()
+	}); err != nil {
+		return &fs.PathError{
+			Op:   op,
+			Path: opath,
+			Err:  err,
+		}
+	}
 
 	return nil
 }
 
 func (f *FSRW) MkdirAll(path string, perm fs.FileMode) error {
+	f.mu.Lock()
+	defer f.mu.Unlock()
+
 	cpath := filepath.Join("/", path)
 	last := 0
 
@@ -163,6 +119,9 @@ type File interface {
 }
 
 func (f *FSRW) Create(path string) (File, error) {
+	f.mu.Lock()
+	defer f.mu.Unlock()
+
 	d, existingFile, err := f.getEntryWithParent(path, doesntMatter)
 	if err != nil {
 		return nil, &fs.PathError{
@@ -175,28 +134,28 @@ func (f *FSRW) Create(path string) (File, error) {
 	fileName := filepath.Base(path)
 
 	if existingFile == nil {
-		if d.mode&0o222 == 0 {
-			return nil, &fs.PathError{
-				Op:   "create",
-				Path: path,
-				Err:  fs.ErrPermission,
-			}
-		}
-
 		i := &inode{
 			modtime: time.Now(),
 			mode:    fs.ModePerm,
 		}
-		d.entries = append(d.entries, &dirEnt{
+
+		if err := d.setEntry(&dirEnt{
 			directoryEntry: i,
 			name:           fileName,
-		})
-		d.modtime = i.modtime
+		}); err != nil {
+			return nil, &fs.PathError{
+				Op:   "create",
+				Path: path,
+				Err:  err,
+			}
+		}
 
-		return &file{
-			name:   fileName,
-			inode:  i,
-			opMode: opRead | opWrite | opSeek,
+		return &fileRW{
+			file: file{
+				name:   fileName,
+				inode:  i,
+				opMode: opRead | opWrite | opSeek,
+			},
 		}, nil
 	}
 
@@ -209,7 +168,7 @@ func (f *FSRW) Create(path string) (File, error) {
 		}
 	}
 
-	ef, ok := of.(*file)
+	ef, ok := of.(*fileRW)
 	if !ok {
 		return nil, &fs.PathError{
 			Op:   "create",
@@ -225,6 +184,9 @@ func (f *FSRW) Create(path string) (File, error) {
 }
 
 func (f *FSRW) Link(oldPath, newPath string) error {
+	f.mu.Lock()
+	defer f.mu.Unlock()
+
 	oe, err := f.getLEntry(oldPath)
 	if err != nil {
 		return &fs.PathError{
@@ -247,24 +209,26 @@ func (f *FSRW) Link(oldPath, newPath string) error {
 			Path: newPath,
 			Err:  err,
 		}
-	} else if d.mode&0o222 == 0 {
+	}
+
+	if err := d.setEntry(&dirEnt{
+		directoryEntry: oe.directoryEntry,
+		name:           filepath.Base(newPath),
+	}); err != nil {
 		return &fs.PathError{
 			Op:   "link",
 			Path: newPath,
-			Err:  fs.ErrPermission,
+			Err:  err,
 		}
 	}
-
-	d.entries = append(d.entries, &dirEnt{
-		directoryEntry: oe.directoryEntry,
-		name:           filepath.Base(newPath),
-	})
-	d.modtime = time.Now()
 
 	return nil
 }
 
 func (f *FSRW) Symlink(oldPath, newPath string) error {
+	f.mu.Lock()
+	defer f.mu.Unlock()
+
 	d, _, err := f.getEntryWithParent(newPath, mustNotExist)
 	if err != nil {
 		return &fs.PathError{
@@ -272,28 +236,30 @@ func (f *FSRW) Symlink(oldPath, newPath string) error {
 			Path: newPath,
 			Err:  err,
 		}
-	} else if d.mode&0o222 == 0 {
-		return &fs.PathError{
-			Op:   "symlink",
-			Path: newPath,
-			Err:  fs.ErrPermission,
-		}
 	}
 
-	d.entries = append(d.entries, &dirEnt{
+	if err = d.setEntry(&dirEnt{
 		directoryEntry: &inode{
 			data:    []byte(filepath.Clean(oldPath)),
 			modtime: time.Now(),
 			mode:    fs.ModeSymlink | fs.ModePerm,
 		},
 		name: filepath.Base(newPath),
-	})
-	d.modtime = time.Now()
+	}); err != nil {
+		return &fs.PathError{
+			Op:   "symlink",
+			Path: newPath,
+			Err:  err,
+		}
+	}
 
 	return nil
 }
 
 func (f *FSRW) Rename(oldPath, newPath string) error {
+	f.mu.Lock()
+	defer f.mu.Unlock()
+
 	od, oldFile, err := f.getEntryWithParent(oldPath, mustExist)
 	if err != nil {
 		return &fs.PathError{
@@ -310,7 +276,7 @@ func (f *FSRW) Rename(oldPath, newPath string) error {
 			Path: newPath,
 			Err:  err,
 		}
-	} else if nd.mode&0o222 == 0 {
+	} else if nd.Mode()&0o222 == 0 {
 		return &fs.PathError{
 			Op:   "rename",
 			Path: newPath,
@@ -318,7 +284,7 @@ func (f *FSRW) Rename(oldPath, newPath string) error {
 		}
 	}
 
-	if err := od.remove(oldFile.name); err != nil {
+	if err := od.removeEntry(oldFile.name); err != nil {
 		return &fs.PathError{
 			Op:   "rename",
 			Path: newPath,
@@ -326,16 +292,24 @@ func (f *FSRW) Rename(oldPath, newPath string) error {
 		}
 	}
 
-	nd.entries = append(nd.entries, &dirEnt{
+	if err := nd.setEntry(&dirEnt{
 		directoryEntry: oldFile.directoryEntry,
 		name:           filepath.Base(newPath),
-	})
-	nd.modtime = time.Now()
+	}); err != nil {
+		return &fs.PathError{
+			Op:   "rename",
+			Path: newPath,
+			Err:  err,
+		}
+	}
 
 	return nil
 }
 
 func (f *FSRW) Remove(path string) error {
+	f.mu.Lock()
+	defer f.mu.Unlock()
+
 	d, de, err := f.getEntryWithParent(path, mustExist)
 	if err != nil {
 		return &fs.PathError{
@@ -343,18 +317,12 @@ func (f *FSRW) Remove(path string) error {
 			Path: path,
 			Err:  err,
 		}
-	} else if d.mode&0o222 == 0 {
-		return &fs.PathError{
-			Op:   "remove",
-			Path: path,
-			Err:  fs.ErrPermission,
-		}
 	}
 
 	if de.IsDir() {
-		dir, _ := de.directoryEntry.(*dnode)
+		dir, _ := de.directoryEntry.(dNode)
 
-		if len(dir.entries) > 0 {
+		if dir.hasEntries() {
 			return &fs.PathError{
 				Op:   "remove",
 				Path: path,
@@ -363,7 +331,7 @@ func (f *FSRW) Remove(path string) error {
 		}
 	}
 
-	if err := d.remove(de.name); err != nil {
+	if err := d.removeEntry(de.name); err != nil {
 		return &fs.PathError{
 			Op:   "remove",
 			Path: path,
@@ -375,6 +343,9 @@ func (f *FSRW) Remove(path string) error {
 }
 
 func (f *FSRW) RemoveAll(path string) error {
+	f.mu.Lock()
+	defer f.mu.Unlock()
+
 	dirName, fileName := filepath.Split(path)
 
 	d, err := f.getDirEnt(dirName)
@@ -386,7 +357,7 @@ func (f *FSRW) RemoveAll(path string) error {
 		}
 	}
 
-	if err := d.remove(fileName); err != nil {
+	if err := d.removeEntry(fileName); err != nil {
 		return &fs.PathError{
 			Op:   "removeall",
 			Path: path,
@@ -398,56 +369,23 @@ func (f *FSRW) RemoveAll(path string) error {
 }
 
 func (f *FSRW) LStat(path string) (fs.FileInfo, error) {
-	de, err := f.getLEntry(path)
-	if err != nil {
-		return nil, &fs.PathError{
-			Op:   "lstat",
-			Path: path,
-			Err:  err,
-		}
-	}
+	f.mu.RLock()
+	defer f.mu.RUnlock()
 
-	fi, err := de.Info()
-	if err != nil {
-		return nil, &fs.PathError{
-			Op:   "lstat",
-			Path: path,
-			Err:  err,
-		}
-	}
-
-	return fi, nil
+	return f.FS.LStat(path)
 }
 
 func (f *FSRW) Readlink(path string) (string, error) {
-	de, err := f.getLEntry(path)
-	if err != nil {
-		return "", &fs.PathError{
-			Op:   "readlink",
-			Path: path,
-			Err:  err,
-		}
-	}
+	f.mu.RLock()
+	defer f.mu.RUnlock()
 
-	s, ok := de.directoryEntry.(*inode)
-	if !ok || s.mode&fs.ModeSymlink == 0 {
-		return "", &fs.PathError{
-			Op:   "readlink",
-			Path: path,
-			Err:  fs.ErrInvalid,
-		}
-	} else if s.mode&0o444 == 0 {
-		return "", &fs.PathError{
-			Op:   "readlink",
-			Path: path,
-			Err:  fs.ErrPermission,
-		}
-	}
-
-	return string(s.data), nil
+	return f.FS.Readlink(path)
 }
 
 func (f *FSRW) Chown(path string, uid, gid int) error {
+	f.mu.Lock()
+	defer f.mu.Unlock()
+
 	if _, err := f.getEntry(path); err != nil {
 		return &fs.PathError{
 			Op:   "chown",
@@ -460,6 +398,9 @@ func (f *FSRW) Chown(path string, uid, gid int) error {
 }
 
 func (f *FSRW) Chmod(path string, mode fs.FileMode) error {
+	f.mu.Lock()
+	defer f.mu.Unlock()
+
 	de, err := f.getEntry(path)
 	if err != nil {
 		return &fs.PathError{
@@ -475,6 +416,9 @@ func (f *FSRW) Chmod(path string, mode fs.FileMode) error {
 }
 
 func (f *FSRW) Lchown(path string, uid, gid int) error {
+	f.mu.Lock()
+	defer f.mu.Unlock()
+
 	if _, err := f.getLEntry(path); err != nil {
 		return &fs.PathError{
 			Op:   "lchown",
@@ -487,6 +431,9 @@ func (f *FSRW) Lchown(path string, uid, gid int) error {
 }
 
 func (f *FSRW) Chtimes(path string, atime time.Time, mtime time.Time) error {
+	f.mu.Lock()
+	defer f.mu.Unlock()
+
 	de, err := f.getEntry(path)
 	if err != nil {
 		return &fs.PathError{
@@ -502,6 +449,9 @@ func (f *FSRW) Chtimes(path string, atime time.Time, mtime time.Time) error {
 }
 
 func (f *FSRW) Lchtimes(path string, atime time.Time, mtime time.Time) error {
+	f.mu.Lock()
+	defer f.mu.Unlock()
+
 	de, err := f.getLEntry(path)
 	if err != nil {
 		return &fs.PathError{

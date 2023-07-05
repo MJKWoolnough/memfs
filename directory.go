@@ -19,6 +19,7 @@ type directoryEntry interface {
 
 type dNode interface {
 	get(string) *dirEnt
+	hasEntries() bool
 	fs.FileInfo
 }
 
@@ -64,6 +65,10 @@ func (d *dnode) get(name string) *dirEnt {
 	}
 
 	return nil
+}
+
+func (d *dnode) hasEntries() bool {
+	return len(d.entries) > 0
 }
 
 func (d *dnode) remove(name string) error {

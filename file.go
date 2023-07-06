@@ -34,6 +34,14 @@ func (i *inode) open(name string, mode opMode) (fs.File, error) {
 	}, nil
 }
 
+func (i *inode) bytes() ([]byte, error) {
+	if i.mode&0o444 == 0 {
+		return nil, fs.ErrPermission
+	}
+
+	return i.data, nil
+}
+
 func (i *inode) setMode(mode fs.FileMode) {
 	i.mode = i.mode&fs.ModeSymlink | mode
 }

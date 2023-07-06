@@ -31,6 +31,13 @@ func (i *inodeRW) open(name string, mode opMode) (fs.File, error) {
 	}, nil
 }
 
+func (i *inodeRW) bytes() ([]byte, error) {
+	i.mu.RLock()
+	defer i.mu.RUnlock()
+
+	return i.inode.bytes()
+}
+
 func (i *inodeRW) Size() int64 {
 	i.mu.RLock()
 	defer i.mu.RUnlock()

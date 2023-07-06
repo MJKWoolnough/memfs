@@ -8,6 +8,8 @@ import (
 	"testing"
 )
 
+var _ dNode = &directory{}
+
 func testReadAll(d *directory) ([]fs.DirEntry, error) {
 	return d.ReadDir(-1)
 }
@@ -119,60 +121,6 @@ func TestReadDir(t *testing.T) {
 	}
 }
 
-func TestDnodeRemove(t *testing.T) {
-	d := dnode{
-		entries: []*dirEnt{
-			{
-				name: "1",
-			},
-			{
-				name: "2",
-			},
-			{
-				name: "3",
-			},
-			{
-				name: "4",
-			},
-		},
-		mode: fs.ModeDir | fs.ModePerm,
-	}
-
-	if err := d.remove("2"); err != nil {
-		t.Errorf("test 1: unexpected error: %s", err)
-
-		return
-	}
-
-	if err := d.remove("2"); !errors.Is(err, fs.ErrNotExist) {
-		t.Errorf("test 2: unexpected Not Exist, got %s", err)
-
-		return
-	}
-
-	if len(d.entries) != 3 {
-		t.Errorf("test 3: expecting 3 entries, got %d", len(d.entries))
-
-		return
-	}
-
-	expecting := []*dirEnt{
-		{
-			name: "1",
-		},
-		{
-			name: "3",
-		},
-		{
-			name: "4",
-		},
-	}
-
-	if !reflect.DeepEqual(expecting, d.entries) {
-		t.Errorf("test 4: expecting %v, got %v", expecting, d.entries)
-	}
-}
-
 func TestDnodeGet(t *testing.T) {
 	d := dnode{
 		entries: []*dirEnt{
@@ -181,33 +129,52 @@ func TestDnodeGet(t *testing.T) {
 			},
 			{
 				name: "2",
+				directoryEntry: &dnode{
+					mode: fs.ModePerm,
+				},
 			},
 			{
 				name: "3",
+				directoryEntry: &dnode{
+					mode: 0o222,
+				},
 			},
 			{
 				name: "4",
+				directoryEntry: &dnode{
+					mode: 0o444,
+				},
 			},
 		},
 	}
 
-	if got := d.get("1"); got == nil || got.name != "1" {
-		t.Errorf("test 1: expecting to get '1', got %v", got)
+	if got, err := d.getEntry("1"); !errors.Is(err, fs.ErrPermission) {
+		t.Errorf("test 1: expecting to err %v, got %v", fs.ErrPermission, err)
+	} else if got != nil {
+		t.Errorf("test 1: expecting to get nil, got %v", got)
 	}
 
-	if got := d.get("2"); got == nil || got.name != "2" {
+	if got, err := d.getEntry("2"); err != nil {
+		t.Errorf("test 2: expecting to nil err, got %v", err)
+	} else if got == nil || got.name != "2" {
 		t.Errorf("test 2: expecting to get '2', got %v", got)
 	}
 
-	if got := d.get("3"); got == nil || got.name != "3" {
+	if got, err := d.getEntry("3"); err != nil {
+		t.Errorf("test 3: expecting to nil err, got %v", err)
+	} else if got == nil || got.name != "3" {
 		t.Errorf("test 3: expecting to get '3', got %v", got)
 	}
 
-	if got := d.get("4"); got == nil || got.name != "4" {
-		t.Errorf("test 4: expecting to get '4', got %v", got)
+	if got, err := d.getEntry("4"); !errors.Is(err, fs.ErrPermission) {
+		t.Errorf("test 4: expecting to err %v, got %v", fs.ErrPermission, err)
+	} else if got != nil {
+		t.Errorf("test 4: expecting to get nil, got %v", got)
 	}
 
-	if got := d.get("5"); got != nil {
-		t.Errorf("test 3: expecting to get nil, got %v", got)
+	if got, err := d.getEntry("5"); !errors.Is(err, fs.ErrNotExist) {
+		t.Errorf("test 5: expecting to err %v, got %v", fs.ErrNotExist, err)
+	} else if got != nil {
+		t.Errorf("test 5: expecting to get nil, got %v", got)
 	}
 }

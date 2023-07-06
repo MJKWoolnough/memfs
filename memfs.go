@@ -87,15 +87,16 @@ func (f *FS) getResolvedDirEnt(path string, remainingRedirects *uint8) (*dirEnt,
 		return de, nil
 	} else if *remainingRedirects == 0 {
 		return nil, fs.ErrInvalid
-	} else if de.Mode()&0o444 == 0 {
-		return nil, fs.ErrPermission
 	}
 
 	*remainingRedirects--
 
-	se, _ := de.directoryEntry.(*inode)
+	b, err := de.bytes()
+	if err != nil {
+		return nil, err
+	}
 
-	link := string(se.data)
+	link := string(b)
 
 	if !strings.HasPrefix(link, "/") {
 		link = filepath.Join(dir, link)
@@ -187,25 +188,16 @@ func (f *FS) ReadFile(path string) ([]byte, error) {
 		}
 	}
 
-	inode, ok := de.directoryEntry.(*inode)
-	if !ok {
+	b, err := de.bytes()
+	if err != nil {
 		return nil, &fs.PathError{
 			Op:   "readfile",
 			Path: path,
-			Err:  fs.ErrInvalid,
-		}
-	}
-	if inode.mode&0o444 == 0 {
-		return nil, &fs.PathError{
-			Op:   "readfile",
-			Path: path,
-			Err:  fs.ErrPermission,
+			Err:  err,
 		}
 	}
 
-	data := make([]byte, len(inode.data))
-
-	copy(data, inode.data)
+	data := make([]byte, len(b))
 
 	copy(data, b)
 

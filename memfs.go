@@ -5,17 +5,9 @@ import (
 	"io/fs"
 	"path/filepath"
 	"strings"
-	"time"
 )
 
 type FS dnode
-
-func New() *FS {
-	return &FS{
-		modtime: time.Now(),
-		mode:    fs.ModeDir | fs.ModePerm,
-	}
-}
 
 func (f *FS) joinRoot(path string) string {
 	return filepath.Join("/", path)

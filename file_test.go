@@ -13,12 +13,9 @@ import (
 var _ interface {
 	io.ReadSeekCloser
 	io.ReaderAt
-	io.Writer
 	io.WriterTo
-	io.WriterAt
 	io.RuneScanner
 	io.ByteScanner
-	io.ByteWriter
 } = &file{}
 
 func TestRead(t *testing.T) {
@@ -745,243 +742,25 @@ func TestSeek(t *testing.T) {
 	}
 }
 
-func TestWrite(t *testing.T) {
-	var toWrite [256]byte
-
-	for n := range toWrite {
-		toWrite[n] = byte(n)
-	}
-
-	f := file{
-		inode: &inode{
-			data: make([]byte, 100),
-		},
-	}
-
-	n, err := f.Write(toWrite[:10])
-	if !reflect.DeepEqual(err, &fs.PathError{
-		Op:   "write",
-		Path: "",
-		Err:  fs.ErrClosed,
-	}) {
-		t.Errorf("test 1: expecting ErrClosed, got %s", err)
-	} else if n != 0 {
-		t.Errorf("test 1: expecting to write 0 bytes, wrote %d", n)
-	}
-
-	for n := range toWrite {
-		if n == 0 {
-			continue
-		}
-		f := file{
-			inode: &inode{
-				data: make([]byte, 100),
-			},
-			opMode: opWrite,
-		}
-		for i := 0; i < 100; i++ {
-			m, err := f.Write(toWrite[:n])
-			if !errors.Is(err, nil) {
-				t.Errorf("test %d: expecting no error, got %s", n+1, err)
-			} else if m != n {
-				t.Errorf("test %d: expecting to write %d bytes, wrote %d", n+1, n, m)
-			}
-		}
-		expected := bytes.Repeat(toWrite[:n], 100)
-		if !bytes.Equal(f.data, expected) {
-			t.Errorf("test %d: expecting to write %v, wrote %v", n+1, expected, f.data)
-		}
-	}
-}
-
-func TestWriteAt(t *testing.T) {
-	f := file{
-		inode: &inode{
-			data: make([]byte, 10),
-		},
-	}
-
-	n, err := f.WriteAt([]byte{0}, 0)
-	if !reflect.DeepEqual(err, &fs.PathError{
-		Op:   "writeat",
-		Path: "",
-		Err:  fs.ErrClosed,
-	}) {
-		t.Errorf("test 1: expecting ErrClosed, got %s", err)
-	} else if n != 0 {
-		t.Errorf("test 1: expecting to write 0 bytes, wrote %d", n)
-	}
-
-	f.opMode = opWrite | opSeek
-
-	for n, test := range [...]struct {
-		ToWrite []byte
-		Pos     int64
-		N       int
-		Err     error
-		Buffer  []byte
-	}{
-		{
-			ToWrite: []byte("Beep"),
-			Pos:     2,
-			N:       4,
-			Err:     nil,
-			Buffer:  []byte("\000\000Beep\000\000\000\000"),
-		},
-		{
-			ToWrite: []byte("Boop"),
-			Pos:     2,
-			N:       4,
-			Err:     nil,
-			Buffer:  []byte("\000\000Boop\000\000\000\000"),
-		},
-		{
-			ToWrite: []byte("FooBar"),
-			Pos:     12,
-			N:       6,
-			Err:     nil,
-			Buffer:  []byte("\000\000Boop\000\000\000\000\000\000FooBar"),
-		},
-		{
-			ToWrite: []byte("Hello"),
-			Pos:     0,
-			N:       5,
-			Err:     nil,
-			Buffer:  []byte("Hellop\000\000\000\000\000\000FooBar"),
-		},
-	} {
-		m, err := f.WriteAt(test.ToWrite, test.Pos)
-		if !reflect.DeepEqual(test.Err, err) {
-			t.Errorf("test %d: expecting error %s, got %s", n+1, test.Err, err)
-		} else if m != test.N {
-			t.Errorf("test %d: expecting to write %d bytes, wrote %d", n+1, test.N, m)
-		} else if !bytes.Equal(f.data, test.Buffer) {
-			t.Errorf("test %d: expecting buffer to be %v bytes, got %v", n+1, test.Buffer, f.data)
-		}
-	}
-}
-
-func TestWriteString(t *testing.T) {
-	var toWrite [256]byte
-
-	for n := range toWrite {
-		toWrite[n] = byte(n)
-	}
-
-	f := file{
-		inode: &inode{
-			data: make([]byte, 100),
-		},
-	}
-
-	n, err := f.WriteString(string(toWrite[:10]))
-	if !reflect.DeepEqual(err, &fs.PathError{
-		Op:   "writestring",
-		Path: "",
-		Err:  fs.ErrClosed,
-	}) {
-		t.Errorf("test 1: expecting ErrClosed, got %s", err)
-	} else if n != 0 {
-		t.Errorf("test 1: expecting to write 0 bytes, wrote %d", n)
-	}
-
-	for n := range toWrite {
-		if n == 0 {
-			continue
-		}
-		f := file{
-			inode: &inode{
-				data: make([]byte, 100),
-			},
-			opMode: opWrite,
-		}
-		for i := 0; i < 100; i++ {
-			m, err := f.WriteString(string(toWrite[:n]))
-			if !errors.Is(err, nil) {
-				t.Errorf("test %d: expecting no error, got %s", n+1, err)
-			} else if m != n {
-				t.Errorf("test %d: expecting to write %d bytes, wrote %d", n+1, n, m)
-			}
-		}
-		expected := bytes.Repeat(toWrite[:n], 100)
-		if !bytes.Equal(f.data, expected) {
-			t.Errorf("test %d: expecting to write %v, wrote %v", n+1, expected, f.data)
-		}
-	}
-}
-
-func TestWriteByte(t *testing.T) {
-Tests:
-	for n, test := range [...]struct {
-		Data []byte
-		Mode opMode
-		Err  error
-	}{
-		{
-			Err: &fs.PathError{
-				Op:   "writebyte",
-				Path: "",
-				Err:  fs.ErrInvalid,
-			},
-		},
-		{
-			Data: []byte{'a'},
-			Err: &fs.PathError{
-				Op:   "writebyte",
-				Path: "",
-				Err:  fs.ErrClosed,
-			},
-		},
-		{
-			Data: []byte("abc"),
-			Mode: opWrite,
-		},
-	} {
-		f := file{
-			inode: &inode{
-				data: test.Data,
-			},
-			opMode: test.Mode,
-		}
-
-		for i := range test.Data {
-			err := f.WriteByte(test.Data[i])
-			if !reflect.DeepEqual(err, test.Err) {
-				t.Errorf("test %d.%d: expecting error %s, got %s", n+1, i+1, test.Err, err)
-			} else if test.Err != nil {
-				continue Tests
-			}
-		}
-
-		if test.Err != nil {
-			continue
-		}
-
-		if !bytes.Equal(test.Data, f.data) {
-			t.Errorf("test %d: expecting to write %s, wrote %s", n+1, test.Data, f.data)
-		}
-	}
-}
-
 func TestClose(t *testing.T) {
 	f := file{
 		inode:  &inode{},
 		opMode: opWrite,
 	}
 
-	_, err := f.WriteString("123")
+	err := f.Close()
 	if err != nil {
 		t.Errorf("test 1: expecting nil error, got %s", err)
 	}
 
 	err = f.Close()
-	if err != nil {
-		t.Errorf("test 2: expecting nil error, got %s", err)
+	if !errors.Is(err, fs.ErrClosed) {
+		t.Errorf("test 2: expecting ErrClosed error, got %s", err)
 	}
 
-	_, err = f.WriteString("1")
+	_, err = f.Read([]byte{})
 	if !reflect.DeepEqual(err, &fs.PathError{
-		Op:   "writestring",
+		Op:   "read",
 		Path: "",
 		Err:  fs.ErrClosed,
 	}) {

@@ -18,7 +18,7 @@ type directoryEntry interface {
 }
 
 type dNode interface {
-	getEntry(string) *dirEnt
+	getEntry(string) (*dirEnt, error)
 	setEntry(*dirEnt) error
 	hasEntries() bool
 	getEntries() ([]fs.DirEntry, error)
@@ -60,14 +60,18 @@ func (d *dnode) open(name string, _ opMode) (fs.File, error) {
 	}, nil
 }
 
-func (d *dnode) getEntry(name string) *dirEnt {
+func (d *dnode) getEntry(name string) (*dirEnt, error) {
+	if d.mode&0o444 == 0 {
+		return nil, fs.ErrPermission
+	}
+
 	for _, de := range d.entries {
 		if de.name == name {
-			return de
+			return de, nil
 		}
 	}
 
-	return nil
+	return nil, fs.ErrNotExist
 }
 
 func (d *dnode) setEntry(de *dirEnt) error {

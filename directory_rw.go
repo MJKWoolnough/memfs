@@ -25,7 +25,7 @@ func (d *dnodeRW) open(name string, _ opMode) (fs.File, error) {
 	}, nil
 }
 
-func (d *dnodeRW) getEntry(name string) *dirEnt {
+func (d *dnodeRW) getEntry(name string) (*dirEnt, error) {
 	d.mu.RLock()
 	defer d.mu.RUnlock()
 

@@ -2,12 +2,15 @@ package memfs
 
 import (
 	"errors"
+	"fmt"
 	"io/fs"
 	"path/filepath"
 	"strings"
 )
 
-type FS dnode
+type FS struct {
+	de directoryEntry
+}
 
 func (f *FS) joinRoot(path string) string {
 	return filepath.Join("/", path)
@@ -43,7 +46,7 @@ func (f *FS) getDirEnt(path string) (dNode, error) {
 	de, err := f.getResolvedDirEnt(f.joinRoot(path), &redirectsRemaining)
 	if err != nil {
 		return nil, err
-	} else if d, ok := de.directoryEntry.(dNode); !ok {
+	} else if d, ok := de.(dNode); !ok {
 		return nil, fs.ErrInvalid
 	} else {
 		return d, nil
@@ -52,38 +55,43 @@ func (f *FS) getDirEnt(path string) (dNode, error) {
 
 var maxRedirects uint8 = 255
 
-func (f *FS) getResolvedDirEnt(path string, remainingRedirects *uint8) (*dirEnt, error) {
-	var de *dirEnt
+func (f *FS) getResolvedDirEnt(path string, remainingRedirects *uint8) (directoryEntry, error) {
+	var (
+		de  directoryEntry
+		d   *dirEnt
+		dn  dNode
+		err error
+		ok  bool
+	)
 
 	dir, base := filepath.Split(path)
 	if dir == "" || dir == "/" {
-		de = &dirEnt{
-			directoryEntry: (*dnode)(f),
-			name:           "/",
+		if f.de.Mode()&0o444 == 0 {
+			return nil, fs.ErrPermission
 		}
-	} else {
-		var err error
 
+		de = f.de
+	} else {
 		if de, err = f.getResolvedDirEnt(filepath.Clean(dir), remainingRedirects); err != nil {
 			return nil, err
 		}
 	}
 
-	if d, ok := de.directoryEntry.(dNode); !ok {
+	if base == "" {
+		return de, nil
+	} else if dn, ok = de.(dNode); !ok {
 		return nil, fs.ErrInvalid
-	} else if base == "" {
-		return de, nil
-	} else if de, err := d.getEntry(base); err != nil {
+	} else if d, err = dn.getEntry(base); err != nil {
 		return nil, err
-	} else if de.Mode()&fs.ModeSymlink == 0 {
-		return de, nil
+	} else if d.Mode()&fs.ModeSymlink == 0 {
+		return d.directoryEntry, nil
 	} else if *remainingRedirects == 0 {
 		return nil, fs.ErrInvalid
 	}
 
 	*remainingRedirects--
 
-	b, err := de.bytes()
+	b, err := d.bytes()
 	if err != nil {
 		return nil, err
 	}
@@ -97,7 +105,7 @@ func (f *FS) getResolvedDirEnt(path string, remainingRedirects *uint8) (*dirEnt,
 	return f.getResolvedDirEnt(link, remainingRedirects)
 }
 
-func (f *FS) getEntry(path string) (*dirEnt, error) {
+func (f *FS) getEntry(path string) (directoryEntry, error) {
 	redirectsRemaining := maxRedirects
 
 	return f.getResolvedDirEnt(f.joinRoot(path), &redirectsRemaining)
@@ -113,12 +121,13 @@ func (f *FS) getLEntry(path string) (*dirEnt, error) {
 		return nil, err
 	}
 
-	d, ok := de.directoryEntry.(dNode)
+	d, ok := de.(dNode)
 	if !ok {
+		fmt.Printf("%T %v", de, de)
 		return nil, fs.ErrInvalid
-	} else if jpath == "" || jpath == "/" {
+	} else if jpath == "/" {
 		return &dirEnt{
-			directoryEntry: (*dnode)(f),
+			directoryEntry: f.de,
 			name:           "/",
 		}, nil
 	}
@@ -167,7 +176,16 @@ func (f *FS) ReadDir(path string) ([]fs.DirEntry, error) {
 		}
 	}
 
-	return d.getEntries()
+	es, err := d.getEntries()
+	if err != nil {
+		return nil, &fs.PathError{
+			Op:   "readdir",
+			Path: path,
+			Err:  err,
+		}
+	}
+
+	return es, nil
 }
 
 func (f *FS) ReadFile(path string) ([]byte, error) {
@@ -206,16 +224,16 @@ func (f *FS) Stat(path string) (fs.FileInfo, error) {
 		}
 	}
 
-	fi, err := de.Info()
-	if err != nil {
-		return nil, &fs.PathError{
-			Op:   "stat",
-			Path: path,
-			Err:  err,
-		}
+	base := filepath.Base(path)
+
+	if base == "." {
+		base = "/"
 	}
 
-	return fi, nil
+	return &dirEnt{
+		name:           base,
+		directoryEntry: de,
+	}, nil
 }
 
 func (f *FS) LStat(path string) (fs.FileInfo, error) {
@@ -228,16 +246,7 @@ func (f *FS) LStat(path string) (fs.FileInfo, error) {
 		}
 	}
 
-	fi, err := de.Info()
-	if err != nil {
-		return nil, &fs.PathError{
-			Op:   "lstat",
-			Path: path,
-			Err:  err,
-		}
-	}
-
-	return fi, nil
+	return de, nil
 }
 
 func (f *FS) Readlink(path string) (string, error) {

@@ -9,6 +9,12 @@ import (
 	"time"
 )
 
+func newFS(d dnode) FS {
+	return FS{
+		de: &d,
+	}
+}
+
 func TestOpen(t *testing.T) {
 	for n, test := range [...]struct {
 		FS   FS
@@ -17,7 +23,7 @@ func TestOpen(t *testing.T) {
 		Err  error
 	}{
 		{ // 1
-			FS:   FS{},
+			FS:   newFS(dnode{}),
 			Path: "/file",
 			Err: &fs.PathError{
 				Op:   "open",
@@ -26,9 +32,9 @@ func TestOpen(t *testing.T) {
 			},
 		},
 		{ // 2
-			FS: FS{
+			FS: newFS(dnode{
 				mode: fs.ModeDir | fs.ModePerm,
-			},
+			}),
 			Path: "/file",
 			Err: &fs.PathError{
 				Op:   "open",
@@ -37,14 +43,14 @@ func TestOpen(t *testing.T) {
 			},
 		},
 		{ // 3
-			FS: FS{
+			FS: newFS(dnode{
 				entries: []*dirEnt{
 					{
 						directoryEntry: &inode{},
 						name:           "file",
 					},
 				},
-			},
+			}),
 			Path: "/file",
 			Err: &fs.PathError{
 				Op:   "open",
@@ -53,7 +59,7 @@ func TestOpen(t *testing.T) {
 			},
 		},
 		{ // 4
-			FS: FS{
+			FS: newFS(dnode{
 				entries: []*dirEnt{
 					{
 						directoryEntry: &inode{
@@ -63,7 +69,7 @@ func TestOpen(t *testing.T) {
 					},
 				},
 				mode: fs.ModeDir | fs.ModePerm,
-			},
+			}),
 			Path: "/file",
 			File: &file{
 				name: "file",
@@ -74,7 +80,7 @@ func TestOpen(t *testing.T) {
 			},
 		},
 		{ // 5
-			FS: FS{
+			FS: newFS(dnode{
 				entries: []*dirEnt{
 					{
 						directoryEntry: &inode{
@@ -84,7 +90,7 @@ func TestOpen(t *testing.T) {
 					},
 				},
 				mode: fs.ModeDir | fs.ModePerm,
-			},
+			}),
 			Path: "/file",
 			Err: &fs.PathError{
 				Op:   "open",
@@ -93,7 +99,7 @@ func TestOpen(t *testing.T) {
 			},
 		},
 		{ // 6
-			FS: FS{
+			FS: newFS(dnode{
 				entries: []*dirEnt{
 					{
 						directoryEntry: &dnode{
@@ -111,7 +117,7 @@ func TestOpen(t *testing.T) {
 					},
 				},
 				mode: fs.ModeDir | fs.ModePerm,
-			},
+			}),
 			Path: "/dir/deepFile",
 			File: &file{
 				name: "deepFile",
@@ -139,7 +145,7 @@ func TestFSReadDir(t *testing.T) {
 		Err    error
 	}{
 		{ // 1
-			FS: FS{},
+			FS: newFS(dnode{}),
 			Err: &fs.PathError{
 				Op:   "readdir",
 				Path: "",
@@ -147,13 +153,13 @@ func TestFSReadDir(t *testing.T) {
 			},
 		},
 		{ // 2
-			FS: FS{
+			FS: newFS(dnode{
 				mode: fs.ModeDir | fs.ModePerm,
-			},
+			}),
 			Output: []fs.DirEntry{},
 		},
 		{ // 3
-			FS: FS{
+			FS: newFS(dnode{
 				entries: []*dirEnt{
 					{
 						directoryEntry: &inode{
@@ -164,7 +170,7 @@ func TestFSReadDir(t *testing.T) {
 					},
 				},
 				mode: fs.ModeDir | fs.ModePerm,
-			},
+			}),
 			Output: []fs.DirEntry{
 				&dirEnt{
 					directoryEntry: &inode{
@@ -176,7 +182,7 @@ func TestFSReadDir(t *testing.T) {
 			},
 		},
 		{ // 4
-			FS: FS{
+			FS: newFS(dnode{
 				entries: []*dirEnt{
 					{
 						directoryEntry: &inode{
@@ -194,7 +200,7 @@ func TestFSReadDir(t *testing.T) {
 					},
 				},
 				mode: fs.ModeDir | fs.ModePerm,
-			},
+			}),
 			Output: []fs.DirEntry{
 				&dirEnt{
 					directoryEntry: &inode{
@@ -213,7 +219,7 @@ func TestFSReadDir(t *testing.T) {
 			},
 		},
 		{ // 5
-			FS: FS{
+			FS: newFS(dnode{
 				entries: []*dirEnt{
 					{
 						directoryEntry: &inode{
@@ -240,7 +246,7 @@ func TestFSReadDir(t *testing.T) {
 					},
 				},
 				mode: fs.ModeDir | fs.ModePerm,
-			},
+			}),
 			Path: "/",
 			Output: []fs.DirEntry{
 				&dirEnt{
@@ -269,7 +275,7 @@ func TestFSReadDir(t *testing.T) {
 			},
 		},
 		{ // 6
-			FS: FS{
+			FS: newFS(dnode{
 				entries: []*dirEnt{
 					{
 						directoryEntry: &inode{
@@ -296,7 +302,7 @@ func TestFSReadDir(t *testing.T) {
 					},
 				},
 				mode: fs.ModeDir | fs.ModePerm,
-			},
+			}),
 			Path: "/test2",
 			Output: []fs.DirEntry{
 				&dirEnt{
@@ -309,7 +315,7 @@ func TestFSReadDir(t *testing.T) {
 			},
 		},
 		{ // 7
-			FS: FS{
+			FS: newFS(dnode{
 				entries: []*dirEnt{
 					{
 						directoryEntry: &inode{
@@ -336,7 +342,7 @@ func TestFSReadDir(t *testing.T) {
 					},
 				},
 				mode: fs.ModeDir | fs.ModePerm,
-			},
+			}),
 			Path: "/test2",
 			Err: &fs.PathError{
 				Op:   "readdir",
@@ -362,7 +368,7 @@ func TestReadFile(t *testing.T) {
 		Err    error
 	}{
 		{ // 1
-			FS: FS{},
+			FS: newFS(dnode{}),
 			Err: &fs.PathError{
 				Op:   "readfile",
 				Path: "",
@@ -370,9 +376,9 @@ func TestReadFile(t *testing.T) {
 			},
 		},
 		{ // 2
-			FS: FS{
+			FS: newFS(dnode{
 				mode: fs.ModeDir | fs.ModePerm,
-			},
+			}),
 			Err: &fs.PathError{
 				Op:   "readfile",
 				Path: "",
@@ -380,9 +386,9 @@ func TestReadFile(t *testing.T) {
 			},
 		},
 		{ // 3
-			FS: FS{
+			FS: newFS(dnode{
 				mode: fs.ModeDir | fs.ModePerm,
-			},
+			}),
 			Path: "/file",
 			Err: &fs.PathError{
 				Op:   "readfile",
@@ -391,7 +397,7 @@ func TestReadFile(t *testing.T) {
 			},
 		},
 		{ // 4
-			FS: FS{
+			FS: newFS(dnode{
 				entries: []*dirEnt{
 					{
 						directoryEntry: &inode{},
@@ -399,7 +405,7 @@ func TestReadFile(t *testing.T) {
 					},
 				},
 				mode: fs.ModeDir | fs.ModePerm,
-			},
+			}),
 			Path: "/file",
 			Err: &fs.PathError{
 				Op:   "readfile",
@@ -408,7 +414,7 @@ func TestReadFile(t *testing.T) {
 			},
 		},
 		{ // 5
-			FS: FS{
+			FS: newFS(dnode{
 				entries: []*dirEnt{
 					{
 						directoryEntry: &inode{},
@@ -416,7 +422,7 @@ func TestReadFile(t *testing.T) {
 					},
 				},
 				mode: fs.ModeDir | fs.ModePerm,
-			},
+			}),
 			Path: "/file",
 			Err: &fs.PathError{
 				Op:   "readfile",
@@ -425,7 +431,7 @@ func TestReadFile(t *testing.T) {
 			},
 		},
 		{ // 6
-			FS: FS{
+			FS: newFS(dnode{
 				entries: []*dirEnt{
 					{
 						directoryEntry: &inode{
@@ -436,12 +442,12 @@ func TestReadFile(t *testing.T) {
 					},
 				},
 				mode: fs.ModeDir | fs.ModePerm,
-			},
+			}),
 			Path:   "/file",
 			Output: []byte("DATA"),
 		},
 		{ // 7
-			FS: FS{
+			FS: newFS(dnode{
 				entries: []*dirEnt{
 					{
 						directoryEntry: &inode{
@@ -467,7 +473,7 @@ func TestReadFile(t *testing.T) {
 					},
 				},
 				mode: fs.ModeDir | fs.ModePerm,
-			},
+			}),
 			Path:   "/DIR/file2",
 			Output: []byte("MORE DATA"),
 		},
@@ -489,7 +495,7 @@ func TestStat(t *testing.T) {
 		Err    error
 	}{
 		{ // 1
-			FS: FS{},
+			FS: newFS(dnode{}),
 			Err: &fs.PathError{
 				Op:   "stat",
 				Path: "",
@@ -497,10 +503,10 @@ func TestStat(t *testing.T) {
 			},
 		},
 		{ // 2
-			FS: FS{
+			FS: newFS(dnode{
 				modtime: time.Unix(1, 2),
 				mode:    fs.ModeDir | fs.ModePerm,
-			},
+			}),
 			Output: &dirEnt{
 				directoryEntry: &dnode{
 					modtime: time.Unix(1, 2),
@@ -510,9 +516,9 @@ func TestStat(t *testing.T) {
 			},
 		},
 		{ // 3
-			FS: FS{
+			FS: newFS(dnode{
 				mode: fs.ModeDir | fs.ModePerm,
-			},
+			}),
 			Path: "/file",
 			Err: &fs.PathError{
 				Op:   "stat",
@@ -521,7 +527,7 @@ func TestStat(t *testing.T) {
 			},
 		},
 		{ // 4
-			FS: FS{
+			FS: newFS(dnode{
 				entries: []*dirEnt{
 					{
 						directoryEntry: &inode{},
@@ -529,7 +535,7 @@ func TestStat(t *testing.T) {
 					},
 				},
 				mode: fs.ModeDir | fs.ModePerm,
-			},
+			}),
 			Path: "/file",
 			Err: &fs.PathError{
 				Op:   "stat",
@@ -538,7 +544,7 @@ func TestStat(t *testing.T) {
 			},
 		},
 		{ // 5
-			FS: FS{
+			FS: newFS(dnode{
 				entries: []*dirEnt{
 					{
 						directoryEntry: &inode{
@@ -549,7 +555,7 @@ func TestStat(t *testing.T) {
 					},
 				},
 				mode: fs.ModeDir | fs.ModePerm,
-			},
+			}),
 			Path: "/file",
 			Output: &dirEnt{
 				directoryEntry: &inode{
@@ -560,7 +566,7 @@ func TestStat(t *testing.T) {
 			},
 		},
 		{ // 6
-			FS: FS{
+			FS: newFS(dnode{
 				entries: []*dirEnt{
 					{
 						directoryEntry: &inode{
@@ -578,7 +584,7 @@ func TestStat(t *testing.T) {
 					},
 				},
 				mode: fs.ModeDir | fs.ModePerm,
-			},
+			}),
 			Path: "/dir",
 			Output: &dirEnt{
 				directoryEntry: &dnode{
@@ -589,7 +595,7 @@ func TestStat(t *testing.T) {
 			},
 		},
 		{ // 7
-			FS: FS{
+			FS: newFS(dnode{
 				entries: []*dirEnt{
 					{
 						directoryEntry: &inode{
@@ -616,7 +622,7 @@ func TestStat(t *testing.T) {
 					},
 				},
 				mode: fs.ModeDir | fs.ModePerm,
-			},
+			}),
 			Path: "/dir/anotherFile",
 			Err: &fs.PathError{
 				Op:   "stat",
@@ -625,7 +631,7 @@ func TestStat(t *testing.T) {
 			},
 		},
 		{ // 8
-			FS: FS{
+			FS: newFS(dnode{
 				entries: []*dirEnt{
 					{
 						directoryEntry: &inode{
@@ -652,7 +658,7 @@ func TestStat(t *testing.T) {
 					},
 				},
 				mode: fs.ModeDir | fs.ModePerm,
-			},
+			}),
 			Path: "/dir/anotherFile",
 			Output: &dirEnt{
 				directoryEntry: &inode{
@@ -680,7 +686,7 @@ func TestSymlinkResolveFile(t *testing.T) {
 		Err    error
 	}{
 		{ // 1
-			FS: FS{
+			FS: newFS(dnode{
 				entries: []*dirEnt{
 					{
 						name: "a",
@@ -698,12 +704,12 @@ func TestSymlinkResolveFile(t *testing.T) {
 					},
 				},
 				mode: fs.ModeDir | fs.ModePerm,
-			},
+			}),
 			Path:   "/b",
 			Output: []byte("Hello"),
 		},
 		{ // 2
-			FS: FS{
+			FS: newFS(dnode{
 				entries: []*dirEnt{
 					{
 						name: "a",
@@ -721,12 +727,12 @@ func TestSymlinkResolveFile(t *testing.T) {
 					},
 				},
 				mode: fs.ModeDir | fs.ModePerm,
-			},
+			}),
 			Path: "/b",
 			Err:  fs.ErrNotExist,
 		},
 		{ // 3
-			FS: FS{
+			FS: newFS(dnode{
 				entries: []*dirEnt{
 					{
 						name: "a",
@@ -743,12 +749,12 @@ func TestSymlinkResolveFile(t *testing.T) {
 					},
 				},
 				mode: fs.ModeDir | fs.ModePerm,
-			},
+			}),
 			Path: "/b",
 			Err:  fs.ErrPermission,
 		},
 		{ // 4
-			FS: FS{
+			FS: newFS(dnode{
 				entries: []*dirEnt{
 					{
 						name: "a",
@@ -774,12 +780,12 @@ func TestSymlinkResolveFile(t *testing.T) {
 					},
 				},
 				mode: fs.ModeDir | fs.ModePerm,
-			},
+			}),
 			Path:   "/c",
 			Output: []byte("World"),
 		},
 		{ // 5
-			FS: FS{
+			FS: newFS(dnode{
 				entries: []*dirEnt{
 					{
 						name: "a",
@@ -805,12 +811,12 @@ func TestSymlinkResolveFile(t *testing.T) {
 					},
 				},
 				mode: fs.ModeDir | fs.ModePerm,
-			},
+			}),
 			Path:   "/c",
 			Output: []byte("World"),
 		},
 		{ // 6
-			FS: FS{
+			FS: newFS(dnode{
 				entries: []*dirEnt{
 					{
 						name: "a",
@@ -836,12 +842,12 @@ func TestSymlinkResolveFile(t *testing.T) {
 					},
 				},
 				mode: fs.ModeDir | fs.ModePerm,
-			},
+			}),
 			Path:   "/a/b",
 			Output: []byte("FooBar"),
 		},
 		{ // 7
-			FS: FS{
+			FS: newFS(dnode{
 				entries: []*dirEnt{
 					{
 						name: "a",
@@ -867,12 +873,12 @@ func TestSymlinkResolveFile(t *testing.T) {
 					},
 				},
 				mode: fs.ModeDir | fs.ModePerm,
-			},
+			}),
 			Path:   "/a/b",
 			Output: []byte("FooBar"),
 		},
 		{ // 8
-			FS: FS{
+			FS: newFS(dnode{
 				entries: []*dirEnt{
 					{
 						name: "a",
@@ -905,7 +911,7 @@ func TestSymlinkResolveFile(t *testing.T) {
 					},
 				},
 				mode: fs.ModeDir | fs.ModePerm,
-			},
+			}),
 			Path:   "/a/b",
 			Output: []byte("Baz"),
 		},
@@ -926,7 +932,7 @@ func TestSymlinkResolveDir(t *testing.T) {
 		Err    error
 	}{
 		{ // 1
-			FS: FS{
+			FS: newFS(dnode{
 				entries: []*dirEnt{
 					{
 						name: "a",
@@ -966,12 +972,12 @@ func TestSymlinkResolveDir(t *testing.T) {
 					},
 				},
 				mode: fs.ModeDir | fs.ModePerm,
-			},
+			}),
 			Path: "/e",
 			Err:  fs.ErrNotExist,
 		},
-		{ // 1
-			FS: FS{
+		{ // 2
+			FS: newFS(dnode{
 				entries: []*dirEnt{
 					{
 						name: "a",
@@ -1011,7 +1017,7 @@ func TestSymlinkResolveDir(t *testing.T) {
 					},
 				},
 				mode: fs.ModeDir | fs.ModePerm,
-			},
+			}),
 			Path: "/e",
 			Output: []fs.DirEntry{
 				&dirEnt{
@@ -1055,7 +1061,7 @@ func TestLStat(t *testing.T) {
 		Err    error
 	}{
 		{ // 1
-			FS: FS{},
+			FS: newFS(dnode{}),
 			Err: &fs.PathError{
 				Op:   "lstat",
 				Path: "",
@@ -1063,10 +1069,10 @@ func TestLStat(t *testing.T) {
 			},
 		},
 		{ // 2
-			FS: FS{
+			FS: newFS(dnode{
 				modtime: time.Unix(1, 2),
 				mode:    fs.ModeDir | fs.ModePerm,
-			},
+			}),
 			Output: &dirEnt{
 				directoryEntry: &dnode{
 					modtime: time.Unix(1, 2),
@@ -1076,9 +1082,9 @@ func TestLStat(t *testing.T) {
 			},
 		},
 		{ // 3
-			FS: FS{
+			FS: newFS(dnode{
 				mode: fs.ModeDir | fs.ModePerm,
-			},
+			}),
 			Path: "/file",
 			Err: &fs.PathError{
 				Op:   "lstat",
@@ -1087,7 +1093,7 @@ func TestLStat(t *testing.T) {
 			},
 		},
 		{ // 4
-			FS: FS{
+			FS: newFS(dnode{
 				entries: []*dirEnt{
 					{
 						directoryEntry: &inode{},
@@ -1095,7 +1101,7 @@ func TestLStat(t *testing.T) {
 					},
 				},
 				mode: fs.ModeDir | fs.ModePerm,
-			},
+			}),
 			Path: "/file",
 			Err: &fs.PathError{
 				Op:   "lstat",
@@ -1104,7 +1110,7 @@ func TestLStat(t *testing.T) {
 			},
 		},
 		{ // 5
-			FS: FS{
+			FS: newFS(dnode{
 				entries: []*dirEnt{
 					{
 						directoryEntry: &inode{
@@ -1115,7 +1121,7 @@ func TestLStat(t *testing.T) {
 					},
 				},
 				mode: fs.ModeDir | fs.ModePerm,
-			},
+			}),
 			Path: "/file",
 			Output: &dirEnt{
 				directoryEntry: &inode{
@@ -1126,7 +1132,7 @@ func TestLStat(t *testing.T) {
 			},
 		},
 		{ // 6
-			FS: FS{
+			FS: newFS(dnode{
 				entries: []*dirEnt{
 					{
 						directoryEntry: &inode{
@@ -1144,7 +1150,7 @@ func TestLStat(t *testing.T) {
 					},
 				},
 				mode: fs.ModeDir | fs.ModePerm,
-			},
+			}),
 			Path: "/dir",
 			Output: &dirEnt{
 				directoryEntry: &dnode{
@@ -1155,7 +1161,7 @@ func TestLStat(t *testing.T) {
 			},
 		},
 		{ // 7
-			FS: FS{
+			FS: newFS(dnode{
 				entries: []*dirEnt{
 					{
 						directoryEntry: &inode{
@@ -1182,7 +1188,7 @@ func TestLStat(t *testing.T) {
 					},
 				},
 				mode: fs.ModeDir | fs.ModePerm,
-			},
+			}),
 			Path: "/dir/anotherFile",
 			Err: &fs.PathError{
 				Op:   "lstat",
@@ -1191,7 +1197,7 @@ func TestLStat(t *testing.T) {
 			},
 		},
 		{ // 8
-			FS: FS{
+			FS: newFS(dnode{
 				entries: []*dirEnt{
 					{
 						directoryEntry: &inode{
@@ -1218,7 +1224,7 @@ func TestLStat(t *testing.T) {
 					},
 				},
 				mode: fs.ModeDir | fs.ModePerm,
-			},
+			}),
 			Path: "/dir/anotherFile",
 			Output: &dirEnt{
 				directoryEntry: &inode{
@@ -1245,6 +1251,7 @@ func TestReadlink(t *testing.T) {
 		Err    error
 	}{
 		{ // 1
+			FS: newFS(dnode{}),
 			Err: &fs.PathError{
 				Op:   "readlink",
 				Path: "",
@@ -1252,10 +1259,10 @@ func TestReadlink(t *testing.T) {
 			},
 		},
 		{ // 2
-			FS: FS{
+			FS: newFS(dnode{
 				modtime: time.Unix(1, 2),
 				mode:    fs.ModeDir | fs.ModePerm,
-			},
+			}),
 			Err: &fs.PathError{
 				Op:   "readlink",
 				Path: "",
@@ -1263,10 +1270,10 @@ func TestReadlink(t *testing.T) {
 			},
 		},
 		{ // 3
-			FS: FS{
+			FS: newFS(dnode{
 				modtime: time.Unix(1, 2),
 				mode:    fs.ModeDir | fs.ModePerm,
-			},
+			}),
 			Path: "/",
 			Err: &fs.PathError{
 				Op:   "readlink",
@@ -1275,7 +1282,7 @@ func TestReadlink(t *testing.T) {
 			},
 		},
 		{ // 4
-			FS: FS{
+			FS: newFS(dnode{
 				entries: []*dirEnt{
 					{
 						directoryEntry: &inode{},
@@ -1284,7 +1291,7 @@ func TestReadlink(t *testing.T) {
 				},
 				modtime: time.Unix(1, 2),
 				mode:    fs.ModeDir | fs.ModePerm,
-			},
+			}),
 			Path: "/a",
 			Err: &fs.PathError{
 				Op:   "readlink",
@@ -1293,7 +1300,7 @@ func TestReadlink(t *testing.T) {
 			},
 		},
 		{ // 5
-			FS: FS{
+			FS: newFS(dnode{
 				entries: []*dirEnt{
 					{
 						directoryEntry: &inode{
@@ -1304,7 +1311,7 @@ func TestReadlink(t *testing.T) {
 				},
 				modtime: time.Unix(1, 2),
 				mode:    fs.ModeDir | fs.ModePerm,
-			},
+			}),
 			Path: "/a",
 			Err: &fs.PathError{
 				Op:   "readlink",
@@ -1313,7 +1320,7 @@ func TestReadlink(t *testing.T) {
 			},
 		},
 		{ // 6
-			FS: FS{
+			FS: newFS(dnode{
 				entries: []*dirEnt{
 					{
 						directoryEntry: &inode{
@@ -1324,11 +1331,11 @@ func TestReadlink(t *testing.T) {
 				},
 				modtime: time.Unix(1, 2),
 				mode:    fs.ModeDir | fs.ModePerm,
-			},
+			}),
 			Path: "/a",
 		},
 		{ // 7
-			FS: FS{
+			FS: newFS(dnode{
 				entries: []*dirEnt{
 					{
 						directoryEntry: &inode{
@@ -1340,7 +1347,7 @@ func TestReadlink(t *testing.T) {
 				},
 				modtime: time.Unix(1, 2),
 				mode:    fs.ModeDir | fs.ModePerm,
-			},
+			}),
 			Path:   "/a",
 			Output: "/other/path",
 		},

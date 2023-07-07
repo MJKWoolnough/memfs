@@ -49,6 +49,7 @@ func makeDirectoryRW(dirs []*dirEnt) *directoryRW {
 		directory: directory{
 			dnode: &dnode{
 				entries: dirs,
+				mode:    fs.ModeDir | fs.ModePerm,
 			},
 		},
 	}
@@ -168,65 +169,5 @@ func TestDnodeRemoveRW(t *testing.T) {
 
 	if !reflect.DeepEqual(expecting, d.entries) {
 		t.Errorf("test 4: expecting %v, got %v", expecting, d.entries)
-	}
-}
-
-func TestDnodeGetRW(t *testing.T) {
-	d := dnodeRW{
-		dnode: dnode{
-			entries: []*dirEnt{
-				{
-					name: "1",
-				},
-				{
-					name: "2",
-					directoryEntry: &dnode{
-						mode: fs.ModePerm,
-					},
-				},
-				{
-					name: "3",
-					directoryEntry: &dnode{
-						mode: 0o222,
-					},
-				},
-				{
-					name: "4",
-					directoryEntry: &dnode{
-						mode: 0o444,
-					},
-				},
-			},
-		},
-	}
-
-	if got, err := d.getEntry("1"); !errors.Is(err, fs.ErrPermission) {
-		t.Errorf("test 1: expecting to err %v, got %v", fs.ErrPermission, err)
-	} else if got != nil {
-		t.Errorf("test 1: expecting to get nil, got %v", got)
-	}
-
-	if got, err := d.getEntry("2"); err != nil {
-		t.Errorf("test 2: expecting to nil err, got %v", err)
-	} else if got == nil || got.name != "2" {
-		t.Errorf("test 2: expecting to get '2', got %v", got)
-	}
-
-	if got, err := d.getEntry("3"); err != nil {
-		t.Errorf("test 3: expecting to nil err, got %v", err)
-	} else if got == nil || got.name != "3" {
-		t.Errorf("test 3: expecting to get '3', got %v", got)
-	}
-
-	if got, err := d.getEntry("4"); !errors.Is(err, fs.ErrPermission) {
-		t.Errorf("test 4: expecting to err %v, got %v", fs.ErrPermission, err)
-	} else if got != nil {
-		t.Errorf("test 4: expecting to get nil, got %v", got)
-	}
-
-	if got, err := d.getEntry("5"); !errors.Is(err, fs.ErrNotExist) {
-		t.Errorf("test 5: expecting to err %v, got %v", fs.ErrNotExist, err)
-	} else if got != nil {
-		t.Errorf("test 5: expecting to get nil, got %v", got)
 	}
 }

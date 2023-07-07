@@ -14,6 +14,19 @@ type FSRW struct {
 	FS
 }
 
+func New() *FSRW {
+	return &FSRW{
+		FS: FS{
+			de: &dnodeRW{
+				dnode: dnode{
+					mode:    fs.ModeDir | fs.ModePerm,
+					modtime: time.Now(),
+				},
+			},
+		},
+	}
+}
+
 func (f *FSRW) ReadDir(path string) ([]fs.DirEntry, error) {
 	d, err := f.getDirEnt(path)
 	if err != nil {

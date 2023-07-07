@@ -134,9 +134,11 @@ func (f *FSRW) Create(path string) (File, error) {
 	fileName := filepath.Base(path)
 
 	if existingFile == nil {
-		i := &inode{
-			modtime: time.Now(),
-			mode:    fs.ModePerm,
+		i := &inodeRW{
+			inode: inode{
+				modtime: time.Now(),
+				mode:    fs.ModePerm,
+			},
 		}
 
 		if err := d.setEntry(&dirEnt{
@@ -151,9 +153,10 @@ func (f *FSRW) Create(path string) (File, error) {
 		}
 
 		return &fileRW{
+			mu: &i.mu,
 			file: file{
 				name:   fileName,
-				inode:  i,
+				inode:  &i.inode,
 				opMode: opRead | opWrite | opSeek,
 			},
 		}, nil
@@ -239,10 +242,12 @@ func (f *FSRW) Symlink(oldPath, newPath string) error {
 	}
 
 	if err = d.setEntry(&dirEnt{
-		directoryEntry: &inode{
-			data:    []byte(filepath.Clean(oldPath)),
-			modtime: time.Now(),
-			mode:    fs.ModeSymlink | fs.ModePerm,
+		directoryEntry: &inodeRW{
+			inode: inode{
+				data:    []byte(filepath.Clean(oldPath)),
+				modtime: time.Now(),
+				mode:    fs.ModeSymlink | fs.ModePerm,
+			},
 		},
 		name: filepath.Base(newPath),
 	}); err != nil {

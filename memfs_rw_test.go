@@ -10,6 +10,16 @@ import (
 	"time"
 )
 
+func newFSRW(d dnode) FSRW {
+	return FSRW{
+		FS: FS{
+			de: &dnodeRW{
+				dnode: d,
+			},
+		},
+	}
+}
+
 func TestOpenRW(t *testing.T) {
 	for n, test := range [...]struct {
 		FS   FSRW
@@ -18,7 +28,7 @@ func TestOpenRW(t *testing.T) {
 		Err  error
 	}{
 		{ // 1
-			FS:   FSRW{},
+			FS:   newFSRW(dnode{}),
 			Path: "/file",
 			Err: &fs.PathError{
 				Op:   "open",
@@ -27,11 +37,9 @@ func TestOpenRW(t *testing.T) {
 			},
 		},
 		{ // 2
-			FS: FSRW{
-				FS: FS{
-					mode: fs.ModeDir | fs.ModePerm,
-				},
-			},
+			FS: newFSRW(dnode{
+				mode: fs.ModeDir | fs.ModePerm,
+			}),
 			Path: "/file",
 			Err: &fs.PathError{
 				Op:   "open",
@@ -40,16 +48,14 @@ func TestOpenRW(t *testing.T) {
 			},
 		},
 		{ // 3
-			FS: FSRW{
-				FS: FS{
-					entries: []*dirEnt{
-						{
-							directoryEntry: &inodeRW{},
-							name:           "file",
-						},
+			FS: newFSRW(dnode{
+				entries: []*dirEnt{
+					{
+						directoryEntry: &inodeRW{},
+						name:           "file",
 					},
 				},
-			},
+			}),
 			Path: "/file",
 			Err: &fs.PathError{
 				Op:   "open",
@@ -58,21 +64,19 @@ func TestOpenRW(t *testing.T) {
 			},
 		},
 		{ // 4
-			FS: FSRW{
-				FS: FS{
-					entries: []*dirEnt{
-						{
-							directoryEntry: &inodeRW{
-								inode: inode{
-									mode: fs.ModeDir | fs.ModePerm,
-								},
+			FS: newFSRW(dnode{
+				entries: []*dirEnt{
+					{
+						directoryEntry: &inodeRW{
+							inode: inode{
+								mode: fs.ModeDir | fs.ModePerm,
 							},
-							name: "file",
 						},
+						name: "file",
 					},
-					mode: fs.ModeDir | fs.ModePerm,
 				},
-			},
+				mode: fs.ModeDir | fs.ModePerm,
+			}),
 			Path: "/file",
 			File: &fileRW{
 				mu: &sync.RWMutex{},
@@ -86,21 +90,19 @@ func TestOpenRW(t *testing.T) {
 			},
 		},
 		{ // 5
-			FS: FSRW{
-				FS: FS{
-					entries: []*dirEnt{
-						{
-							directoryEntry: &inodeRW{
-								inode: inode{
-									mode: fs.ModeDir | fs.ModePerm,
-								},
+			FS: newFSRW(dnode{
+				entries: []*dirEnt{
+					{
+						directoryEntry: &inodeRW{
+							inode: inode{
+								mode: fs.ModeDir | fs.ModePerm,
 							},
-							name: "otherFile",
 						},
+						name: "otherFile",
 					},
-					mode: fs.ModeDir | fs.ModePerm,
 				},
-			},
+				mode: fs.ModeDir | fs.ModePerm,
+			}),
 			Path: "/file",
 			Err: &fs.PathError{
 				Op:   "open",
@@ -109,31 +111,29 @@ func TestOpenRW(t *testing.T) {
 			},
 		},
 		{ // 6
-			FS: FSRW{
-				FS: FS{
-					entries: []*dirEnt{
-						{
-							directoryEntry: &dnodeRW{
-								dnode: dnode{
-									entries: []*dirEnt{
-										{
-											directoryEntry: &inodeRW{
-												inode: inode{
-													mode: fs.ModeDir | fs.ModePerm,
-												},
+			FS: newFSRW(dnode{
+				entries: []*dirEnt{
+					{
+						directoryEntry: &dnodeRW{
+							dnode: dnode{
+								entries: []*dirEnt{
+									{
+										directoryEntry: &inodeRW{
+											inode: inode{
+												mode: fs.ModeDir | fs.ModePerm,
 											},
-											name: "deepFile",
 										},
+										name: "deepFile",
 									},
-									mode: fs.ModeDir | fs.ModePerm,
 								},
+								mode: fs.ModeDir | fs.ModePerm,
 							},
-							name: "dir",
 						},
+						name: "dir",
 					},
-					mode: fs.ModeDir | fs.ModePerm,
 				},
-			},
+				mode: fs.ModeDir | fs.ModePerm,
+			}),
 			Path: "/dir/deepFile",
 			File: &fileRW{
 				mu: &sync.RWMutex{},
@@ -164,7 +164,7 @@ func TestFSReadDirRW(t *testing.T) {
 		Err    error
 	}{
 		{ // 1
-			FS: FSRW{},
+			FS: newFSRW(dnode{}),
 			Err: &fs.PathError{
 				Op:   "readdir",
 				Path: "",
@@ -172,30 +172,26 @@ func TestFSReadDirRW(t *testing.T) {
 			},
 		},
 		{ // 2
-			FS: FSRW{
-				FS: FS{
-					mode: fs.ModeDir | fs.ModePerm,
-				},
-			},
+			FS: newFSRW(dnode{
+				mode: fs.ModeDir | fs.ModePerm,
+			}),
 			Output: []fs.DirEntry{},
 		},
 		{ // 3
-			FS: FSRW{
-				FS: FS{
-					entries: []*dirEnt{
-						{
-							directoryEntry: &inodeRW{
-								inode: inode{
-									modtime: time.Unix(1, 0),
-									mode:    2,
-								},
+			FS: newFSRW(dnode{
+				entries: []*dirEnt{
+					{
+						directoryEntry: &inodeRW{
+							inode: inode{
+								modtime: time.Unix(1, 0),
+								mode:    2,
 							},
-							name: "test",
 						},
+						name: "test",
 					},
-					mode: fs.ModeDir | fs.ModePerm,
 				},
-			},
+				mode: fs.ModeDir | fs.ModePerm,
+			}),
 			Output: []fs.DirEntry{
 				&dirEnt{
 					directoryEntry: &inodeRW{
@@ -209,31 +205,29 @@ func TestFSReadDirRW(t *testing.T) {
 			},
 		},
 		{ // 4
-			FS: FSRW{
-				FS: FS{
-					entries: []*dirEnt{
-						{
-							directoryEntry: &inodeRW{
-								inode: inode{
-									modtime: time.Unix(1, 0),
-									mode:    2,
-								},
+			FS: newFSRW(dnode{
+				entries: []*dirEnt{
+					{
+						directoryEntry: &inodeRW{
+							inode: inode{
+								modtime: time.Unix(1, 0),
+								mode:    2,
 							},
-							name: "test",
 						},
-						{
-							directoryEntry: &inodeRW{
-								inode: inode{
-									modtime: time.Unix(3, 0),
-									mode:    4,
-								},
-							},
-							name: "test2",
-						},
+						name: "test",
 					},
-					mode: fs.ModeDir | fs.ModePerm,
+					{
+						directoryEntry: &inodeRW{
+							inode: inode{
+								modtime: time.Unix(3, 0),
+								mode:    4,
+							},
+						},
+						name: "test2",
+					},
 				},
-			},
+				mode: fs.ModeDir | fs.ModePerm,
+			}),
 			Output: []fs.DirEntry{
 				&dirEnt{
 					directoryEntry: &inodeRW{
@@ -256,42 +250,40 @@ func TestFSReadDirRW(t *testing.T) {
 			},
 		},
 		{ // 5
-			FS: FSRW{
-				FS: FS{
-					entries: []*dirEnt{
-						{
-							directoryEntry: &inodeRW{
-								inode: inode{
-									modtime: time.Unix(1, 0),
-									mode:    2,
-								},
+			FS: newFSRW(dnode{
+				entries: []*dirEnt{
+					{
+						directoryEntry: &inodeRW{
+							inode: inode{
+								modtime: time.Unix(1, 0),
+								mode:    2,
 							},
-							name: "test",
 						},
-						{
-							directoryEntry: &dnodeRW{
-								dnode: dnode{
-									entries: []*dirEnt{
-										{
-											directoryEntry: &inodeRW{
-												inode: inode{
-													modtime: time.Unix(3, 0),
-													mode:    4,
-												},
-											},
-											name: "test3",
-										},
-									},
-									modtime: time.Unix(5, 0),
-									mode:    fs.ModeDir | fs.ModePerm,
-								},
-							},
-							name: "test2",
-						},
+						name: "test",
 					},
-					mode: fs.ModeDir | fs.ModePerm,
+					{
+						directoryEntry: &dnodeRW{
+							dnode: dnode{
+								entries: []*dirEnt{
+									{
+										directoryEntry: &inodeRW{
+											inode: inode{
+												modtime: time.Unix(3, 0),
+												mode:    4,
+											},
+										},
+										name: "test3",
+									},
+								},
+								modtime: time.Unix(5, 0),
+								mode:    fs.ModeDir | fs.ModePerm,
+							},
+						},
+						name: "test2",
+					},
 				},
-			},
+				mode: fs.ModeDir | fs.ModePerm,
+			}),
 			Path: "/",
 			Output: []fs.DirEntry{
 				&dirEnt{
@@ -326,42 +318,40 @@ func TestFSReadDirRW(t *testing.T) {
 			},
 		},
 		{ // 6
-			FS: FSRW{
-				FS: FS{
-					entries: []*dirEnt{
-						{
-							directoryEntry: &inodeRW{
-								inode: inode{
-									modtime: time.Unix(1, 0),
-									mode:    2,
-								},
+			FS: newFSRW(dnode{
+				entries: []*dirEnt{
+					{
+						directoryEntry: &inodeRW{
+							inode: inode{
+								modtime: time.Unix(1, 0),
+								mode:    2,
 							},
-							name: "test",
 						},
-						{
-							directoryEntry: &dnodeRW{
-								dnode: dnode{
-									entries: []*dirEnt{
-										{
-											directoryEntry: &inodeRW{
-												inode: inode{
-													modtime: time.Unix(3, 0),
-													mode:    4,
-												},
-											},
-											name: "test3",
-										},
-									},
-									modtime: time.Unix(5, 0),
-									mode:    fs.ModeDir | fs.ModePerm,
-								},
-							},
-							name: "test2",
-						},
+						name: "test",
 					},
-					mode: fs.ModeDir | fs.ModePerm,
+					{
+						directoryEntry: &dnodeRW{
+							dnode: dnode{
+								entries: []*dirEnt{
+									{
+										directoryEntry: &inodeRW{
+											inode: inode{
+												modtime: time.Unix(3, 0),
+												mode:    4,
+											},
+										},
+										name: "test3",
+									},
+								},
+								modtime: time.Unix(5, 0),
+								mode:    fs.ModeDir | fs.ModePerm,
+							},
+						},
+						name: "test2",
+					},
 				},
-			},
+				mode: fs.ModeDir | fs.ModePerm,
+			}),
 			Path: "/test2",
 			Output: []fs.DirEntry{
 				&dirEnt{
@@ -376,42 +366,40 @@ func TestFSReadDirRW(t *testing.T) {
 			},
 		},
 		{ // 7
-			FS: FSRW{
-				FS: FS{
-					entries: []*dirEnt{
-						{
-							directoryEntry: &inodeRW{
-								inode: inode{
-									modtime: time.Unix(1, 0),
-									mode:    2,
-								},
+			FS: newFSRW(dnode{
+				entries: []*dirEnt{
+					{
+						directoryEntry: &inodeRW{
+							inode: inode{
+								modtime: time.Unix(1, 0),
+								mode:    2,
 							},
-							name: "test",
 						},
-						{
-							directoryEntry: &dnodeRW{
-								dnode: dnode{
-									entries: []*dirEnt{
-										{
-											directoryEntry: &inodeRW{
-												inode: inode{
-													modtime: time.Unix(3, 0),
-													mode:    4,
-												},
-											},
-											name: "test3",
-										},
-									},
-									modtime: time.Unix(5, 0),
-									mode:    fs.ModeDir,
-								},
-							},
-							name: "test2",
-						},
+						name: "test",
 					},
-					mode: fs.ModeDir | fs.ModePerm,
+					{
+						directoryEntry: &dnodeRW{
+							dnode: dnode{
+								entries: []*dirEnt{
+									{
+										directoryEntry: &inodeRW{
+											inode: inode{
+												modtime: time.Unix(3, 0),
+												mode:    4,
+											},
+										},
+										name: "test3",
+									},
+								},
+								modtime: time.Unix(5, 0),
+								mode:    fs.ModeDir,
+							},
+						},
+						name: "test2",
+					},
 				},
-			},
+				mode: fs.ModeDir | fs.ModePerm,
+			}),
 			Path: "/test2",
 			Err: &fs.PathError{
 				Op:   "readdir",
@@ -437,7 +425,7 @@ func TestReadFileRW(t *testing.T) {
 		Err    error
 	}{
 		{ // 1
-			FS: FSRW{},
+			FS: newFSRW(dnode{}),
 			Err: &fs.PathError{
 				Op:   "readfile",
 				Path: "",
@@ -445,11 +433,9 @@ func TestReadFileRW(t *testing.T) {
 			},
 		},
 		{ // 2
-			FS: FSRW{
-				FS: FS{
-					mode: fs.ModeDir | fs.ModePerm,
-				},
-			},
+			FS: newFSRW(dnode{
+				mode: fs.ModeDir | fs.ModePerm,
+			}),
 			Err: &fs.PathError{
 				Op:   "readfile",
 				Path: "",
@@ -457,11 +443,9 @@ func TestReadFileRW(t *testing.T) {
 			},
 		},
 		{ // 3
-			FS: FSRW{
-				FS: FS{
-					mode: fs.ModeDir | fs.ModePerm,
-				},
-			},
+			FS: newFSRW(dnode{
+				mode: fs.ModeDir | fs.ModePerm,
+			}),
 			Path: "/file",
 			Err: &fs.PathError{
 				Op:   "readfile",
@@ -470,17 +454,15 @@ func TestReadFileRW(t *testing.T) {
 			},
 		},
 		{ // 4
-			FS: FSRW{
-				FS: FS{
-					entries: []*dirEnt{
-						{
-							directoryEntry: &inodeRW{},
-							name:           "notFile",
-						},
+			FS: newFSRW(dnode{
+				entries: []*dirEnt{
+					{
+						directoryEntry: &inodeRW{},
+						name:           "notFile",
 					},
-					mode: fs.ModeDir | fs.ModePerm,
 				},
-			},
+				mode: fs.ModeDir | fs.ModePerm,
+			}),
 			Path: "/file",
 			Err: &fs.PathError{
 				Op:   "readfile",
@@ -489,17 +471,15 @@ func TestReadFileRW(t *testing.T) {
 			},
 		},
 		{ // 5
-			FS: FSRW{
-				FS: FS{
-					entries: []*dirEnt{
-						{
-							directoryEntry: &inodeRW{},
-							name:           "file",
-						},
+			FS: newFSRW(dnode{
+				entries: []*dirEnt{
+					{
+						directoryEntry: &inodeRW{},
+						name:           "file",
 					},
-					mode: fs.ModeDir | fs.ModePerm,
 				},
-			},
+				mode: fs.ModeDir | fs.ModePerm,
+			}),
 			Path: "/file",
 			Err: &fs.PathError{
 				Op:   "readfile",
@@ -508,61 +488,57 @@ func TestReadFileRW(t *testing.T) {
 			},
 		},
 		{ // 6
-			FS: FSRW{
-				FS: FS{
-					entries: []*dirEnt{
-						{
-							directoryEntry: &inodeRW{
-								inode: inode{
-									data: []byte("DATA"),
-									mode: fs.ModePerm,
-								},
+			FS: newFSRW(dnode{
+				entries: []*dirEnt{
+					{
+						directoryEntry: &inodeRW{
+							inode: inode{
+								data: []byte("DATA"),
+								mode: fs.ModePerm,
 							},
-							name: "file",
 						},
+						name: "file",
 					},
-					mode: fs.ModeDir | fs.ModePerm,
 				},
-			},
+				mode: fs.ModeDir | fs.ModePerm,
+			}),
 			Path:   "/file",
 			Output: []byte("DATA"),
 		},
 		{ // 7
-			FS: FSRW{
-				FS: FS{
-					entries: []*dirEnt{
-						{
-							directoryEntry: &inodeRW{
-								inode: inode{
-									data: []byte("DATA"),
-									mode: fs.ModePerm,
-								},
+			FS: newFSRW(dnode{
+				entries: []*dirEnt{
+					{
+						directoryEntry: &inodeRW{
+							inode: inode{
+								data: []byte("DATA"),
+								mode: fs.ModePerm,
 							},
-							name: "file",
 						},
-						{
-							directoryEntry: &dnodeRW{
-								dnode: dnode{
-									entries: []*dirEnt{
-										{
-											directoryEntry: &inodeRW{
-												inode: inode{
-													data: []byte("MORE DATA"),
-													mode: fs.ModePerm,
-												},
-											},
-											name: "file2",
-										},
-									},
-									mode: fs.ModeDir | fs.ModePerm,
-								},
-							},
-							name: "DIR",
-						},
+						name: "file",
 					},
-					mode: fs.ModeDir | fs.ModePerm,
+					{
+						directoryEntry: &dnodeRW{
+							dnode: dnode{
+								entries: []*dirEnt{
+									{
+										directoryEntry: &inodeRW{
+											inode: inode{
+												data: []byte("MORE DATA"),
+												mode: fs.ModePerm,
+											},
+										},
+										name: "file2",
+									},
+								},
+								mode: fs.ModeDir | fs.ModePerm,
+							},
+						},
+						name: "DIR",
+					},
 				},
-			},
+				mode: fs.ModeDir | fs.ModePerm,
+			}),
 			Path:   "/DIR/file2",
 			Output: []byte("MORE DATA"),
 		},
@@ -584,7 +560,7 @@ func TestStatRW(t *testing.T) {
 		Err    error
 	}{
 		{ // 1
-			FS: FSRW{},
+			FS: newFSRW(dnode{}),
 			Err: &fs.PathError{
 				Op:   "stat",
 				Path: "",
@@ -592,12 +568,10 @@ func TestStatRW(t *testing.T) {
 			},
 		},
 		{ // 2
-			FS: FSRW{
-				FS: FS{
-					modtime: time.Unix(1, 2),
-					mode:    fs.ModeDir | fs.ModePerm,
-				},
-			},
+			FS: newFSRW(dnode{
+				modtime: time.Unix(1, 2),
+				mode:    fs.ModeDir | fs.ModePerm,
+			}),
 			Output: &dirEnt{
 				directoryEntry: &dnodeRW{
 					dnode: dnode{
@@ -609,11 +583,9 @@ func TestStatRW(t *testing.T) {
 			},
 		},
 		{ // 3
-			FS: FSRW{
-				FS: FS{
-					mode: fs.ModeDir | fs.ModePerm,
-				},
-			},
+			FS: newFSRW(dnode{
+				mode: fs.ModeDir | fs.ModePerm,
+			}),
 			Path: "/file",
 			Err: &fs.PathError{
 				Op:   "stat",
@@ -622,17 +594,15 @@ func TestStatRW(t *testing.T) {
 			},
 		},
 		{ // 4
-			FS: FSRW{
-				FS: FS{
-					entries: []*dirEnt{
-						{
-							directoryEntry: &inodeRW{},
-							name:           "notFile",
-						},
+			FS: newFSRW(dnode{
+				entries: []*dirEnt{
+					{
+						directoryEntry: &inodeRW{},
+						name:           "notFile",
 					},
-					mode: fs.ModeDir | fs.ModePerm,
 				},
-			},
+				mode: fs.ModeDir | fs.ModePerm,
+			}),
 			Path: "/file",
 			Err: &fs.PathError{
 				Op:   "stat",
@@ -641,22 +611,20 @@ func TestStatRW(t *testing.T) {
 			},
 		},
 		{ // 5
-			FS: FSRW{
-				FS: FS{
-					entries: []*dirEnt{
-						{
-							directoryEntry: &inodeRW{
-								inode: inode{
-									modtime: time.Unix(1, 2),
-									mode:    3,
-								},
+			FS: newFSRW(dnode{
+				entries: []*dirEnt{
+					{
+						directoryEntry: &inodeRW{
+							inode: inode{
+								modtime: time.Unix(1, 2),
+								mode:    3,
 							},
-							name: "file",
 						},
+						name: "file",
 					},
-					mode: fs.ModeDir | fs.ModePerm,
 				},
-			},
+				mode: fs.ModeDir | fs.ModePerm,
+			}),
 			Path: "/file",
 			Output: &dirEnt{
 				directoryEntry: &inodeRW{
@@ -669,31 +637,29 @@ func TestStatRW(t *testing.T) {
 			},
 		},
 		{ // 6
-			FS: FSRW{
-				FS: FS{
-					entries: []*dirEnt{
-						{
-							directoryEntry: &inodeRW{
-								inode: inode{
-									modtime: time.Unix(1, 2),
-									mode:    3,
-								},
+			FS: newFSRW(dnode{
+				entries: []*dirEnt{
+					{
+						directoryEntry: &inodeRW{
+							inode: inode{
+								modtime: time.Unix(1, 2),
+								mode:    3,
 							},
-							name: "file",
 						},
-						{
-							directoryEntry: &dnodeRW{
-								dnode: dnode{
-									modtime: time.Unix(4, 5),
-									mode:    6,
-								},
-							},
-							name: "dir",
-						},
+						name: "file",
 					},
-					mode: fs.ModeDir | fs.ModePerm,
+					{
+						directoryEntry: &dnodeRW{
+							dnode: dnode{
+								modtime: time.Unix(4, 5),
+								mode:    6,
+							},
+						},
+						name: "dir",
+					},
 				},
-			},
+				mode: fs.ModeDir | fs.ModePerm,
+			}),
 			Path: "/dir",
 			Output: &dirEnt{
 				directoryEntry: &dnodeRW{
@@ -706,42 +672,40 @@ func TestStatRW(t *testing.T) {
 			},
 		},
 		{ // 7
-			FS: FSRW{
-				FS: FS{
-					entries: []*dirEnt{
-						{
-							directoryEntry: &inodeRW{
-								inode: inode{
-									modtime: time.Unix(1, 2),
-									mode:    3,
-								},
+			FS: newFSRW(dnode{
+				entries: []*dirEnt{
+					{
+						directoryEntry: &inodeRW{
+							inode: inode{
+								modtime: time.Unix(1, 2),
+								mode:    3,
 							},
-							name: "file",
 						},
-						{
-							directoryEntry: &dnodeRW{
-								dnode: dnode{
-									entries: []*dirEnt{
-										{
-											directoryEntry: &inodeRW{
-												inode: inode{
-													modtime: time.Unix(4, 5),
-													mode:    6,
-												},
-											},
-											name: "anotherFile",
-										},
-									},
-									modtime: time.Unix(7, 8),
-									mode:    9,
-								},
-							},
-							name: "dir",
-						},
+						name: "file",
 					},
-					mode: fs.ModeDir | fs.ModePerm,
+					{
+						directoryEntry: &dnodeRW{
+							dnode: dnode{
+								entries: []*dirEnt{
+									{
+										directoryEntry: &inodeRW{
+											inode: inode{
+												modtime: time.Unix(4, 5),
+												mode:    6,
+											},
+										},
+										name: "anotherFile",
+									},
+								},
+								modtime: time.Unix(7, 8),
+								mode:    9,
+							},
+						},
+						name: "dir",
+					},
 				},
-			},
+				mode: fs.ModeDir | fs.ModePerm,
+			}),
 			Path: "/dir/anotherFile",
 			Err: &fs.PathError{
 				Op:   "stat",
@@ -750,42 +714,40 @@ func TestStatRW(t *testing.T) {
 			},
 		},
 		{ // 8
-			FS: FSRW{
-				FS: FS{
-					entries: []*dirEnt{
-						{
-							directoryEntry: &inodeRW{
-								inode: inode{
-									modtime: time.Unix(1, 2),
-									mode:    3,
-								},
+			FS: newFSRW(dnode{
+				entries: []*dirEnt{
+					{
+						directoryEntry: &inodeRW{
+							inode: inode{
+								modtime: time.Unix(1, 2),
+								mode:    3,
 							},
-							name: "file",
 						},
-						{
-							directoryEntry: &dnodeRW{
-								dnode: dnode{
-									entries: []*dirEnt{
-										{
-											directoryEntry: &inodeRW{
-												inode: inode{
-													modtime: time.Unix(4, 5),
-													mode:    6,
-												},
-											},
-											name: "anotherFile",
-										},
-									},
-									modtime: time.Unix(7, 8),
-									mode:    fs.ModeDir | fs.ModePerm,
-								},
-							},
-							name: "dir",
-						},
+						name: "file",
 					},
-					mode: fs.ModeDir | fs.ModePerm,
+					{
+						directoryEntry: &dnodeRW{
+							dnode: dnode{
+								entries: []*dirEnt{
+									{
+										directoryEntry: &inodeRW{
+											inode: inode{
+												modtime: time.Unix(4, 5),
+												mode:    6,
+											},
+										},
+										name: "anotherFile",
+									},
+								},
+								modtime: time.Unix(7, 8),
+								mode:    fs.ModeDir | fs.ModePerm,
+							},
+						},
+						name: "dir",
+					},
 				},
-			},
+				mode: fs.ModeDir | fs.ModePerm,
+			}),
 			Path: "/dir/anotherFile",
 			Output: &dirEnt{
 				directoryEntry: &inodeRW{
@@ -817,8 +779,8 @@ func TestMkdir(t *testing.T) {
 		Err       error
 	}{
 		{ // 1
-			FS:     FSRW{},
-			Output: FSRW{},
+			FS:     newFSRW(dnode{}),
+			Output: newFSRW(dnode{}),
 			Err: &fs.PathError{
 				Op:   "mkdir",
 				Path: "",
@@ -826,18 +788,14 @@ func TestMkdir(t *testing.T) {
 			},
 		},
 		{ // 2
-			FS: FSRW{
-				FS: FS{
-					modtime: now,
-					mode:    fs.ModeDir | fs.ModePerm,
-				},
-			},
-			Output: FSRW{
-				FS: FS{
-					modtime: now,
-					mode:    fs.ModeDir | fs.ModePerm,
-				},
-			},
+			FS: newFSRW(dnode{
+				modtime: now,
+				mode:    fs.ModeDir | fs.ModePerm,
+			}),
+			Output: newFSRW(dnode{
+				modtime: now,
+				mode:    fs.ModeDir | fs.ModePerm,
+			}),
 			Err: &fs.PathError{
 				Op:   "mkdir",
 				Path: "",
@@ -845,18 +803,14 @@ func TestMkdir(t *testing.T) {
 			},
 		},
 		{ // 3
-			FS: FSRW{
-				FS: FS{
-					modtime: now,
-					mode:    fs.ModeDir | fs.ModePerm,
-				},
-			},
-			Output: FSRW{
-				FS: FS{
-					modtime: now,
-					mode:    fs.ModeDir | fs.ModePerm,
-				},
-			},
+			FS: newFSRW(dnode{
+				modtime: now,
+				mode:    fs.ModeDir | fs.ModePerm,
+			}),
+			Output: newFSRW(dnode{
+				modtime: now,
+				mode:    fs.ModeDir | fs.ModePerm,
+			}),
 			Path: "/",
 			Err: &fs.PathError{
 				Op:   "mkdir",
@@ -865,44 +819,36 @@ func TestMkdir(t *testing.T) {
 			},
 		},
 		{ // 4
-			FS: FSRW{
-				FS: FS{
-					modtime: now,
-					mode:    fs.ModeDir | fs.ModePerm,
-				},
-			},
-			Output: FSRW{
-				FS: FS{
-					modtime: now,
-					entries: []*dirEnt{
-						{
-							directoryEntry: &dnodeRW{
-								dnode: dnode{
-									modtime: now,
-									mode:    fs.ModeDir,
-								},
+			FS: newFSRW(dnode{
+				modtime: now,
+				mode:    fs.ModeDir | fs.ModePerm,
+			}),
+			Output: newFSRW(dnode{
+				modtime: now,
+				entries: []*dirEnt{
+					{
+						directoryEntry: &dnodeRW{
+							dnode: dnode{
+								modtime: now,
+								mode:    fs.ModeDir,
 							},
-							name: "a",
 						},
+						name: "a",
 					},
-					mode: fs.ModeDir | fs.ModePerm,
 				},
-			},
+				mode: fs.ModeDir | fs.ModePerm,
+			}),
 			Path: "/a",
 		},
 		{ // 5
-			FS: FSRW{
-				FS: FS{
-					modtime: now,
-					mode:    fs.ModeDir | fs.ModePerm,
-				},
-			},
-			Output: FSRW{
-				FS: FS{
-					modtime: now,
-					mode:    fs.ModeDir | fs.ModePerm,
-				},
-			},
+			FS: newFSRW(dnode{
+				modtime: now,
+				mode:    fs.ModeDir | fs.ModePerm,
+			}),
+			Output: newFSRW(dnode{
+				modtime: now,
+				mode:    fs.ModeDir | fs.ModePerm,
+			}),
 			Path: "/a/b",
 			Err: &fs.PathError{
 				Op:   "mkdir",
@@ -911,40 +857,36 @@ func TestMkdir(t *testing.T) {
 			},
 		},
 		{ // 6
-			FS: FSRW{
-				FS: FS{
-					modtime: now,
-					entries: []*dirEnt{
-						{
-							directoryEntry: &dnodeRW{
-								dnode: dnode{
-									modtime: now,
-									mode:    fs.ModeDir,
-								},
+			FS: newFSRW(dnode{
+				modtime: now,
+				entries: []*dirEnt{
+					{
+						directoryEntry: &dnodeRW{
+							dnode: dnode{
+								modtime: now,
+								mode:    fs.ModeDir,
 							},
-							name: "a",
 						},
+						name: "a",
 					},
-					mode: fs.ModeDir | fs.ModePerm,
 				},
-			},
-			Output: FSRW{
-				FS: FS{
-					modtime: now,
-					entries: []*dirEnt{
-						{
-							directoryEntry: &dnodeRW{
-								dnode: dnode{
-									modtime: now,
-									mode:    fs.ModeDir,
-								},
+				mode: fs.ModeDir | fs.ModePerm,
+			}),
+			Output: newFSRW(dnode{
+				modtime: now,
+				entries: []*dirEnt{
+					{
+						directoryEntry: &dnodeRW{
+							dnode: dnode{
+								modtime: now,
+								mode:    fs.ModeDir,
 							},
-							name: "a",
 						},
+						name: "a",
 					},
-					mode: fs.ModeDir | fs.ModePerm,
 				},
-			},
+				mode: fs.ModeDir | fs.ModePerm,
+			}),
 			Path: "/a/b",
 			Err: &fs.PathError{
 				Op:   "mkdir",
@@ -953,40 +895,36 @@ func TestMkdir(t *testing.T) {
 			},
 		},
 		{ // 7
-			FS: FSRW{
-				FS: FS{
-					modtime: now,
-					entries: []*dirEnt{
-						{
-							directoryEntry: &inodeRW{
-								inode: inode{
-									modtime: now,
-									mode:    fs.ModePerm,
-								},
+			FS: newFSRW(dnode{
+				modtime: now,
+				entries: []*dirEnt{
+					{
+						directoryEntry: &inodeRW{
+							inode: inode{
+								modtime: now,
+								mode:    fs.ModePerm,
 							},
-							name: "a",
 						},
+						name: "a",
 					},
-					mode: fs.ModeDir | fs.ModePerm,
 				},
-			},
-			Output: FSRW{
-				FS: FS{
-					modtime: now,
-					entries: []*dirEnt{
-						{
-							directoryEntry: &inodeRW{
-								inode: inode{
-									modtime: now,
-									mode:    fs.ModePerm,
-								},
+				mode: fs.ModeDir | fs.ModePerm,
+			}),
+			Output: newFSRW(dnode{
+				modtime: now,
+				entries: []*dirEnt{
+					{
+						directoryEntry: &inodeRW{
+							inode: inode{
+								modtime: now,
+								mode:    fs.ModePerm,
 							},
-							name: "a",
 						},
+						name: "a",
 					},
-					mode: fs.ModeDir | fs.ModePerm,
 				},
-			},
+				mode: fs.ModeDir | fs.ModePerm,
+			}),
 			Path: "/a/b",
 			Err: &fs.PathError{
 				Op:   "mkdir",
@@ -995,51 +933,47 @@ func TestMkdir(t *testing.T) {
 			},
 		},
 		{ // 8
-			FS: FSRW{
-				FS: FS{
-					modtime: now,
-					entries: []*dirEnt{
-						{
-							directoryEntry: &dnodeRW{
-								dnode: dnode{
-									modtime: now,
-									mode:    fs.ModeDir | fs.ModePerm,
-								},
+			FS: newFSRW(dnode{
+				modtime: now,
+				entries: []*dirEnt{
+					{
+						directoryEntry: &dnodeRW{
+							dnode: dnode{
+								modtime: now,
+								mode:    fs.ModeDir | fs.ModePerm,
 							},
-							name: "a",
 						},
+						name: "a",
 					},
-					mode: fs.ModeDir | fs.ModePerm,
 				},
-			},
-			Output: FSRW{
-				FS: FS{
-					modtime: now,
-					entries: []*dirEnt{
-						{
-							directoryEntry: &dnodeRW{
-								dnode: dnode{
-									entries: []*dirEnt{
-										{
-											directoryEntry: &dnodeRW{
-												dnode: dnode{
-													modtime: now,
-													mode:    fs.ModeDir | 0o123,
-												},
+				mode: fs.ModeDir | fs.ModePerm,
+			}),
+			Output: newFSRW(dnode{
+				modtime: now,
+				entries: []*dirEnt{
+					{
+						directoryEntry: &dnodeRW{
+							dnode: dnode{
+								entries: []*dirEnt{
+									{
+										directoryEntry: &dnodeRW{
+											dnode: dnode{
+												modtime: now,
+												mode:    fs.ModeDir | 0o123,
 											},
-											name: "b",
 										},
+										name: "b",
 									},
-									modtime: now,
-									mode:    fs.ModeDir | fs.ModePerm,
 								},
+								modtime: now,
+								mode:    fs.ModeDir | fs.ModePerm,
 							},
-							name: "a",
 						},
+						name: "a",
 					},
-					mode: fs.ModeDir | fs.ModePerm,
 				},
-			},
+				mode: fs.ModeDir | fs.ModePerm,
+			}),
 			Path:      "/a/b",
 			PathPerms: 0o123,
 		},
@@ -1047,7 +981,7 @@ func TestMkdir(t *testing.T) {
 		if err := test.FS.Mkdir(test.Path, test.PathPerms); !reflect.DeepEqual(err, test.Err) {
 			t.Errorf("test %d: expecting error %s, got %s", n+1, test.Err, err)
 		} else {
-			fixTimes((*dnode)(&test.FS.FS), now)
+			fixTimes(test.FS.de.(*dnodeRW), now)
 			if !reflect.DeepEqual(test.Output, test.FS) {
 				t.Errorf("test %d: expecting to get %v, got %v", n+1, test.Output, test.FS)
 			}
@@ -1059,14 +993,14 @@ func withinRange(dt time.Duration) bool {
 	return dt > -10*time.Second && dt < 10*time.Second
 }
 
-func fixTimes(d *dnode, now time.Time) {
+func fixTimes(d *dnodeRW, now time.Time) {
 	if withinRange(d.modtime.Sub(now)) {
 		d.modtime = now
 	}
 
 	for _, e := range d.entries {
 		if de, ok := e.directoryEntry.(*dnodeRW); ok {
-			fixTimes(&de.dnode, now)
+			fixTimes(de, now)
 		} else if f, ok := e.directoryEntry.(*inodeRW); ok && withinRange(f.modtime.Sub(now)) {
 			f.modtime = now
 		}
@@ -1083,8 +1017,8 @@ func TestMkdirAll(t *testing.T) {
 		Err       error
 	}{
 		{ // 1
-			FS:     FSRW{},
-			Output: FSRW{},
+			FS:     newFSRW(dnode{}),
+			Output: newFSRW(dnode{}),
 			Err: &fs.PathError{
 				Op:   "mkdirall",
 				Path: "",
@@ -1092,18 +1026,14 @@ func TestMkdirAll(t *testing.T) {
 			},
 		},
 		{ // 2
-			FS: FSRW{
-				FS: FS{
-					modtime: now,
-					mode:    fs.ModeDir | fs.ModePerm,
-				},
-			},
-			Output: FSRW{
-				FS: FS{
-					modtime: now,
-					mode:    fs.ModeDir | fs.ModePerm,
-				},
-			},
+			FS: newFSRW(dnode{
+				modtime: now,
+				mode:    fs.ModeDir | fs.ModePerm,
+			}),
+			Output: newFSRW(dnode{
+				modtime: now,
+				mode:    fs.ModeDir | fs.ModePerm,
+			}),
 			Err: &fs.PathError{
 				Op:   "mkdirall",
 				Path: "",
@@ -1111,18 +1041,14 @@ func TestMkdirAll(t *testing.T) {
 			},
 		},
 		{ // 3
-			FS: FSRW{
-				FS: FS{
-					modtime: now,
-					mode:    fs.ModeDir | fs.ModePerm,
-				},
-			},
-			Output: FSRW{
-				FS: FS{
-					modtime: now,
-					mode:    fs.ModeDir | fs.ModePerm,
-				},
-			},
+			FS: newFSRW(dnode{
+				modtime: now,
+				mode:    fs.ModeDir | fs.ModePerm,
+			}),
+			Output: newFSRW(dnode{
+				modtime: now,
+				mode:    fs.ModeDir | fs.ModePerm,
+			}),
 			Path: "/",
 			Err: &fs.PathError{
 				Op:   "mkdirall",
@@ -1131,55 +1057,47 @@ func TestMkdirAll(t *testing.T) {
 			},
 		},
 		{ // 4
-			FS: FSRW{
-				FS: FS{
-					modtime: now,
-					mode:    fs.ModeDir | fs.ModePerm,
-				},
-			},
-			Output: FSRW{
-				FS: FS{
-					modtime: now,
-					entries: []*dirEnt{
-						{
-							directoryEntry: &dnodeRW{
-								dnode: dnode{
-									modtime: now,
-									mode:    fs.ModeDir,
-								},
+			FS: newFSRW(dnode{
+				modtime: now,
+				mode:    fs.ModeDir | fs.ModePerm,
+			}),
+			Output: newFSRW(dnode{
+				modtime: now,
+				entries: []*dirEnt{
+					{
+						directoryEntry: &dnodeRW{
+							dnode: dnode{
+								modtime: now,
+								mode:    fs.ModeDir,
 							},
-							name: "a",
 						},
+						name: "a",
 					},
-					mode: fs.ModeDir | fs.ModePerm,
 				},
-			},
+				mode: fs.ModeDir | fs.ModePerm,
+			}),
 			Path: "/a",
 		},
 		{ // 5
-			FS: FSRW{
-				FS: FS{
-					modtime: now,
-					mode:    fs.ModeDir | fs.ModePerm,
-				},
-			},
-			Output: FSRW{
-				FS: FS{
-					modtime: now,
-					entries: []*dirEnt{
-						{
-							directoryEntry: &dnodeRW{
-								dnode: dnode{
-									modtime: now,
-									mode:    fs.ModeDir,
-								},
+			FS: newFSRW(dnode{
+				modtime: now,
+				mode:    fs.ModeDir | fs.ModePerm,
+			}),
+			Output: newFSRW(dnode{
+				modtime: now,
+				entries: []*dirEnt{
+					{
+						directoryEntry: &dnodeRW{
+							dnode: dnode{
+								modtime: now,
+								mode:    fs.ModeDir,
 							},
-							name: "a",
 						},
+						name: "a",
 					},
-					mode: fs.ModeDir | fs.ModePerm,
 				},
-			},
+				mode: fs.ModeDir | fs.ModePerm,
+			}),
 			Path: "/a/b",
 			Err: &fs.PathError{
 				Op:   "mkdirall",
@@ -1188,40 +1106,36 @@ func TestMkdirAll(t *testing.T) {
 			},
 		},
 		{ // 6
-			FS: FSRW{
-				FS: FS{
-					modtime: now,
-					entries: []*dirEnt{
-						{
-							directoryEntry: &dnodeRW{
-								dnode: dnode{
-									modtime: now,
-									mode:    fs.ModeDir,
-								},
+			FS: newFSRW(dnode{
+				modtime: now,
+				entries: []*dirEnt{
+					{
+						directoryEntry: &dnodeRW{
+							dnode: dnode{
+								modtime: now,
+								mode:    fs.ModeDir,
 							},
-							name: "a",
 						},
+						name: "a",
 					},
-					mode: fs.ModeDir | fs.ModePerm,
 				},
-			},
-			Output: FSRW{
-				FS: FS{
-					modtime: now,
-					entries: []*dirEnt{
-						{
-							directoryEntry: &dnodeRW{
-								dnode: dnode{
-									modtime: now,
-									mode:    fs.ModeDir,
-								},
+				mode: fs.ModeDir | fs.ModePerm,
+			}),
+			Output: newFSRW(dnode{
+				modtime: now,
+				entries: []*dirEnt{
+					{
+						directoryEntry: &dnodeRW{
+							dnode: dnode{
+								modtime: now,
+								mode:    fs.ModeDir,
 							},
-							name: "a",
 						},
+						name: "a",
 					},
-					mode: fs.ModeDir | fs.ModePerm,
 				},
-			},
+				mode: fs.ModeDir | fs.ModePerm,
+			}),
 			Path: "/a/b",
 			Err: &fs.PathError{
 				Op:   "mkdirall",
@@ -1230,40 +1144,36 @@ func TestMkdirAll(t *testing.T) {
 			},
 		},
 		{ // 7
-			FS: FSRW{
-				FS: FS{
-					modtime: now,
-					entries: []*dirEnt{
-						{
-							directoryEntry: &inodeRW{
-								inode: inode{
-									modtime: now,
-									mode:    fs.ModePerm,
-								},
+			FS: newFSRW(dnode{
+				modtime: now,
+				entries: []*dirEnt{
+					{
+						directoryEntry: &inodeRW{
+							inode: inode{
+								modtime: now,
+								mode:    fs.ModePerm,
 							},
-							name: "a",
 						},
+						name: "a",
 					},
-					mode: fs.ModeDir | fs.ModePerm,
 				},
-			},
-			Output: FSRW{
-				FS: FS{
-					modtime: now,
-					entries: []*dirEnt{
-						{
-							directoryEntry: &inodeRW{
-								inode: inode{
-									modtime: now,
-									mode:    fs.ModePerm,
-								},
+				mode: fs.ModeDir | fs.ModePerm,
+			}),
+			Output: newFSRW(dnode{
+				modtime: now,
+				entries: []*dirEnt{
+					{
+						directoryEntry: &inodeRW{
+							inode: inode{
+								modtime: now,
+								mode:    fs.ModePerm,
 							},
-							name: "a",
 						},
+						name: "a",
 					},
-					mode: fs.ModeDir | fs.ModePerm,
 				},
-			},
+				mode: fs.ModeDir | fs.ModePerm,
+			}),
 			Path: "/a/b",
 			Err: &fs.PathError{
 				Op:   "mkdirall",
@@ -1272,89 +1182,81 @@ func TestMkdirAll(t *testing.T) {
 			},
 		},
 		{ // 8
-			FS: FSRW{
-				FS: FS{
-					modtime: now,
-					entries: []*dirEnt{
-						{
-							directoryEntry: &dnodeRW{
-								dnode: dnode{
-									modtime: now,
-									mode:    fs.ModeDir | fs.ModePerm,
-								},
+			FS: newFSRW(dnode{
+				modtime: now,
+				entries: []*dirEnt{
+					{
+						directoryEntry: &dnodeRW{
+							dnode: dnode{
+								modtime: now,
+								mode:    fs.ModeDir | fs.ModePerm,
 							},
-							name: "a",
 						},
+						name: "a",
 					},
-					mode: fs.ModeDir | fs.ModePerm,
 				},
-			},
-			Output: FSRW{
-				FS: FS{
-					modtime: now,
-					entries: []*dirEnt{
-						{
-							directoryEntry: &dnodeRW{
-								dnode: dnode{
-									entries: []*dirEnt{
-										{
-											directoryEntry: &dnodeRW{
-												dnode: dnode{
-													modtime: now,
-													mode:    fs.ModeDir | 0o123,
-												},
+				mode: fs.ModeDir | fs.ModePerm,
+			}),
+			Output: newFSRW(dnode{
+				modtime: now,
+				entries: []*dirEnt{
+					{
+						directoryEntry: &dnodeRW{
+							dnode: dnode{
+								entries: []*dirEnt{
+									{
+										directoryEntry: &dnodeRW{
+											dnode: dnode{
+												modtime: now,
+												mode:    fs.ModeDir | 0o123,
 											},
-											name: "b",
 										},
+										name: "b",
 									},
-									modtime: now,
-									mode:    fs.ModeDir | fs.ModePerm,
 								},
+								modtime: now,
+								mode:    fs.ModeDir | fs.ModePerm,
 							},
-							name: "a",
 						},
+						name: "a",
 					},
-					mode: fs.ModeDir | fs.ModePerm,
 				},
-			},
+				mode: fs.ModeDir | fs.ModePerm,
+			}),
 			Path:      "/a/b",
 			PathPerms: 0o123,
 		},
 		{ // 9
-			FS: FSRW{
-				FS: FS{
-					modtime: now,
-					mode:    fs.ModeDir | fs.ModePerm,
-				},
-			},
-			Output: FSRW{
-				FS: FS{
-					modtime: now,
-					entries: []*dirEnt{
-						{
-							directoryEntry: &dnodeRW{
-								dnode: dnode{
-									entries: []*dirEnt{
-										{
-											directoryEntry: &dnodeRW{
-												dnode: dnode{
-													modtime: now,
-													mode:    fs.ModeDir | 0o765,
-												},
+			FS: newFSRW(dnode{
+				modtime: now,
+				mode:    fs.ModeDir | fs.ModePerm,
+			}),
+			Output: newFSRW(dnode{
+				modtime: now,
+				entries: []*dirEnt{
+					{
+						directoryEntry: &dnodeRW{
+							dnode: dnode{
+								entries: []*dirEnt{
+									{
+										directoryEntry: &dnodeRW{
+											dnode: dnode{
+												modtime: now,
+												mode:    fs.ModeDir | 0o765,
 											},
-											name: "b",
 										},
+										name: "b",
 									},
-									modtime: now,
-									mode:    fs.ModeDir | 0o765,
 								},
+								modtime: now,
+								mode:    fs.ModeDir | 0o765,
 							},
-							name: "a",
 						},
+						name: "a",
 					},
-					mode: fs.ModeDir | fs.ModePerm,
 				},
-			},
+				mode: fs.ModeDir | fs.ModePerm,
+			}),
 			Path:      "/a/b",
 			PathPerms: 0o765,
 		},
@@ -1362,7 +1264,7 @@ func TestMkdirAll(t *testing.T) {
 		if err := test.FS.MkdirAll(test.Path, test.PathPerms); !reflect.DeepEqual(err, test.Err) {
 			t.Errorf("test %d: expecting error %s, got %s", n+1, test.Err, err)
 		} else {
-			fixTimes((*dnode)(&test.FS.FS), now)
+			fixTimes(test.FS.de.(*dnodeRW), now)
 			if !reflect.DeepEqual(test.Output, test.FS) {
 				t.Errorf("test %d: expecting to get %v, got %v", n+1, test.Output, test.FS)
 			}
@@ -1381,8 +1283,8 @@ func TestCreate(t *testing.T) {
 		Err        error
 	}{
 		{ // 1
-			FS:       FSRW{},
-			OutputFS: FSRW{},
+			FS:       newFSRW(dnode{}),
+			OutputFS: newFSRW(dnode{}),
 			Err: &fs.PathError{
 				Op:   "create",
 				Path: "",
@@ -1390,16 +1292,12 @@ func TestCreate(t *testing.T) {
 			},
 		},
 		{ // 2
-			FS: FSRW{
-				FS: FS{
-					mode: fs.ModeDir | fs.ModePerm,
-				},
-			},
-			OutputFS: FSRW{
-				FS: FS{
-					mode: fs.ModeDir | fs.ModePerm,
-				},
-			},
+			FS: newFSRW(dnode{
+				mode: fs.ModeDir | fs.ModePerm,
+			}),
+			OutputFS: newFSRW(dnode{
+				mode: fs.ModeDir | fs.ModePerm,
+			}),
 			Err: &fs.PathError{
 				Op:   "create",
 				Path: "",
@@ -1407,8 +1305,8 @@ func TestCreate(t *testing.T) {
 			},
 		},
 		{ // 3
-			FS:       FSRW{},
-			OutputFS: FSRW{},
+			FS:       newFSRW(dnode{}),
+			OutputFS: newFSRW(dnode{}),
 			Path:     "/a",
 			Err: &fs.PathError{
 				Op:   "create",
@@ -1417,16 +1315,12 @@ func TestCreate(t *testing.T) {
 			},
 		},
 		{ // 4
-			FS: FSRW{
-				FS: FS{
-					mode: fs.ModeDir | fs.ModePerm,
-				},
-			},
-			OutputFS: FSRW{
-				FS: FS{
-					mode: fs.ModeDir | fs.ModePerm,
-				},
-			},
+			FS: newFSRW(dnode{
+				mode: fs.ModeDir | fs.ModePerm,
+			}),
+			OutputFS: newFSRW(dnode{
+				mode: fs.ModeDir | fs.ModePerm,
+			}),
 			Path: "/",
 			Err: &fs.PathError{
 				Op:   "create",
@@ -1435,29 +1329,25 @@ func TestCreate(t *testing.T) {
 			},
 		},
 		{ // 5
-			FS: FSRW{
-				FS: FS{
-					modtime: now.Add(-20 * time.Second),
-					mode:    fs.ModeDir | fs.ModePerm,
-				},
-			},
-			OutputFS: FSRW{
-				FS: FS{
-					entries: []*dirEnt{
-						{
-							directoryEntry: &inodeRW{
-								inode: inode{
-									modtime: now,
-									mode:    fs.ModePerm,
-								},
+			FS: newFSRW(dnode{
+				modtime: now.Add(-20 * time.Second),
+				mode:    fs.ModeDir | fs.ModePerm,
+			}),
+			OutputFS: newFSRW(dnode{
+				entries: []*dirEnt{
+					{
+						directoryEntry: &inodeRW{
+							inode: inode{
+								modtime: now,
+								mode:    fs.ModePerm,
 							},
-							name: "a",
 						},
+						name: "a",
 					},
-					modtime: now,
-					mode:    fs.ModeDir | fs.ModePerm,
 				},
-			},
+				modtime: now,
+				mode:    fs.ModeDir | fs.ModePerm,
+			}),
 			OutputFile: &fileRW{
 				mu: &sync.RWMutex{},
 				file: file{
@@ -1472,42 +1362,38 @@ func TestCreate(t *testing.T) {
 			Path: "/a",
 		},
 		{ // 6
-			FS: FSRW{
-				FS: FS{
-					entries: []*dirEnt{
-						{
-							directoryEntry: &inodeRW{
-								inode: inode{
-									data:    []byte("Hello"),
-									modtime: now.Add(-20 * time.Second),
-									mode:    fs.ModePerm,
-								},
+			FS: newFSRW(dnode{
+				entries: []*dirEnt{
+					{
+						directoryEntry: &inodeRW{
+							inode: inode{
+								data:    []byte("Hello"),
+								modtime: now.Add(-20 * time.Second),
+								mode:    fs.ModePerm,
 							},
-							name: "a",
 						},
+						name: "a",
 					},
-					modtime: now.Add(-20 * time.Second),
-					mode:    fs.ModeDir | fs.ModePerm,
 				},
-			},
-			OutputFS: FSRW{
-				FS: FS{
-					entries: []*dirEnt{
-						{
-							directoryEntry: &inodeRW{
-								inode: inode{
-									data:    ([]byte("Hello"))[:0],
-									modtime: now,
-									mode:    fs.ModePerm,
-								},
+				modtime: now.Add(-20 * time.Second),
+				mode:    fs.ModeDir | fs.ModePerm,
+			}),
+			OutputFS: newFSRW(dnode{
+				entries: []*dirEnt{
+					{
+						directoryEntry: &inodeRW{
+							inode: inode{
+								data:    ([]byte("Hello"))[:0],
+								modtime: now,
+								mode:    fs.ModePerm,
 							},
-							name: "a",
 						},
+						name: "a",
 					},
-					modtime: now.Add(-20 * time.Second),
-					mode:    fs.ModeDir | fs.ModePerm,
 				},
-			},
+				modtime: now.Add(-20 * time.Second),
+				mode:    fs.ModeDir | fs.ModePerm,
+			}),
 			OutputFile: &fileRW{
 				mu: &sync.RWMutex{},
 				file: file{
@@ -1523,51 +1409,47 @@ func TestCreate(t *testing.T) {
 			Path: "/a",
 		},
 		{ // 7
-			FS: FSRW{
-				FS: FS{
-					entries: []*dirEnt{
-						{
-							directoryEntry: &dnodeRW{
-								dnode: dnode{
-									modtime: now.Add(-20 * time.Second),
-									mode:    fs.ModeDir | fs.ModePerm,
-								},
+			FS: newFSRW(dnode{
+				entries: []*dirEnt{
+					{
+						directoryEntry: &dnodeRW{
+							dnode: dnode{
+								modtime: now.Add(-20 * time.Second),
+								mode:    fs.ModeDir | fs.ModePerm,
 							},
-							name: "a",
 						},
+						name: "a",
 					},
-					modtime: now,
-					mode:    fs.ModeDir | fs.ModePerm,
 				},
-			},
-			OutputFS: FSRW{
-				FS: FS{
-					entries: []*dirEnt{
-						{
-							directoryEntry: &dnodeRW{
-								dnode: dnode{
-									entries: []*dirEnt{
-										{
-											directoryEntry: &inodeRW{
-												inode: inode{
-													modtime: now,
-													mode:    fs.ModePerm,
-												},
+				modtime: now,
+				mode:    fs.ModeDir | fs.ModePerm,
+			}),
+			OutputFS: newFSRW(dnode{
+				entries: []*dirEnt{
+					{
+						directoryEntry: &dnodeRW{
+							dnode: dnode{
+								entries: []*dirEnt{
+									{
+										directoryEntry: &inodeRW{
+											inode: inode{
+												modtime: now,
+												mode:    fs.ModePerm,
 											},
-											name: "b",
 										},
+										name: "b",
 									},
-									modtime: now,
-									mode:    fs.ModeDir | fs.ModePerm,
 								},
+								modtime: now,
+								mode:    fs.ModeDir | fs.ModePerm,
 							},
-							name: "a",
 						},
+						name: "a",
 					},
-					modtime: now,
-					mode:    fs.ModeDir | fs.ModePerm,
 				},
-			},
+				modtime: now,
+				mode:    fs.ModeDir | fs.ModePerm,
+			}),
 			OutputFile: &fileRW{
 				mu: &sync.RWMutex{},
 				file: file{
@@ -1582,40 +1464,36 @@ func TestCreate(t *testing.T) {
 			Path: "/a/b",
 		},
 		{ // 8
-			FS: FSRW{
-				FS: FS{
-					entries: []*dirEnt{
-						{
-							directoryEntry: &dnodeRW{
-								dnode: dnode{
-									modtime: now.Add(-20 * time.Second),
-									mode:    fs.ModeDir | 0o444,
-								},
+			FS: newFSRW(dnode{
+				entries: []*dirEnt{
+					{
+						directoryEntry: &dnodeRW{
+							dnode: dnode{
+								modtime: now.Add(-20 * time.Second),
+								mode:    fs.ModeDir | 0o444,
 							},
-							name: "a",
 						},
+						name: "a",
 					},
-					modtime: now,
-					mode:    fs.ModeDir | fs.ModePerm,
 				},
-			},
-			OutputFS: FSRW{
-				FS: FS{
-					entries: []*dirEnt{
-						{
-							directoryEntry: &dnodeRW{
-								dnode: dnode{
-									modtime: now.Add(-20 * time.Second),
-									mode:    fs.ModeDir | 0o444,
-								},
+				modtime: now,
+				mode:    fs.ModeDir | fs.ModePerm,
+			}),
+			OutputFS: newFSRW(dnode{
+				entries: []*dirEnt{
+					{
+						directoryEntry: &dnodeRW{
+							dnode: dnode{
+								modtime: now.Add(-20 * time.Second),
+								mode:    fs.ModeDir | 0o444,
 							},
-							name: "a",
 						},
+						name: "a",
 					},
-					modtime: now,
-					mode:    fs.ModeDir | fs.ModePerm,
 				},
-			},
+				modtime: now,
+				mode:    fs.ModeDir | fs.ModePerm,
+			}),
 			Path: "/a/b",
 			Err: &fs.PathError{
 				Op:   "create",
@@ -1627,7 +1505,7 @@ func TestCreate(t *testing.T) {
 		if f, err := test.FS.Create(test.Path); !reflect.DeepEqual(err, test.Err) {
 			t.Errorf("test %d: expecting error %s, got %s", n+1, test.Err, err)
 		} else {
-			fixTimes((*dnode)(&test.FS.FS), now)
+			fixTimes(test.FS.de.(*dnodeRW), now)
 			if !reflect.DeepEqual(test.OutputFile, f) {
 				t.Errorf("test %d: expecting to get file %v, got %v", n+1, test.OutputFile, f)
 			} else if !reflect.DeepEqual(test.OutputFS, test.FS) {
@@ -1646,8 +1524,8 @@ func TestLink(t *testing.T) {
 		Err      error
 	}{
 		{ // 1
-			FS:     FSRW{},
-			Output: FSRW{},
+			FS:     newFSRW(dnode{}),
+			Output: newFSRW(dnode{}),
 			Err: &fs.PathError{
 				Op:   "link",
 				Path: "",
@@ -1655,16 +1533,12 @@ func TestLink(t *testing.T) {
 			},
 		},
 		{ // 2
-			FS: FSRW{
-				FS: FS{
-					mode: fs.ModeDir | fs.ModePerm,
-				},
-			},
-			Output: FSRW{
-				FS: FS{
-					mode: fs.ModeDir | fs.ModePerm,
-				},
-			},
+			FS: newFSRW(dnode{
+				mode: fs.ModeDir | fs.ModePerm,
+			}),
+			Output: newFSRW(dnode{
+				mode: fs.ModeDir | fs.ModePerm,
+			}),
 			Err: &fs.PathError{
 				Op:   "link",
 				Path: "",
@@ -1672,16 +1546,12 @@ func TestLink(t *testing.T) {
 			},
 		},
 		{ // 3
-			FS: FSRW{
-				FS: FS{
-					mode: fs.ModeDir | fs.ModePerm,
-				},
-			},
-			Output: FSRW{
-				FS: FS{
-					mode: fs.ModeDir | fs.ModePerm,
-				},
-			},
+			FS: newFSRW(dnode{
+				mode: fs.ModeDir | fs.ModePerm,
+			}),
+			Output: newFSRW(dnode{
+				mode: fs.ModeDir | fs.ModePerm,
+			}),
 			From: "/a",
 			Err: &fs.PathError{
 				Op:   "link",
@@ -1690,28 +1560,24 @@ func TestLink(t *testing.T) {
 			},
 		},
 		{ // 4
-			FS: FSRW{
-				FS: FS{
-					entries: []*dirEnt{
-						{
-							name:           "a",
-							directoryEntry: &inodeRW{},
-						},
+			FS: newFSRW(dnode{
+				entries: []*dirEnt{
+					{
+						name:           "a",
+						directoryEntry: &inodeRW{},
 					},
-					mode: fs.ModeDir | fs.ModePerm,
 				},
-			},
-			Output: FSRW{
-				FS: FS{
-					entries: []*dirEnt{
-						{
-							name:           "a",
-							directoryEntry: &inodeRW{},
-						},
+				mode: fs.ModeDir | fs.ModePerm,
+			}),
+			Output: newFSRW(dnode{
+				entries: []*dirEnt{
+					{
+						name:           "a",
+						directoryEntry: &inodeRW{},
 					},
-					mode: fs.ModeDir | fs.ModePerm,
 				},
-			},
+				mode: fs.ModeDir | fs.ModePerm,
+			}),
 			From: "/a",
 			Err: &fs.PathError{
 				Op:   "link",
@@ -1720,28 +1586,24 @@ func TestLink(t *testing.T) {
 			},
 		},
 		{ // 5
-			FS: FSRW{
-				FS: FS{
-					entries: []*dirEnt{
-						{
-							name:           "a",
-							directoryEntry: &inodeRW{},
-						},
+			FS: newFSRW(dnode{
+				entries: []*dirEnt{
+					{
+						name:           "a",
+						directoryEntry: &inodeRW{},
 					},
-					mode: fs.ModeDir | fs.ModePerm,
 				},
-			},
-			Output: FSRW{
-				FS: FS{
-					entries: []*dirEnt{
-						{
-							name:           "a",
-							directoryEntry: &inodeRW{},
-						},
+				mode: fs.ModeDir | fs.ModePerm,
+			}),
+			Output: newFSRW(dnode{
+				entries: []*dirEnt{
+					{
+						name:           "a",
+						directoryEntry: &inodeRW{},
 					},
-					mode: fs.ModeDir | fs.ModePerm,
 				},
-			},
+				mode: fs.ModeDir | fs.ModePerm,
+			}),
 			From: "/a",
 			To:   "/a",
 			Err: &fs.PathError{
@@ -1751,36 +1613,32 @@ func TestLink(t *testing.T) {
 			},
 		},
 		{ // 6
-			FS: FSRW{
-				FS: FS{
-					entries: []*dirEnt{
-						{
-							name: "a",
-							directoryEntry: &inodeRW{
-								inode: inode{
-									data: []byte("Hello"),
-								},
+			FS: newFSRW(dnode{
+				entries: []*dirEnt{
+					{
+						name: "a",
+						directoryEntry: &inodeRW{
+							inode: inode{
+								data: []byte("Hello"),
 							},
 						},
 					},
-					mode: fs.ModeDir,
 				},
-			},
-			Output: FSRW{
-				FS: FS{
-					entries: []*dirEnt{
-						{
-							name: "a",
-							directoryEntry: &inodeRW{
-								inode: inode{
-									data: []byte("Hello"),
-								},
+				mode: fs.ModeDir,
+			}),
+			Output: newFSRW(dnode{
+				entries: []*dirEnt{
+					{
+						name: "a",
+						directoryEntry: &inodeRW{
+							inode: inode{
+								data: []byte("Hello"),
 							},
 						},
 					},
-					mode: fs.ModeDir,
 				},
-			},
+				mode: fs.ModeDir,
+			}),
 			From: "/a",
 			To:   "/b",
 			Err: &fs.PathError{
@@ -1790,167 +1648,157 @@ func TestLink(t *testing.T) {
 			},
 		},
 		{ // 7
-			FS: FSRW{
-				FS: FS{
-					entries: []*dirEnt{
-						{
-							name: "a",
-							directoryEntry: &inodeRW{
-								inode: inode{
-									data: []byte("Hello"),
-								},
+			FS: newFSRW(dnode{
+				entries: []*dirEnt{
+					{
+						name: "a",
+						directoryEntry: &inodeRW{
+							inode: inode{
+								data: []byte("Hello"),
 							},
 						},
 					},
-					mode: fs.ModeDir | fs.ModePerm,
 				},
-			},
-			Output: FSRW{
-				FS: FS{
-					entries: []*dirEnt{
-						{
-							name: "a",
-							directoryEntry: &inodeRW{
-								inode: inode{
-									data: []byte("Hello"),
-								},
-							},
-						},
-						{
-							name: "b",
-							directoryEntry: &inodeRW{
-								inode: inode{
-									data: []byte("Hello"),
-								},
+				mode: fs.ModeDir | fs.ModePerm,
+			}),
+			Output: newFSRW(dnode{
+				entries: []*dirEnt{
+					{
+						name: "a",
+						directoryEntry: &inodeRW{
+							inode: inode{
+								data: []byte("Hello"),
 							},
 						},
 					},
-					mode:    fs.ModeDir | fs.ModePerm,
-					modtime: now,
+					{
+						name: "b",
+						directoryEntry: &inodeRW{
+							inode: inode{
+								data: []byte("Hello"),
+							},
+						},
+					},
 				},
-			},
+				mode:    fs.ModeDir | fs.ModePerm,
+				modtime: now,
+			}),
 			From: "/a",
 			To:   "/b",
 		},
 		{ // 8
-			FS: FSRW{
-				FS: FS{
-					entries: []*dirEnt{
-						{
-							name: "a",
-							directoryEntry: &dnodeRW{
-								dnode: dnode{
-									entries: []*dirEnt{
-										{
-											name: "b",
-											directoryEntry: &inodeRW{
-												inode: inode{
-													data: []byte("Hello"),
-												},
+			FS: newFSRW(dnode{
+				entries: []*dirEnt{
+					{
+						name: "a",
+						directoryEntry: &dnodeRW{
+							dnode: dnode{
+								entries: []*dirEnt{
+									{
+										name: "b",
+										directoryEntry: &inodeRW{
+											inode: inode{
+												data: []byte("Hello"),
 											},
 										},
 									},
-									mode: fs.ModeDir | fs.ModePerm,
 								},
-							},
-						},
-					},
-					mode: fs.ModeDir | fs.ModePerm,
-				},
-			},
-			Output: FSRW{
-				FS: FS{
-					entries: []*dirEnt{
-						{
-							name: "a",
-							directoryEntry: &dnodeRW{
-								dnode: dnode{
-									entries: []*dirEnt{
-										{
-											name: "b",
-											directoryEntry: &inodeRW{
-												inode: inode{
-													data: []byte("Hello"),
-												},
-											},
-										},
-									},
-									mode: fs.ModeDir | fs.ModePerm,
-								},
-							},
-						},
-						{
-							name: "c",
-							directoryEntry: &inodeRW{
-								inode: inode{
-									data: []byte("Hello"),
-								},
-							},
-						},
-					},
-					mode:    fs.ModeDir | fs.ModePerm,
-					modtime: now,
-				},
-			},
-			From: "/a/b",
-			To:   "/c",
-		},
-		{ // 9
-			FS: FSRW{
-				FS: FS{
-					entries: []*dirEnt{
-						{
-							name: "a",
-							directoryEntry: &inodeRW{
-								inode: inode{
-									data: []byte("Hello"),
-								},
-							},
-						},
-						{
-							name: "b",
-							directoryEntry: &dnode{
 								mode: fs.ModeDir | fs.ModePerm,
 							},
 						},
 					},
-					mode: fs.ModeDir | fs.ModePerm,
 				},
-			},
-			Output: FSRW{
-				FS: FS{
-					entries: []*dirEnt{
-						{
-							name: "a",
-							directoryEntry: &inodeRW{
-								inode: inode{
-									data: []byte("Hello"),
-								},
-							},
-						},
-						{
-							name: "b",
-							directoryEntry: &dnodeRW{
-								dnode: dnode{
-									entries: []*dirEnt{
-										{
-											name: "c",
-											directoryEntry: &inodeRW{
-												inode: inode{
-													data: []byte("Hello"),
-												},
+				mode: fs.ModeDir | fs.ModePerm,
+			}),
+			Output: newFSRW(dnode{
+				entries: []*dirEnt{
+					{
+						name: "a",
+						directoryEntry: &dnodeRW{
+							dnode: dnode{
+								entries: []*dirEnt{
+									{
+										name: "b",
+										directoryEntry: &inodeRW{
+											inode: inode{
+												data: []byte("Hello"),
 											},
 										},
 									},
-									mode:    fs.ModeDir | fs.ModePerm,
-									modtime: now,
 								},
+								mode: fs.ModeDir | fs.ModePerm,
 							},
 						},
 					},
-					mode: fs.ModeDir | fs.ModePerm,
+					{
+						name: "c",
+						directoryEntry: &inodeRW{
+							inode: inode{
+								data: []byte("Hello"),
+							},
+						},
+					},
 				},
-			},
+				mode:    fs.ModeDir | fs.ModePerm,
+				modtime: now,
+			}),
+			From: "/a/b",
+			To:   "/c",
+		},
+		{ // 9
+			FS: newFSRW(dnode{
+				entries: []*dirEnt{
+					{
+						name: "a",
+						directoryEntry: &inodeRW{
+							inode: inode{
+								data: []byte("Hello"),
+							},
+						},
+					},
+					{
+						name: "b",
+						directoryEntry: &dnodeRW{
+							dnode: dnode{
+								mode: fs.ModeDir | fs.ModePerm,
+							},
+						},
+					},
+				},
+				mode: fs.ModeDir | fs.ModePerm,
+			}),
+			Output: newFSRW(dnode{
+				entries: []*dirEnt{
+					{
+						name: "a",
+						directoryEntry: &inodeRW{
+							inode: inode{
+								data: []byte("Hello"),
+							},
+						},
+					},
+					{
+						name: "b",
+						directoryEntry: &dnodeRW{
+							dnode: dnode{
+								entries: []*dirEnt{
+									{
+										name: "c",
+										directoryEntry: &inodeRW{
+											inode: inode{
+												data: []byte("Hello"),
+											},
+										},
+									},
+								},
+								mode:    fs.ModeDir | fs.ModePerm,
+								modtime: now,
+							},
+						},
+					},
+				},
+				mode: fs.ModeDir | fs.ModePerm,
+			}),
 			From: "/a",
 			To:   "/b/c",
 		},
@@ -1958,7 +1806,7 @@ func TestLink(t *testing.T) {
 		if err := test.FS.Link(test.From, test.To); !reflect.DeepEqual(err, test.Err) {
 			t.Errorf("test %d: expecting error %s, got %s", n+1, test.Err, err)
 		} else {
-			fixTimes((*dnode)(&test.FS.FS), now)
+			fixTimes(test.FS.de.(*dnodeRW), now)
 			if !reflect.DeepEqual(test.Output, test.FS) {
 				t.Errorf("test %d: expecting to get FS %v, got %v", n+1, test.Output, test.FS)
 			}
@@ -1975,8 +1823,8 @@ func TestSymlink(t *testing.T) {
 		Err      error
 	}{
 		{ // 1
-			FS:     FSRW{},
-			Output: FSRW{},
+			FS:     newFSRW(dnode{}),
+			Output: newFSRW(dnode{}),
 			Err: &fs.PathError{
 				Op:   "symlink",
 				Path: "",
@@ -1984,16 +1832,12 @@ func TestSymlink(t *testing.T) {
 			},
 		},
 		{ // 2
-			FS: FSRW{
-				FS: FS{
-					mode: fs.ModeDir | fs.ModePerm,
-				},
-			},
-			Output: FSRW{
-				FS: FS{
-					mode: fs.ModeDir | fs.ModePerm,
-				},
-			},
+			FS: newFSRW(dnode{
+				mode: fs.ModeDir | fs.ModePerm,
+			}),
+			Output: newFSRW(dnode{
+				mode: fs.ModeDir | fs.ModePerm,
+			}),
 			Err: &fs.PathError{
 				Op:   "symlink",
 				Path: "",
@@ -2001,16 +1845,12 @@ func TestSymlink(t *testing.T) {
 			},
 		},
 		{ // 3
-			FS: FSRW{
-				FS: FS{
-					mode: fs.ModeDir | fs.ModePerm,
-				},
-			},
-			Output: FSRW{
-				FS: FS{
-					mode: fs.ModeDir | fs.ModePerm,
-				},
-			},
+			FS: newFSRW(dnode{
+				mode: fs.ModeDir | fs.ModePerm,
+			}),
+			Output: newFSRW(dnode{
+				mode: fs.ModeDir | fs.ModePerm,
+			}),
 			From: "/a",
 			Err: &fs.PathError{
 				Op:   "symlink",
@@ -2019,28 +1859,24 @@ func TestSymlink(t *testing.T) {
 			},
 		},
 		{ // 4
-			FS: FSRW{
-				FS: FS{
-					entries: []*dirEnt{
-						{
-							name:           "a",
-							directoryEntry: &inodeRW{},
-						},
+			FS: newFSRW(dnode{
+				entries: []*dirEnt{
+					{
+						name:           "a",
+						directoryEntry: &inodeRW{},
 					},
-					mode: fs.ModeDir | fs.ModePerm,
 				},
-			},
-			Output: FSRW{
-				FS: FS{
-					entries: []*dirEnt{
-						{
-							name:           "a",
-							directoryEntry: &inodeRW{},
-						},
+				mode: fs.ModeDir | fs.ModePerm,
+			}),
+			Output: newFSRW(dnode{
+				entries: []*dirEnt{
+					{
+						name:           "a",
+						directoryEntry: &inodeRW{},
 					},
-					mode: fs.ModeDir | fs.ModePerm,
 				},
-			},
+				mode: fs.ModeDir | fs.ModePerm,
+			}),
 			From: "/a",
 			Err: &fs.PathError{
 				Op:   "symlink",
@@ -2049,28 +1885,24 @@ func TestSymlink(t *testing.T) {
 			},
 		},
 		{ // 5
-			FS: FSRW{
-				FS: FS{
-					entries: []*dirEnt{
-						{
-							name:           "a",
-							directoryEntry: &inodeRW{},
-						},
+			FS: newFSRW(dnode{
+				entries: []*dirEnt{
+					{
+						name:           "a",
+						directoryEntry: &inodeRW{},
 					},
-					mode: fs.ModeDir | fs.ModePerm,
 				},
-			},
-			Output: FSRW{
-				FS: FS{
-					entries: []*dirEnt{
-						{
-							name:           "a",
-							directoryEntry: &inodeRW{},
-						},
+				mode: fs.ModeDir | fs.ModePerm,
+			}),
+			Output: newFSRW(dnode{
+				entries: []*dirEnt{
+					{
+						name:           "a",
+						directoryEntry: &inodeRW{},
 					},
-					mode: fs.ModeDir | fs.ModePerm,
 				},
-			},
+				mode: fs.ModeDir | fs.ModePerm,
+			}),
 			From: "/a",
 			To:   "/a",
 			Err: &fs.PathError{
@@ -2080,36 +1912,32 @@ func TestSymlink(t *testing.T) {
 			},
 		},
 		{ // 6
-			FS: FSRW{
-				FS: FS{
-					entries: []*dirEnt{
-						{
-							name: "a",
-							directoryEntry: &inodeRW{
-								inode: inode{
-									data: []byte("Hello"),
-								},
+			FS: newFSRW(dnode{
+				entries: []*dirEnt{
+					{
+						name: "a",
+						directoryEntry: &inodeRW{
+							inode: inode{
+								data: []byte("Hello"),
 							},
 						},
 					},
-					mode: fs.ModeDir,
 				},
-			},
-			Output: FSRW{
-				FS: FS{
-					entries: []*dirEnt{
-						{
-							name: "a",
-							directoryEntry: &inodeRW{
-								inode: inode{
-									data: []byte("Hello"),
-								},
+				mode: fs.ModeDir,
+			}),
+			Output: newFSRW(dnode{
+				entries: []*dirEnt{
+					{
+						name: "a",
+						directoryEntry: &inodeRW{
+							inode: inode{
+								data: []byte("Hello"),
 							},
 						},
 					},
-					mode: fs.ModeDir,
 				},
-			},
+				mode: fs.ModeDir,
+			}),
 			From: "/a",
 			To:   "/b",
 			Err: &fs.PathError{
@@ -2119,57 +1947,53 @@ func TestSymlink(t *testing.T) {
 			},
 		},
 		{ // 7
-			FS: FSRW{
-				FS: FS{
-					entries: []*dirEnt{
-						{
-							name: "a",
-							directoryEntry: &inodeRW{
-								inode: inode{
-									data: []byte("Hello"),
-								},
+			FS: newFSRW(dnode{
+				entries: []*dirEnt{
+					{
+						name: "a",
+						directoryEntry: &inodeRW{
+							inode: inode{
+								data: []byte("Hello"),
 							},
 						},
 					},
-					mode: fs.ModeDir | fs.ModePerm,
 				},
-			},
-			Output: FSRW{
-				FS: FS{
-					entries: []*dirEnt{
-						{
-							name: "a",
-							directoryEntry: &inodeRW{
-								inode: inode{
-									data: []byte("Hello"),
-								},
-							},
-						},
-						{
-							name: "b",
-							directoryEntry: &inodeRW{
-								inode: inode{
-									data:    []byte("/a"),
-									modtime: now,
-									mode:    fs.ModeSymlink | fs.ModePerm,
-								},
+				mode: fs.ModeDir | fs.ModePerm,
+			}),
+			Output: newFSRW(dnode{
+				entries: []*dirEnt{
+					{
+						name: "a",
+						directoryEntry: &inodeRW{
+							inode: inode{
+								data: []byte("Hello"),
 							},
 						},
 					},
-					mode:    fs.ModeDir | fs.ModePerm,
-					modtime: now,
+					{
+						name: "b",
+						directoryEntry: &inodeRW{
+							inode: inode{
+								data:    []byte("/a"),
+								modtime: now,
+								mode:    fs.ModeSymlink | fs.ModePerm,
+							},
+						},
+					},
 				},
-			},
+				mode:    fs.ModeDir | fs.ModePerm,
+				modtime: now,
+			}),
 			From: "/a",
 			To:   "/b",
 		},
 		{ // 8
-			FS: FSRW{
-				FS: FS{
-					entries: []*dirEnt{
-						{
-							name: "a",
-							directoryEntry: &dnode{
+			FS: newFSRW(dnode{
+				entries: []*dirEnt{
+					{
+						name: "a",
+						directoryEntry: &dnodeRW{
+							dnode: dnode{
 								entries: []*dirEnt{
 									{
 										name: "b",
@@ -2184,108 +2008,102 @@ func TestSymlink(t *testing.T) {
 							},
 						},
 					},
-					mode: fs.ModeDir | fs.ModePerm,
 				},
-			},
-			Output: FSRW{
-				FS: FS{
-					entries: []*dirEnt{
-						{
-							name: "a",
-							directoryEntry: &dnodeRW{
-								dnode: dnode{
-									entries: []*dirEnt{
-										{
-											name: "b",
-											directoryEntry: &inodeRW{
-												inode: inode{
-													data: []byte("Hello"),
-												},
+				mode: fs.ModeDir | fs.ModePerm,
+			}),
+			Output: newFSRW(dnode{
+				entries: []*dirEnt{
+					{
+						name: "a",
+						directoryEntry: &dnodeRW{
+							dnode: dnode{
+								entries: []*dirEnt{
+									{
+										name: "b",
+										directoryEntry: &inodeRW{
+											inode: inode{
+												data: []byte("Hello"),
 											},
 										},
 									},
-									mode: fs.ModeDir | fs.ModePerm,
 								},
-							},
-						},
-						{
-							name: "c",
-							directoryEntry: &inodeRW{
-								inode: inode{
-									data:    []byte("/a/b"),
-									mode:    fs.ModeSymlink | fs.ModePerm,
-									modtime: now,
-								},
+								mode: fs.ModeDir | fs.ModePerm,
 							},
 						},
 					},
-					mode:    fs.ModeDir | fs.ModePerm,
-					modtime: now,
+					{
+						name: "c",
+						directoryEntry: &inodeRW{
+							inode: inode{
+								data:    []byte("/a/b"),
+								mode:    fs.ModeSymlink | fs.ModePerm,
+								modtime: now,
+							},
+						},
+					},
 				},
-			},
+				mode:    fs.ModeDir | fs.ModePerm,
+				modtime: now,
+			}),
 			From: "/a/b",
 			To:   "/c",
 		},
 		{ // 9
-			FS: FSRW{
-				FS: FS{
-					entries: []*dirEnt{
-						{
-							name: "a",
-							directoryEntry: &inodeRW{
-								inode: inode{
-									data: []byte("Hello"),
-								},
-							},
-						},
-						{
-							name: "b",
-							directoryEntry: &dnodeRW{
-								dnode: dnode{
-									mode: fs.ModeDir | fs.ModePerm,
-								},
+			FS: newFSRW(dnode{
+				entries: []*dirEnt{
+					{
+						name: "a",
+						directoryEntry: &inodeRW{
+							inode: inode{
+								data: []byte("Hello"),
 							},
 						},
 					},
-					mode: fs.ModeDir | fs.ModePerm,
-				},
-			},
-			Output: FSRW{
-				FS: FS{
-					entries: []*dirEnt{
-						{
-							name: "a",
-							directoryEntry: &inodeRW{
-								inode: inode{
-									data: []byte("Hello"),
-								},
+					{
+						name: "b",
+						directoryEntry: &dnodeRW{
+							dnode: dnode{
+								mode: fs.ModeDir | fs.ModePerm,
 							},
 						},
-						{
-							name: "b",
-							directoryEntry: &dnodeRW{
-								dnode: dnode{
-									entries: []*dirEnt{
-										{
-											name: "c",
-											directoryEntry: &inodeRW{
-												inode: inode{
-													data:    []byte("/a"),
-													modtime: now,
-													mode:    fs.ModeSymlink | fs.ModePerm,
-												},
+					},
+				},
+				mode: fs.ModeDir | fs.ModePerm,
+			}),
+			Output: newFSRW(dnode{
+				entries: []*dirEnt{
+					{
+						name: "a",
+						directoryEntry: &inodeRW{
+							inode: inode{
+								data: []byte("Hello"),
+							},
+						},
+					},
+					{
+						name: "b",
+						directoryEntry: &dnodeRW{
+							dnode: dnode{
+								entries: []*dirEnt{
+									{
+										name: "c",
+										directoryEntry: &inodeRW{
+											inode: inode{
+												data:    []byte("/a"),
+												modtime: now,
+												mode:    fs.ModeSymlink | fs.ModePerm,
 											},
 										},
 									},
-									mode:    fs.ModeDir | fs.ModePerm,
-									modtime: now,
 								},
+								mode:    fs.ModeDir | fs.ModePerm,
+								modtime: now,
 							},
 						},
 					},
-					mode: fs.ModeDir | fs.ModePerm,
 				},
-			},
+				mode: fs.ModeDir | fs.ModePerm,
+			}),
 			From: "/a",
 			To:   "/b/c",
 		},
@@ -2293,7 +2111,7 @@ func TestSymlink(t *testing.T) {
 		if err := test.FS.Symlink(test.From, test.To); !reflect.DeepEqual(err, test.Err) {
 			t.Errorf("test %d: expecting error %s, got %s", n+1, test.Err, err)
 		} else {
-			fixTimes((*dnode)(&test.FS.FS), now)
+			fixTimes(test.FS.de.(*dnodeRW), now)
 			if !reflect.DeepEqual(test.Output, test.FS) {
 				t.Errorf("test %d: expecting to get FS %v, got %v", n+1, test.Output, test.FS)
 			}
@@ -2309,290 +2127,274 @@ func TestSymlinkResolveFileRW(t *testing.T) {
 		Err    error
 	}{
 		{ // 1
-			FS: FSRW{
-				FS: FS{
-					entries: []*dirEnt{
-						{
-							name: "a",
-							directoryEntry: &inodeRW{
-								inode: inode{
-									data: []byte("Hello"),
-									mode: fs.ModePerm,
-								},
-							},
-						},
-						{
-							name: "b",
-							directoryEntry: &inodeRW{
-								inode: inode{
-									data: []byte("/a"),
-									mode: fs.ModeSymlink | fs.ModePerm,
-								},
+			FS: newFSRW(dnode{
+				entries: []*dirEnt{
+					{
+						name: "a",
+						directoryEntry: &inodeRW{
+							inode: inode{
+								data: []byte("Hello"),
+								mode: fs.ModePerm,
 							},
 						},
 					},
-					mode: fs.ModeDir | fs.ModePerm,
+					{
+						name: "b",
+						directoryEntry: &inodeRW{
+							inode: inode{
+								data: []byte("/a"),
+								mode: fs.ModeSymlink | fs.ModePerm,
+							},
+						},
+					},
 				},
-			},
+				mode: fs.ModeDir | fs.ModePerm,
+			}),
 			Path:   "/b",
 			Output: []byte("Hello"),
 		},
 		{ // 2
-			FS: FSRW{
-				FS: FS{
-					entries: []*dirEnt{
-						{
-							name: "a",
-							directoryEntry: &inodeRW{
-								inode: inode{
-									data: []byte("Hello"),
-									mode: fs.ModePerm,
-								},
-							},
-						},
-						{
-							name: "b",
-							directoryEntry: &inodeRW{
-								inode: inode{
-									data: []byte("/c"),
-									mode: fs.ModeSymlink | fs.ModePerm,
-								},
+			FS: newFSRW(dnode{
+				entries: []*dirEnt{
+					{
+						name: "a",
+						directoryEntry: &inodeRW{
+							inode: inode{
+								data: []byte("Hello"),
+								mode: fs.ModePerm,
 							},
 						},
 					},
-					mode: fs.ModeDir | fs.ModePerm,
+					{
+						name: "b",
+						directoryEntry: &inodeRW{
+							inode: inode{
+								data: []byte("/c"),
+								mode: fs.ModeSymlink | fs.ModePerm,
+							},
+						},
+					},
 				},
-			},
+				mode: fs.ModeDir | fs.ModePerm,
+			}),
 			Path: "/b",
 			Err:  fs.ErrNotExist,
 		},
 		{ // 3
-			FS: FSRW{
-				FS: FS{
-					entries: []*dirEnt{
-						{
-							name: "a",
-							directoryEntry: &inodeRW{
-								inode: inode{
-									data: []byte("Hello"),
-								},
-							},
-						},
-						{
-							name: "b",
-							directoryEntry: &inodeRW{
-								inode: inode{
-									data: []byte("/a"),
-									mode: fs.ModeSymlink | fs.ModePerm,
-								},
+			FS: newFSRW(dnode{
+				entries: []*dirEnt{
+					{
+						name: "a",
+						directoryEntry: &inodeRW{
+							inode: inode{
+								data: []byte("Hello"),
 							},
 						},
 					},
-					mode: fs.ModeDir | fs.ModePerm,
+					{
+						name: "b",
+						directoryEntry: &inodeRW{
+							inode: inode{
+								data: []byte("/a"),
+								mode: fs.ModeSymlink | fs.ModePerm,
+							},
+						},
+					},
 				},
-			},
+				mode: fs.ModeDir | fs.ModePerm,
+			}),
 			Path: "/b",
 			Err:  fs.ErrPermission,
 		},
 		{ // 4
-			FS: FSRW{
-				FS: FS{
-					entries: []*dirEnt{
-						{
-							name: "a",
-							directoryEntry: &dnodeRW{
-								dnode: dnode{
-									mode: fs.ModeDir | fs.ModePerm,
-									entries: []*dirEnt{
-										{
-											name: "b",
-											directoryEntry: &inodeRW{
-												inode: inode{
-													data: []byte("World"),
-													mode: fs.ModePerm,
-												},
+			FS: newFSRW(dnode{
+				entries: []*dirEnt{
+					{
+						name: "a",
+						directoryEntry: &dnodeRW{
+							dnode: dnode{
+								mode: fs.ModeDir | fs.ModePerm,
+								entries: []*dirEnt{
+									{
+										name: "b",
+										directoryEntry: &inodeRW{
+											inode: inode{
+												data: []byte("World"),
+												mode: fs.ModePerm,
 											},
 										},
 									},
 								},
 							},
 						},
-						{
-							name: "c",
-							directoryEntry: &inodeRW{
-								inode: inode{
-									data: []byte("/a/b"),
-									mode: fs.ModeSymlink | fs.ModePerm,
-								},
+					},
+					{
+						name: "c",
+						directoryEntry: &inodeRW{
+							inode: inode{
+								data: []byte("/a/b"),
+								mode: fs.ModeSymlink | fs.ModePerm,
 							},
 						},
 					},
-					mode: fs.ModeDir | fs.ModePerm,
 				},
-			},
+				mode: fs.ModeDir | fs.ModePerm,
+			}),
 			Path:   "/c",
 			Output: []byte("World"),
 		},
 		{ // 5
-			FS: FSRW{
-				FS: FS{
-					entries: []*dirEnt{
-						{
-							name: "a",
-							directoryEntry: &dnodeRW{
-								dnode: dnode{
-									mode: fs.ModeDir | fs.ModePerm,
-									entries: []*dirEnt{
-										{
-											name: "b",
-											directoryEntry: &inodeRW{
-												inode: inode{
-													data: []byte("World"),
-													mode: fs.ModePerm,
-												},
+			FS: newFSRW(dnode{
+				entries: []*dirEnt{
+					{
+						name: "a",
+						directoryEntry: &dnodeRW{
+							dnode: dnode{
+								mode: fs.ModeDir | fs.ModePerm,
+								entries: []*dirEnt{
+									{
+										name: "b",
+										directoryEntry: &inodeRW{
+											inode: inode{
+												data: []byte("World"),
+												mode: fs.ModePerm,
 											},
 										},
 									},
-								},
-							},
-						},
-						{
-							name: "c",
-							directoryEntry: &inodeRW{
-								inode: inode{
-									data: []byte("a/b"),
-									mode: fs.ModeSymlink | fs.ModePerm,
 								},
 							},
 						},
 					},
-					mode: fs.ModeDir | fs.ModePerm,
+					{
+						name: "c",
+						directoryEntry: &inodeRW{
+							inode: inode{
+								data: []byte("a/b"),
+								mode: fs.ModeSymlink | fs.ModePerm,
+							},
+						},
+					},
 				},
-			},
+				mode: fs.ModeDir | fs.ModePerm,
+			}),
 			Path:   "/c",
 			Output: []byte("World"),
 		},
 		{ // 6
-			FS: FSRW{
-				FS: FS{
-					entries: []*dirEnt{
-						{
-							name: "a",
-							directoryEntry: &dnodeRW{
-								dnode: dnode{
-									mode: fs.ModeDir | fs.ModePerm,
-									entries: []*dirEnt{
-										{
-											name: "b",
-											directoryEntry: &inodeRW{
-												inode: inode{
-													data: []byte("/c"),
-													mode: fs.ModeSymlink | fs.ModePerm,
-												},
+			FS: newFSRW(dnode{
+				entries: []*dirEnt{
+					{
+						name: "a",
+						directoryEntry: &dnodeRW{
+							dnode: dnode{
+								mode: fs.ModeDir | fs.ModePerm,
+								entries: []*dirEnt{
+									{
+										name: "b",
+										directoryEntry: &inodeRW{
+											inode: inode{
+												data: []byte("/c"),
+												mode: fs.ModeSymlink | fs.ModePerm,
 											},
 										},
 									},
 								},
 							},
 						},
-						{
-							name: "c",
-							directoryEntry: &inode{
+					},
+					{
+						name: "c",
+						directoryEntry: &inode{
+							data: []byte("FooBar"),
+							mode: fs.ModePerm,
+						},
+					},
+				},
+				mode: fs.ModeDir | fs.ModePerm,
+			}),
+			Path:   "/a/b",
+			Output: []byte("FooBar"),
+		},
+		{ // 7
+			FS: newFSRW(dnode{
+				entries: []*dirEnt{
+					{
+						name: "a",
+						directoryEntry: &dnodeRW{
+							dnode: dnode{
+								mode: fs.ModeDir | fs.ModePerm,
+								entries: []*dirEnt{
+									{
+										name: "b",
+										directoryEntry: &inodeRW{
+											inode: inode{
+												data: []byte("../c"),
+												mode: fs.ModeSymlink | fs.ModePerm,
+											},
+										},
+									},
+								},
+							},
+						},
+					},
+					{
+						name: "c",
+						directoryEntry: &inodeRW{
+							inode: inode{
 								data: []byte("FooBar"),
 								mode: fs.ModePerm,
 							},
 						},
 					},
-					mode: fs.ModeDir | fs.ModePerm,
 				},
-			},
-			Path:   "/a/b",
-			Output: []byte("FooBar"),
-		},
-		{ // 7
-			FS: FSRW{
-				FS: FS{
-					entries: []*dirEnt{
-						{
-							name: "a",
-							directoryEntry: &dnodeRW{
-								dnode: dnode{
-									mode: fs.ModeDir | fs.ModePerm,
-									entries: []*dirEnt{
-										{
-											name: "b",
-											directoryEntry: &inodeRW{
-												inode: inode{
-													data: []byte("../c"),
-													mode: fs.ModeSymlink | fs.ModePerm,
-												},
-											},
-										},
-									},
-								},
-							},
-						},
-						{
-							name: "c",
-							directoryEntry: &inodeRW{
-								inode: inode{
-									data: []byte("FooBar"),
-									mode: fs.ModePerm,
-								},
-							},
-						},
-					},
-					mode: fs.ModeDir | fs.ModePerm,
-				},
-			},
+				mode: fs.ModeDir | fs.ModePerm,
+			}),
 			Path:   "/a/b",
 			Output: []byte("FooBar"),
 		},
 		{ // 8
-			FS: FSRW{
-				FS: FS{
-					entries: []*dirEnt{
-						{
-							name: "a",
-							directoryEntry: &dnodeRW{
-								dnode: dnode{
-									mode: fs.ModeDir | fs.ModePerm,
-									entries: []*dirEnt{
-										{
-											name: "b",
-											directoryEntry: &inodeRW{
-												inode: inode{
-													data: []byte("../c"),
-													mode: fs.ModeSymlink | fs.ModePerm,
-												},
+			FS: newFSRW(dnode{
+				entries: []*dirEnt{
+					{
+						name: "a",
+						directoryEntry: &dnodeRW{
+							dnode: dnode{
+								mode: fs.ModeDir | fs.ModePerm,
+								entries: []*dirEnt{
+									{
+										name: "b",
+										directoryEntry: &inodeRW{
+											inode: inode{
+												data: []byte("../c"),
+												mode: fs.ModeSymlink | fs.ModePerm,
 											},
 										},
 									},
 								},
 							},
 						},
-						{
-							name: "c",
-							directoryEntry: &inodeRW{
-								inode: inode{
-									data: []byte("d"),
-									mode: fs.ModeSymlink | fs.ModePerm,
-								},
-							},
-						},
-						{
-							name: "d",
-							directoryEntry: &inodeRW{
-								inode: inode{
-									data: []byte("Baz"),
-									mode: fs.ModePerm,
-								},
+					},
+					{
+						name: "c",
+						directoryEntry: &inodeRW{
+							inode: inode{
+								data: []byte("d"),
+								mode: fs.ModeSymlink | fs.ModePerm,
 							},
 						},
 					},
-					mode: fs.ModeDir | fs.ModePerm,
+					{
+						name: "d",
+						directoryEntry: &inodeRW{
+							inode: inode{
+								data: []byte("Baz"),
+								mode: fs.ModePerm,
+							},
+						},
+					},
 				},
-			},
+				mode: fs.ModeDir | fs.ModePerm,
+			}),
 			Path:   "/a/b",
 			Output: []byte("Baz"),
 		},
@@ -2613,116 +2415,112 @@ func TestSymlinkResolveDirRW(t *testing.T) {
 		Err    error
 	}{
 		{ // 1
-			FS: FSRW{
-				FS: FS{
-					entries: []*dirEnt{
-						{
-							name: "a",
-							directoryEntry: &dnodeRW{
-								dnode: dnode{
-									entries: []*dirEnt{
-										{
-											name: "b",
-											directoryEntry: &inodeRW{
-												inode: inode{
-													data: []byte("Foo"),
-													mode: fs.ModePerm,
-												},
-											},
-										},
-										{
-											name: "c",
-											directoryEntry: &inodeRW{
-												inode: inode{
-													data: []byte("Bar"),
-													mode: fs.ModePerm,
-												},
-											},
-										},
-										{
-											name: "d",
-											directoryEntry: &inodeRW{
-												inode: inode{
-													data: []byte("Baz"),
-													mode: fs.ModePerm,
-												},
+			FS: newFSRW(dnode{
+				entries: []*dirEnt{
+					{
+						name: "a",
+						directoryEntry: &dnodeRW{
+							dnode: dnode{
+								entries: []*dirEnt{
+									{
+										name: "b",
+										directoryEntry: &inodeRW{
+											inode: inode{
+												data: []byte("Foo"),
+												mode: fs.ModePerm,
 											},
 										},
 									},
-									mode: fs.ModeDir | fs.ModePerm,
+									{
+										name: "c",
+										directoryEntry: &inodeRW{
+											inode: inode{
+												data: []byte("Bar"),
+												mode: fs.ModePerm,
+											},
+										},
+									},
+									{
+										name: "d",
+										directoryEntry: &inodeRW{
+											inode: inode{
+												data: []byte("Baz"),
+												mode: fs.ModePerm,
+											},
+										},
+									},
 								},
-							},
-						},
-						{
-							name: "e",
-							directoryEntry: &inodeRW{
-								inode: inode{
-									data: []byte("/f"),
-									mode: fs.ModeSymlink | fs.ModePerm,
-								},
+								mode: fs.ModeDir | fs.ModePerm,
 							},
 						},
 					},
-					mode: fs.ModeDir | fs.ModePerm,
+					{
+						name: "e",
+						directoryEntry: &inodeRW{
+							inode: inode{
+								data: []byte("/f"),
+								mode: fs.ModeSymlink | fs.ModePerm,
+							},
+						},
+					},
 				},
-			},
+				mode: fs.ModeDir | fs.ModePerm,
+			}),
 			Path: "/e",
 			Err:  fs.ErrNotExist,
 		},
 		{ // 1
-			FS: FSRW{
-				FS: FS{
-					entries: []*dirEnt{
-						{
-							name: "a",
-							directoryEntry: &dnodeRW{
-								dnode: dnode{
-									entries: []*dirEnt{
-										{
-											name: "b",
-											directoryEntry: &inodeRW{
-												inode: inode{
-													data: []byte("Foo"),
-													mode: fs.ModePerm,
-												},
-											},
-										},
-										{
-											name: "c",
-											directoryEntry: &inodeRW{
-												inode: inode{
-													data: []byte("Bar"),
-													mode: fs.ModePerm,
-												},
-											},
-										},
-										{
-											name: "d",
-											directoryEntry: &inodeRW{
-												inode: inode{
-													data: []byte("Baz"),
-													mode: fs.ModePerm,
-												},
+			FS: newFSRW(dnode{
+				entries: []*dirEnt{
+					{
+						name: "a",
+						directoryEntry: &dnodeRW{
+							dnode: dnode{
+								entries: []*dirEnt{
+									{
+										name: "b",
+										directoryEntry: &inodeRW{
+											inode: inode{
+												data: []byte("Foo"),
+												mode: fs.ModePerm,
 											},
 										},
 									},
-									mode: fs.ModeDir | fs.ModePerm,
+									{
+										name: "c",
+										directoryEntry: &inodeRW{
+											inode: inode{
+												data: []byte("Bar"),
+												mode: fs.ModePerm,
+											},
+										},
+									},
+									{
+										name: "d",
+										directoryEntry: &inodeRW{
+											inode: inode{
+												data: []byte("Baz"),
+												mode: fs.ModePerm,
+											},
+										},
+									},
 								},
-							},
-						},
-						{
-							name: "e",
-							directoryEntry: &inodeRW{
-								inode: inode{
-									data: []byte("/a"),
-									mode: fs.ModeSymlink | fs.ModePerm,
-								},
+								mode: fs.ModeDir | fs.ModePerm,
 							},
 						},
 					},
-					mode: fs.ModeDir | fs.ModePerm,
+					{
+						name: "e",
+						directoryEntry: &inodeRW{
+							inode: inode{
+								data: []byte("/a"),
+								mode: fs.ModeSymlink | fs.ModePerm,
+							},
+						},
+					},
 				},
-			},
+				mode: fs.ModeDir | fs.ModePerm,
+			}),
 			Path: "/e",
 			Output: []fs.DirEntry{
 				&dirEnt{
@@ -2773,6 +2571,8 @@ func TestRemove(t *testing.T) {
 		Err    error
 	}{
 		{ // 1
+			FS:     newFSRW(dnode{}),
+			Output: newFSRW(dnode{}),
 			Err: &fs.PathError{
 				Op:   "remove",
 				Path: "",
@@ -2780,17 +2580,13 @@ func TestRemove(t *testing.T) {
 			},
 		},
 		{ // 2
-			FS: FSRW{
-				FS: FS{
-					mode: fs.ModeDir | fs.ModePerm,
-				},
-			},
+			FS: newFSRW(dnode{
+				mode: fs.ModeDir | fs.ModePerm,
+			}),
 			Path: "/file",
-			Output: FSRW{
-				FS: FS{
-					mode: fs.ModeDir | fs.ModePerm,
-				},
-			},
+			Output: newFSRW(dnode{
+				mode: fs.ModeDir | fs.ModePerm,
+			}),
 			Err: &fs.PathError{
 				Op:   "remove",
 				Path: "/file",
@@ -2798,95 +2594,83 @@ func TestRemove(t *testing.T) {
 			},
 		},
 		{ // 3
-			FS: FSRW{
-				FS: FS{
-					entries: []*dirEnt{
-						{
-							directoryEntry: &inodeRW{},
-							name:           "file",
-						},
+			FS: newFSRW(dnode{
+				entries: []*dirEnt{
+					{
+						directoryEntry: &inodeRW{},
+						name:           "file",
 					},
-					mode: fs.ModeDir | fs.ModePerm,
 				},
-			},
+				mode: fs.ModeDir | fs.ModePerm,
+			}),
 			Path: "/file",
-			Output: FSRW{
-				FS: FS{
-					entries: []*dirEnt{},
-					modtime: now,
-					mode:    fs.ModeDir | fs.ModePerm,
-				},
-			},
+			Output: newFSRW(dnode{
+				entries: []*dirEnt{},
+				modtime: now,
+				mode:    fs.ModeDir | fs.ModePerm,
+			}),
 		},
 		{ // 4
-			FS: FSRW{
-				FS: FS{
-					entries: []*dirEnt{
-						{
-							directoryEntry: &dnodeRW{
-								dnode: dnode{
-									mode: fs.ModeDir | fs.ModePerm,
-								},
+			FS: newFSRW(dnode{
+				entries: []*dirEnt{
+					{
+						directoryEntry: &dnodeRW{
+							dnode: dnode{
+								mode: fs.ModeDir | fs.ModePerm,
 							},
-							name: "dir",
 						},
+						name: "dir",
 					},
-					mode: fs.ModeDir | fs.ModePerm,
 				},
-			},
+				mode: fs.ModeDir | fs.ModePerm,
+			}),
 			Path: "/dir",
-			Output: FSRW{
-				FS: FS{
-					entries: []*dirEnt{},
-					modtime: now,
-					mode:    fs.ModeDir | fs.ModePerm,
-				},
-			},
+			Output: newFSRW(dnode{
+				entries: []*dirEnt{},
+				modtime: now,
+				mode:    fs.ModeDir | fs.ModePerm,
+			}),
 		},
 		{ // 5
-			FS: FSRW{
-				FS: FS{
-					entries: []*dirEnt{
-						{
-							directoryEntry: &dnodeRW{
-								dnode: dnode{
-									entries: []*dirEnt{
-										{
-											directoryEntry: &inodeRW{},
-											name:           "file",
-										},
+			FS: newFSRW(dnode{
+				entries: []*dirEnt{
+					{
+						directoryEntry: &dnodeRW{
+							dnode: dnode{
+								entries: []*dirEnt{
+									{
+										directoryEntry: &inodeRW{},
+										name:           "file",
 									},
-									mode: fs.ModeDir | fs.ModePerm,
 								},
+								mode: fs.ModeDir | fs.ModePerm,
 							},
-							name: "dir",
 						},
+						name: "dir",
 					},
-					mode: fs.ModeDir | fs.ModePerm,
 				},
-			},
+				mode: fs.ModeDir | fs.ModePerm,
+			}),
 			Path: "/dir",
-			Output: FSRW{
-				FS: FS{
-					entries: []*dirEnt{
-						{
-							directoryEntry: &dnodeRW{
-								dnode: dnode{
-									entries: []*dirEnt{
-										{
-											directoryEntry: &inodeRW{},
-											name:           "file",
-										},
+			Output: newFSRW(dnode{
+				entries: []*dirEnt{
+					{
+						directoryEntry: &dnodeRW{
+							dnode: dnode{
+								entries: []*dirEnt{
+									{
+										directoryEntry: &inodeRW{},
+										name:           "file",
 									},
-									mode: fs.ModeDir | fs.ModePerm,
 								},
+								mode: fs.ModeDir | fs.ModePerm,
 							},
-							name: "dir",
 						},
+						name: "dir",
 					},
-					mode: fs.ModeDir | fs.ModePerm,
 				},
-			},
+				mode: fs.ModeDir | fs.ModePerm,
+			}),
 			Err: &fs.PathError{
 				Op:   "remove",
 				Path: "/dir",
@@ -2897,7 +2681,7 @@ func TestRemove(t *testing.T) {
 		if err := test.FS.Remove(test.Path); !reflect.DeepEqual(err, test.Err) {
 			t.Errorf("test %d: expecting error %s, got %s", n+1, test.Err, err)
 		} else {
-			fixTimes((*dnode)(&test.FS.FS), now)
+			fixTimes(test.FS.de.(*dnodeRW), now)
 			if !reflect.DeepEqual(test.Output, test.FS) {
 				t.Errorf("test %d: expecting to get FS %v, got %v", n+1, test.Output, test.FS)
 			}
@@ -2914,6 +2698,8 @@ func TestRemoveAll(t *testing.T) {
 		Err    error
 	}{
 		{ // 1
+			FS:     newFSRW(dnode{}),
+			Output: newFSRW(dnode{}),
 			Err: &fs.PathError{
 				Op:   "removeall",
 				Path: "",
@@ -2921,17 +2707,13 @@ func TestRemoveAll(t *testing.T) {
 			},
 		},
 		{ // 2
-			FS: FSRW{
-				FS: FS{
-					mode: fs.ModeDir | fs.ModePerm,
-				},
-			},
+			FS: newFSRW(dnode{
+				mode: fs.ModeDir | fs.ModePerm,
+			}),
 			Path: "/file",
-			Output: FSRW{
-				FS: FS{
-					mode: fs.ModeDir | fs.ModePerm,
-				},
-			},
+			Output: newFSRW(dnode{
+				mode: fs.ModeDir | fs.ModePerm,
+			}),
 			Err: &fs.PathError{
 				Op:   "removeall",
 				Path: "/file",
@@ -2939,87 +2721,75 @@ func TestRemoveAll(t *testing.T) {
 			},
 		},
 		{ // 3
-			FS: FSRW{
-				FS: FS{
-					entries: []*dirEnt{
-						{
-							directoryEntry: &inodeRW{},
-							name:           "file",
-						},
+			FS: newFSRW(dnode{
+				entries: []*dirEnt{
+					{
+						directoryEntry: &inodeRW{},
+						name:           "file",
 					},
-					mode: fs.ModeDir | fs.ModePerm,
 				},
-			},
+				mode: fs.ModeDir | fs.ModePerm,
+			}),
 			Path: "/file",
-			Output: FSRW{
-				FS: FS{
-					entries: []*dirEnt{},
-					modtime: now,
-					mode:    fs.ModeDir | fs.ModePerm,
-				},
-			},
+			Output: newFSRW(dnode{
+				entries: []*dirEnt{},
+				modtime: now,
+				mode:    fs.ModeDir | fs.ModePerm,
+			}),
 		},
 		{ // 4
-			FS: FSRW{
-				FS: FS{
-					entries: []*dirEnt{
-						{
-							directoryEntry: &dnodeRW{
-								dnode: dnode{
-									mode: fs.ModeDir | fs.ModePerm,
-								},
+			FS: newFSRW(dnode{
+				entries: []*dirEnt{
+					{
+						directoryEntry: &dnodeRW{
+							dnode: dnode{
+								mode: fs.ModeDir | fs.ModePerm,
 							},
-							name: "dir",
 						},
+						name: "dir",
 					},
-					mode: fs.ModeDir | fs.ModePerm,
 				},
-			},
+				mode: fs.ModeDir | fs.ModePerm,
+			}),
 			Path: "/dir",
-			Output: FSRW{
-				FS: FS{
-					entries: []*dirEnt{},
-					modtime: now,
-					mode:    fs.ModeDir | fs.ModePerm,
-				},
-			},
+			Output: newFSRW(dnode{
+				entries: []*dirEnt{},
+				modtime: now,
+				mode:    fs.ModeDir | fs.ModePerm,
+			}),
 		},
 		{ // 5
-			FS: FSRW{
-				FS: FS{
-					entries: []*dirEnt{
-						{
-							directoryEntry: &dnodeRW{
-								dnode: dnode{
-									entries: []*dirEnt{
-										{
-											directoryEntry: &inodeRW{},
-											name:           "file",
-										},
+			FS: newFSRW(dnode{
+				entries: []*dirEnt{
+					{
+						directoryEntry: &dnodeRW{
+							dnode: dnode{
+								entries: []*dirEnt{
+									{
+										directoryEntry: &inodeRW{},
+										name:           "file",
 									},
-									mode: fs.ModeDir | fs.ModePerm,
 								},
+								mode: fs.ModeDir | fs.ModePerm,
 							},
-							name: "dir",
 						},
+						name: "dir",
 					},
-					mode: fs.ModeDir | fs.ModePerm,
 				},
-			},
+				mode: fs.ModeDir | fs.ModePerm,
+			}),
 			Path: "/dir",
-			Output: FSRW{
-				FS: FS{
-					entries: []*dirEnt{},
-					modtime: now,
-					mode:    fs.ModeDir | fs.ModePerm,
-				},
-			},
+			Output: newFSRW(dnode{
+				entries: []*dirEnt{},
+				modtime: now,
+				mode:    fs.ModeDir | fs.ModePerm,
+			}),
 		},
 	} {
 		if err := test.FS.RemoveAll(test.Path); !reflect.DeepEqual(err, test.Err) {
 			t.Errorf("test %d: expecting error %s, got %s", n+1, test.Err, err)
 		} else {
-			fixTimes((*dnode)(&test.FS.FS), now)
+			fixTimes(test.FS.de.(*dnodeRW), now)
 			if !reflect.DeepEqual(test.Output, test.FS) {
 				t.Errorf("test %d: expecting to get FS %v, got %v", n+1, test.Output, test.FS)
 			}
@@ -3035,7 +2805,7 @@ func TestLStatRW(t *testing.T) {
 		Err    error
 	}{
 		{ // 1
-			FS: FSRW{},
+			FS: newFSRW(dnode{}),
 			Err: &fs.PathError{
 				Op:   "lstat",
 				Path: "",
@@ -3043,26 +2813,24 @@ func TestLStatRW(t *testing.T) {
 			},
 		},
 		{ // 2
-			FS: FSRW{
-				FS: FS{
-					modtime: time.Unix(1, 2),
-					mode:    fs.ModeDir | fs.ModePerm,
-				},
-			},
+			FS: newFSRW(dnode{
+				modtime: time.Unix(1, 2),
+				mode:    fs.ModeDir | fs.ModePerm,
+			}),
 			Output: &dirEnt{
-				directoryEntry: &dnode{
-					modtime: time.Unix(1, 2),
-					mode:    fs.ModeDir | fs.ModePerm,
+				directoryEntry: &dnodeRW{
+					dnode: dnode{
+						modtime: time.Unix(1, 2),
+						mode:    fs.ModeDir | fs.ModePerm,
+					},
 				},
 				name: "/",
 			},
 		},
 		{ // 3
-			FS: FSRW{
-				FS: FS{
-					mode: fs.ModeDir | fs.ModePerm,
-				},
-			},
+			FS: newFSRW(dnode{
+				mode: fs.ModeDir | fs.ModePerm,
+			}),
 			Path: "/file",
 			Err: &fs.PathError{
 				Op:   "lstat",
@@ -3071,17 +2839,15 @@ func TestLStatRW(t *testing.T) {
 			},
 		},
 		{ // 4
-			FS: FSRW{
-				FS: FS{
-					entries: []*dirEnt{
-						{
-							directoryEntry: &inodeRW{},
-							name:           "notFile",
-						},
+			FS: newFSRW(dnode{
+				entries: []*dirEnt{
+					{
+						directoryEntry: &inodeRW{},
+						name:           "notFile",
 					},
-					mode: fs.ModeDir | fs.ModePerm,
 				},
-			},
+				mode: fs.ModeDir | fs.ModePerm,
+			}),
 			Path: "/file",
 			Err: &fs.PathError{
 				Op:   "lstat",
@@ -3090,22 +2856,20 @@ func TestLStatRW(t *testing.T) {
 			},
 		},
 		{ // 5
-			FS: FSRW{
-				FS: FS{
-					entries: []*dirEnt{
-						{
-							directoryEntry: &inodeRW{
-								inode: inode{
-									modtime: time.Unix(1, 2),
-									mode:    fs.ModeSymlink | 3,
-								},
+			FS: newFSRW(dnode{
+				entries: []*dirEnt{
+					{
+						directoryEntry: &inodeRW{
+							inode: inode{
+								modtime: time.Unix(1, 2),
+								mode:    fs.ModeSymlink | 3,
 							},
-							name: "file",
 						},
+						name: "file",
 					},
-					mode: fs.ModeDir | fs.ModePerm,
 				},
-			},
+				mode: fs.ModeDir | fs.ModePerm,
+			}),
 			Path: "/file",
 			Output: &dirEnt{
 				directoryEntry: &inodeRW{
@@ -3118,77 +2882,75 @@ func TestLStatRW(t *testing.T) {
 			},
 		},
 		{ // 6
-			FS: FSRW{
-				FS: FS{
-					entries: []*dirEnt{
-						{
-							directoryEntry: &inodeRW{
-								inode: inode{
-									modtime: time.Unix(1, 2),
-									mode:    3,
-								},
+			FS: newFSRW(dnode{
+				entries: []*dirEnt{
+					{
+						directoryEntry: &inodeRW{
+							inode: inode{
+								modtime: time.Unix(1, 2),
+								mode:    3,
 							},
-							name: "file",
 						},
-						{
-							directoryEntry: &dnodeRW{
-								dnode: dnode{
-									modtime: time.Unix(4, 5),
-									mode:    6,
-								},
-							},
-							name: "dir",
-						},
+						name: "file",
 					},
-					mode: fs.ModeDir | fs.ModePerm,
+					{
+						directoryEntry: &dnodeRW{
+							dnode: dnode{
+								modtime: time.Unix(4, 5),
+								mode:    6,
+							},
+						},
+						name: "dir",
+					},
 				},
-			},
+				mode: fs.ModeDir | fs.ModePerm,
+			}),
 			Path: "/dir",
 			Output: &dirEnt{
-				directoryEntry: &dnode{
-					modtime: time.Unix(4, 5),
-					mode:    6,
+				directoryEntry: &dnodeRW{
+					dnode: dnode{
+						modtime: time.Unix(4, 5),
+						mode:    6,
+					},
 				},
 				name: "dir",
 			},
 		},
 		{ // 7
-			FS: FSRW{
-				FS: FS{
-					entries: []*dirEnt{
-						{
-							directoryEntry: &inodeRW{
-								inode: inode{
-									modtime: time.Unix(1, 2),
-									mode:    3,
-								},
+			FS: newFSRW(dnode{
+				entries: []*dirEnt{
+					{
+						directoryEntry: &inodeRW{
+							inode: inode{
+								modtime: time.Unix(1, 2),
+								mode:    3,
 							},
-							name: "file",
 						},
-						{
-							directoryEntry: &dnodeRW{
-								dnode: dnode{
-									entries: []*dirEnt{
-										{
-											directoryEntry: &inodeRW{
-												inode: inode{
-													modtime: time.Unix(4, 5),
-													mode:    6,
-												},
-											},
-											name: "anotherFile",
-										},
-									},
-									modtime: time.Unix(7, 8),
-									mode:    9,
-								},
-							},
-							name: "dir",
-						},
+						name: "file",
 					},
-					mode: fs.ModeDir | fs.ModePerm,
+					{
+						directoryEntry: &dnodeRW{
+							dnode: dnode{
+								entries: []*dirEnt{
+									{
+										directoryEntry: &inodeRW{
+											inode: inode{
+												modtime: time.Unix(4, 5),
+												mode:    6,
+											},
+										},
+										name: "anotherFile",
+									},
+								},
+								modtime: time.Unix(7, 8),
+								mode:    9,
+							},
+						},
+						name: "dir",
+					},
 				},
-			},
+				mode: fs.ModeDir | fs.ModePerm,
+			}),
 			Path: "/dir/anotherFile",
 			Err: &fs.PathError{
 				Op:   "lstat",
@@ -3197,42 +2959,40 @@ func TestLStatRW(t *testing.T) {
 			},
 		},
 		{ // 8
-			FS: FSRW{
-				FS: FS{
-					entries: []*dirEnt{
-						{
-							directoryEntry: &inodeRW{
-								inode: inode{
-									modtime: time.Unix(1, 2),
-									mode:    3,
-								},
+			FS: newFSRW(dnode{
+				entries: []*dirEnt{
+					{
+						directoryEntry: &inodeRW{
+							inode: inode{
+								modtime: time.Unix(1, 2),
+								mode:    3,
 							},
-							name: "file",
 						},
-						{
-							directoryEntry: &dnodeRW{
-								dnode: dnode{
-									entries: []*dirEnt{
-										{
-											directoryEntry: &inodeRW{
-												inode: inode{
-													modtime: time.Unix(4, 5),
-													mode:    fs.ModeSymlink | 6,
-												},
-											},
-											name: "anotherFile",
-										},
-									},
-									modtime: time.Unix(7, 8),
-									mode:    fs.ModeDir | fs.ModePerm,
-								},
-							},
-							name: "dir",
-						},
+						name: "file",
 					},
-					mode: fs.ModeDir | fs.ModePerm,
+					{
+						directoryEntry: &dnodeRW{
+							dnode: dnode{
+								entries: []*dirEnt{
+									{
+										directoryEntry: &inodeRW{
+											inode: inode{
+												modtime: time.Unix(4, 5),
+												mode:    fs.ModeSymlink | 6,
+											},
+										},
+										name: "anotherFile",
+									},
+								},
+								modtime: time.Unix(7, 8),
+								mode:    fs.ModeDir | fs.ModePerm,
+							},
+						},
+						name: "dir",
+					},
 				},
-			},
+				mode: fs.ModeDir | fs.ModePerm,
+			}),
 			Path: "/dir/anotherFile",
 			Output: &dirEnt{
 				directoryEntry: &inodeRW{
@@ -3261,6 +3021,7 @@ func TestReadlinkRW(t *testing.T) {
 		Err    error
 	}{
 		{ // 1
+			FS: newFSRW(dnode{}),
 			Err: &fs.PathError{
 				Op:   "readlink",
 				Path: "",
@@ -3268,12 +3029,10 @@ func TestReadlinkRW(t *testing.T) {
 			},
 		},
 		{ // 2
-			FS: FSRW{
-				FS: FS{
-					modtime: time.Unix(1, 2),
-					mode:    fs.ModeDir | fs.ModePerm,
-				},
-			},
+			FS: newFSRW(dnode{
+				modtime: time.Unix(1, 2),
+				mode:    fs.ModeDir | fs.ModePerm,
+			}),
 			Err: &fs.PathError{
 				Op:   "readlink",
 				Path: "",
@@ -3281,12 +3040,10 @@ func TestReadlinkRW(t *testing.T) {
 			},
 		},
 		{ // 3
-			FS: FSRW{
-				FS: FS{
-					modtime: time.Unix(1, 2),
-					mode:    fs.ModeDir | fs.ModePerm,
-				},
-			},
+			FS: newFSRW(dnode{
+				modtime: time.Unix(1, 2),
+				mode:    fs.ModeDir | fs.ModePerm,
+			}),
 			Path: "/",
 			Err: &fs.PathError{
 				Op:   "readlink",
@@ -3295,18 +3052,16 @@ func TestReadlinkRW(t *testing.T) {
 			},
 		},
 		{ // 4
-			FS: FSRW{
-				FS: FS{
-					entries: []*dirEnt{
-						{
-							directoryEntry: &inodeRW{},
-							name:           "a",
-						},
+			FS: newFSRW(dnode{
+				entries: []*dirEnt{
+					{
+						directoryEntry: &inodeRW{},
+						name:           "a",
 					},
-					modtime: time.Unix(1, 2),
-					mode:    fs.ModeDir | fs.ModePerm,
 				},
-			},
+				modtime: time.Unix(1, 2),
+				mode:    fs.ModeDir | fs.ModePerm,
+			}),
 			Path: "/a",
 			Err: &fs.PathError{
 				Op:   "readlink",
@@ -3315,22 +3070,20 @@ func TestReadlinkRW(t *testing.T) {
 			},
 		},
 		{ // 5
-			FS: FSRW{
-				FS: FS{
-					entries: []*dirEnt{
-						{
-							directoryEntry: &inodeRW{
-								inode: inode{
-									mode: fs.ModeSymlink,
-								},
+			FS: newFSRW(dnode{
+				entries: []*dirEnt{
+					{
+						directoryEntry: &inodeRW{
+							inode: inode{
+								mode: fs.ModeSymlink,
 							},
-							name: "a",
 						},
+						name: "a",
 					},
-					modtime: time.Unix(1, 2),
-					mode:    fs.ModeDir | fs.ModePerm,
 				},
-			},
+				modtime: time.Unix(1, 2),
+				mode:    fs.ModeDir | fs.ModePerm,
+			}),
 			Path: "/a",
 			Err: &fs.PathError{
 				Op:   "readlink",
@@ -3339,42 +3092,38 @@ func TestReadlinkRW(t *testing.T) {
 			},
 		},
 		{ // 6
-			FS: FSRW{
-				FS: FS{
-					entries: []*dirEnt{
-						{
-							directoryEntry: &inodeRW{
-								inode: inode{
-									mode: fs.ModeSymlink | fs.ModePerm,
-								},
+			FS: newFSRW(dnode{
+				entries: []*dirEnt{
+					{
+						directoryEntry: &inodeRW{
+							inode: inode{
+								mode: fs.ModeSymlink | fs.ModePerm,
 							},
-							name: "a",
 						},
+						name: "a",
 					},
-					modtime: time.Unix(1, 2),
-					mode:    fs.ModeDir | fs.ModePerm,
 				},
-			},
+				modtime: time.Unix(1, 2),
+				mode:    fs.ModeDir | fs.ModePerm,
+			}),
 			Path: "/a",
 		},
 		{ // 7
-			FS: FSRW{
-				FS: FS{
-					entries: []*dirEnt{
-						{
-							directoryEntry: &inodeRW{
-								inode: inode{
-									data: []byte("/other/path"),
-									mode: fs.ModeSymlink | fs.ModePerm,
-								},
+			FS: newFSRW(dnode{
+				entries: []*dirEnt{
+					{
+						directoryEntry: &inodeRW{
+							inode: inode{
+								data: []byte("/other/path"),
+								mode: fs.ModeSymlink | fs.ModePerm,
 							},
-							name: "a",
 						},
+						name: "a",
 					},
-					modtime: time.Unix(1, 2),
-					mode:    fs.ModeDir | fs.ModePerm,
 				},
-			},
+				modtime: time.Unix(1, 2),
+				mode:    fs.ModeDir | fs.ModePerm,
+			}),
 			Path:   "/a",
 			Output: "/other/path",
 		},
@@ -3394,6 +3143,7 @@ func TestChown(t *testing.T) {
 		Err  error
 	}{
 		{ // 1
+			FS: newFSRW(dnode{}),
 			Err: &fs.PathError{
 				Op:   "chown",
 				Path: "",
@@ -3401,20 +3151,16 @@ func TestChown(t *testing.T) {
 			},
 		},
 		{ // 2
-			FS: FSRW{
-				FS: FS{
-					modtime: time.Unix(1, 2),
-					mode:    fs.ModeDir | fs.ModePerm,
-				},
-			},
+			FS: newFSRW(dnode{
+				modtime: time.Unix(1, 2),
+				mode:    fs.ModeDir | fs.ModePerm,
+			}),
 		},
 		{ // 3
-			FS: FSRW{
-				FS: FS{
-					modtime: time.Unix(1, 2),
-					mode:    fs.ModeDir | fs.ModePerm,
-				},
-			},
+			FS: newFSRW(dnode{
+				modtime: time.Unix(1, 2),
+				mode:    fs.ModeDir | fs.ModePerm,
+			}),
 			Path: "/a",
 			Err: &fs.PathError{
 				Op:   "chown",
@@ -3423,53 +3169,47 @@ func TestChown(t *testing.T) {
 			},
 		},
 		{ // 5
-			FS: FSRW{
-				FS: FS{
-					entries: []*dirEnt{
-						{
-							directoryEntry: &inodeRW{},
-							name:           "a",
-						},
+			FS: newFSRW(dnode{
+				entries: []*dirEnt{
+					{
+						directoryEntry: &inodeRW{},
+						name:           "a",
 					},
-					modtime: time.Unix(1, 2),
-					mode:    fs.ModeDir | fs.ModePerm,
 				},
-			},
+				modtime: time.Unix(1, 2),
+				mode:    fs.ModeDir | fs.ModePerm,
+			}),
 			Path: "/a",
 		},
 		{ // 6
-			FS: FSRW{
-				FS: FS{
-					entries: []*dirEnt{
-						{
-							directoryEntry: &dnodeRW{},
-							name:           "a",
-						},
+			FS: newFSRW(dnode{
+				entries: []*dirEnt{
+					{
+						directoryEntry: &dnodeRW{},
+						name:           "a",
 					},
-					modtime: time.Unix(1, 2),
-					mode:    fs.ModeDir | fs.ModePerm,
 				},
-			},
+				modtime: time.Unix(1, 2),
+				mode:    fs.ModeDir | fs.ModePerm,
+			}),
 			Path: "/a",
 		},
 		{ // 7
-			FS: FSRW{
-				FS: FS{
-					entries: []*dirEnt{
-						{
-							directoryEntry: &inodeRW{
-								inode: inode{
-									data: []byte("/b"),
-									mode: fs.ModeSymlink | fs.ModePerm,
-								},
+			FS: newFSRW(dnode{
+				entries: []*dirEnt{
+					{
+						directoryEntry: &inodeRW{
+							inode: inode{
+								data: []byte("/b"),
+								mode: fs.ModeSymlink | fs.ModePerm,
 							},
-							name: "a",
 						},
+						name: "a",
 					},
-					modtime: time.Unix(1, 2),
-					mode:    fs.ModeDir | fs.ModePerm,
 				},
-			},
+				modtime: time.Unix(1, 2),
+				mode:    fs.ModeDir | fs.ModePerm,
+			}),
 			Path: "/a",
 			Err: &fs.PathError{
 				Op:   "chown",
@@ -3478,27 +3218,25 @@ func TestChown(t *testing.T) {
 			},
 		},
 		{ // 8
-			FS: FSRW{
-				FS: FS{
-					entries: []*dirEnt{
-						{
-							directoryEntry: &inodeRW{
-								inode: inode{
-									data: []byte("/b"),
-									mode: fs.ModeSymlink | fs.ModePerm,
-								},
+			FS: newFSRW(dnode{
+				entries: []*dirEnt{
+					{
+						directoryEntry: &inodeRW{
+							inode: inode{
+								data: []byte("/b"),
+								mode: fs.ModeSymlink | fs.ModePerm,
 							},
-							name: "a",
 						},
-						{
-							directoryEntry: &inodeRW{},
-							name:           "b",
-						},
+						name: "a",
 					},
-					modtime: time.Unix(3, 4),
-					mode:    fs.ModeDir | fs.ModePerm,
+					{
+						directoryEntry: &inodeRW{},
+						name:           "b",
+					},
 				},
-			},
+				modtime: time.Unix(3, 4),
+				mode:    fs.ModeDir | fs.ModePerm,
+			}),
 			Path: "/a",
 		},
 	} {
@@ -3517,6 +3255,8 @@ func TestChmod(t *testing.T) {
 		Err    error
 	}{
 		{ // 1
+			FS:     newFSRW(dnode{}),
+			Output: newFSRW(dnode{}),
 			Err: &fs.PathError{
 				Op:   "chmod",
 				Path: "",
@@ -3524,124 +3264,108 @@ func TestChmod(t *testing.T) {
 			},
 		},
 		{ // 2
-			FS: FSRW{
-				FS: FS{
-					modtime: time.Unix(1, 2),
-					mode:    fs.ModeDir | fs.ModePerm,
-				},
-			},
-			Output: FSRW{
-				FS: FS{
-					modtime: time.Unix(1, 2),
-					mode:    fs.ModeDir,
-				},
-			},
+			FS: newFSRW(dnode{
+				modtime: time.Unix(1, 2),
+				mode:    fs.ModeDir | fs.ModePerm,
+			}),
+			Output: newFSRW(dnode{
+				modtime: time.Unix(1, 2),
+				mode:    fs.ModeDir,
+			}),
 		},
 		{ // 3
-			FS: FSRW{
-				FS: FS{
-					entries: []*dirEnt{
-						{
-							directoryEntry: &inodeRW{},
-							name:           "a",
-						},
+			FS: newFSRW(dnode{
+				entries: []*dirEnt{
+					{
+						directoryEntry: &inodeRW{},
+						name:           "a",
 					},
-					modtime: time.Unix(1, 2),
-					mode:    fs.ModeDir | fs.ModePerm,
 				},
-			},
+				modtime: time.Unix(1, 2),
+				mode:    fs.ModeDir | fs.ModePerm,
+			}),
 			Path: "/a",
 			Mode: 0o123,
-			Output: FSRW{
-				FS: FS{
-					entries: []*dirEnt{
-						{
-							directoryEntry: &inodeRW{
-								inode: inode{
-									mode: 0o123,
-								},
+			Output: newFSRW(dnode{
+				entries: []*dirEnt{
+					{
+						directoryEntry: &inodeRW{
+							inode: inode{
+								mode: 0o123,
 							},
-							name: "a",
 						},
+						name: "a",
 					},
-					modtime: time.Unix(1, 2),
-					mode:    fs.ModeDir | fs.ModePerm,
 				},
-			},
+				modtime: time.Unix(1, 2),
+				mode:    fs.ModeDir | fs.ModePerm,
+			}),
 		},
 		{ // 4
-			FS: FSRW{
-				FS: FS{
-					entries: []*dirEnt{
-						{
-							directoryEntry: &dnodeRW{
-								dnode: dnode{
-									mode: fs.ModeDir,
-								},
+			FS: newFSRW(dnode{
+				entries: []*dirEnt{
+					{
+						directoryEntry: &dnodeRW{
+							dnode: dnode{
+								mode: fs.ModeDir,
 							},
-							name: "a",
 						},
+						name: "a",
 					},
-					modtime: time.Unix(1, 2),
-					mode:    fs.ModeDir | fs.ModePerm,
 				},
-			},
+				modtime: time.Unix(1, 2),
+				mode:    fs.ModeDir | fs.ModePerm,
+			}),
 			Path: "/a",
 			Mode: 0o123,
-			Output: FSRW{
-				FS: FS{
-					entries: []*dirEnt{
-						{
-							directoryEntry: &dnodeRW{
-								dnode: dnode{
-									mode: fs.ModeDir | 0o123,
-								},
+			Output: newFSRW(dnode{
+				entries: []*dirEnt{
+					{
+						directoryEntry: &dnodeRW{
+							dnode: dnode{
+								mode: fs.ModeDir | 0o123,
 							},
-							name: "a",
 						},
+						name: "a",
 					},
-					modtime: time.Unix(1, 2),
-					mode:    fs.ModeDir | fs.ModePerm,
 				},
-			},
+				modtime: time.Unix(1, 2),
+				mode:    fs.ModeDir | fs.ModePerm,
+			}),
 		},
 		{ // 5
-			FS: FSRW{
-				FS: FS{
-					entries: []*dirEnt{
-						{
-							directoryEntry: &inodeRW{
-								inode: inode{
-									data: []byte("/b"),
-									mode: fs.ModeSymlink,
-								},
+			FS: newFSRW(dnode{
+				entries: []*dirEnt{
+					{
+						directoryEntry: &inodeRW{
+							inode: inode{
+								data: []byte("/b"),
+								mode: fs.ModeSymlink,
 							},
-							name: "a",
 						},
+						name: "a",
 					},
-					modtime: time.Unix(1, 2),
-					mode:    fs.ModeDir | fs.ModePerm,
 				},
-			},
+				modtime: time.Unix(1, 2),
+				mode:    fs.ModeDir | fs.ModePerm,
+			}),
 			Path: "/a",
 			Mode: 0o123,
-			Output: FSRW{
-				FS: FS{
-					entries: []*dirEnt{
-						{
-							directoryEntry: &inodeRW{
-								inode: inode{
-									data: []byte("/b"),
-									mode: fs.ModeSymlink,
-								},
+			Output: newFSRW(dnode{
+				entries: []*dirEnt{
+					{
+						directoryEntry: &inodeRW{
+							inode: inode{
+								data: []byte("/b"),
+								mode: fs.ModeSymlink,
 							},
-							name: "a",
 						},
+						name: "a",
 					},
-					modtime: time.Unix(1, 2),
-					mode:    fs.ModeDir | fs.ModePerm,
 				},
-			},
+				modtime: time.Unix(1, 2),
+				mode:    fs.ModeDir | fs.ModePerm,
+			}),
 			Err: &fs.PathError{
 				Op:   "chmod",
 				Path: "/a",
@@ -3649,54 +3373,50 @@ func TestChmod(t *testing.T) {
 			},
 		},
 		{ // 6
-			FS: FSRW{
-				FS: FS{
-					entries: []*dirEnt{
-						{
-							directoryEntry: &inodeRW{
-								inode: inode{
-									data: []byte("/b"),
-									mode: fs.ModeSymlink | fs.ModePerm,
-								},
+			FS: newFSRW(dnode{
+				entries: []*dirEnt{
+					{
+						directoryEntry: &inodeRW{
+							inode: inode{
+								data: []byte("/b"),
+								mode: fs.ModeSymlink | fs.ModePerm,
 							},
-							name: "a",
 						},
-						{
-							directoryEntry: &inodeRW{},
-							name:           "b",
-						},
+						name: "a",
 					},
-					modtime: time.Unix(1, 2),
-					mode:    fs.ModeDir | fs.ModePerm,
+					{
+						directoryEntry: &inodeRW{},
+						name:           "b",
+					},
 				},
-			},
+				modtime: time.Unix(1, 2),
+				mode:    fs.ModeDir | fs.ModePerm,
+			}),
 			Path: "/a",
 			Mode: 0o123,
-			Output: FSRW{
-				FS: FS{
-					entries: []*dirEnt{
-						{
-							directoryEntry: &inodeRW{
-								inode: inode{
-									data: []byte("/b"),
-									mode: fs.ModeSymlink | fs.ModePerm,
-								},
+			Output: newFSRW(dnode{
+				entries: []*dirEnt{
+					{
+						directoryEntry: &inodeRW{
+							inode: inode{
+								data: []byte("/b"),
+								mode: fs.ModeSymlink | fs.ModePerm,
 							},
-							name: "a",
 						},
-						{
-							directoryEntry: &inodeRW{
-								inode: inode{
-									mode: 0o123,
-								},
-							},
-							name: "b",
-						},
+						name: "a",
 					},
-					modtime: time.Unix(1, 2),
-					mode:    fs.ModeDir | fs.ModePerm,
+					{
+						directoryEntry: &inodeRW{
+							inode: inode{
+								mode: 0o123,
+							},
+						},
+						name: "b",
+					},
 				},
-			},
+				modtime: time.Unix(1, 2),
+				mode:    fs.ModeDir | fs.ModePerm,
+			}),
 		},
 	} {
 		if err := test.FS.Chmod(test.Path, test.Mode); !reflect.DeepEqual(err, test.Err) {
@@ -3714,6 +3434,7 @@ func TestLchown(t *testing.T) {
 		Err  error
 	}{
 		{ // 1
+			FS: newFSRW(dnode{}),
 			Err: &fs.PathError{
 				Op:   "lchown",
 				Path: "",
@@ -3721,20 +3442,16 @@ func TestLchown(t *testing.T) {
 			},
 		},
 		{ // 2
-			FS: FSRW{
-				FS: FS{
-					modtime: time.Unix(1, 2),
-					mode:    fs.ModeDir | fs.ModePerm,
-				},
-			},
+			FS: newFSRW(dnode{
+				modtime: time.Unix(1, 2),
+				mode:    fs.ModeDir | fs.ModePerm,
+			}),
 		},
 		{ // 3
-			FS: FSRW{
-				FS: FS{
-					modtime: time.Unix(1, 2),
-					mode:    fs.ModeDir | fs.ModePerm,
-				},
-			},
+			FS: newFSRW(dnode{
+				modtime: time.Unix(1, 2),
+				mode:    fs.ModeDir | fs.ModePerm,
+			}),
 			Path: "/a",
 			Err: &fs.PathError{
 				Op:   "lchown",
@@ -3743,53 +3460,47 @@ func TestLchown(t *testing.T) {
 			},
 		},
 		{ // 5
-			FS: FSRW{
-				FS: FS{
-					entries: []*dirEnt{
-						{
-							directoryEntry: &inodeRW{},
-							name:           "a",
-						},
+			FS: newFSRW(dnode{
+				entries: []*dirEnt{
+					{
+						directoryEntry: &inodeRW{},
+						name:           "a",
 					},
-					modtime: time.Unix(1, 2),
-					mode:    fs.ModeDir | fs.ModePerm,
 				},
-			},
+				modtime: time.Unix(1, 2),
+				mode:    fs.ModeDir | fs.ModePerm,
+			}),
 			Path: "/a",
 		},
 		{ // 6
-			FS: FSRW{
-				FS: FS{
-					entries: []*dirEnt{
-						{
-							directoryEntry: &dnodeRW{},
-							name:           "a",
-						},
+			FS: newFSRW(dnode{
+				entries: []*dirEnt{
+					{
+						directoryEntry: &dnodeRW{},
+						name:           "a",
 					},
-					modtime: time.Unix(1, 2),
-					mode:    fs.ModeDir | fs.ModePerm,
 				},
-			},
+				modtime: time.Unix(1, 2),
+				mode:    fs.ModeDir | fs.ModePerm,
+			}),
 			Path: "/a",
 		},
 		{ // 7
-			FS: FSRW{
-				FS: FS{
-					entries: []*dirEnt{
-						{
-							directoryEntry: &inodeRW{
-								inode: inode{
-									data: []byte("/b"),
-									mode: fs.ModeSymlink | fs.ModePerm,
-								},
+			FS: newFSRW(dnode{
+				entries: []*dirEnt{
+					{
+						directoryEntry: &inodeRW{
+							inode: inode{
+								data: []byte("/b"),
+								mode: fs.ModeSymlink | fs.ModePerm,
 							},
-							name: "a",
 						},
+						name: "a",
 					},
-					modtime: time.Unix(1, 2),
-					mode:    fs.ModeDir | fs.ModePerm,
 				},
-			},
+				modtime: time.Unix(1, 2),
+				mode:    fs.ModeDir | fs.ModePerm,
+			}),
 			Path: "/a",
 		},
 	} {
@@ -3808,6 +3519,8 @@ func TestChtimes(t *testing.T) {
 		Err    error
 	}{
 		{ // 1
+			FS:     newFSRW(dnode{}),
+			Output: newFSRW(dnode{}),
 			Err: &fs.PathError{
 				Op:   "chtimes",
 				Path: "",
@@ -3815,48 +3528,36 @@ func TestChtimes(t *testing.T) {
 			},
 		},
 		{ // 2
-			FS: FSRW{
-				FS: FS{
-					modtime: time.Unix(1, 2),
-					mode:    fs.ModeDir | fs.ModePerm,
-				},
-			},
-			Output: FSRW{
-				FS: FS{
-					mode: fs.ModeDir | fs.ModePerm,
-				},
-			},
+			FS: newFSRW(dnode{
+				modtime: time.Unix(1, 2),
+				mode:    fs.ModeDir | fs.ModePerm,
+			}),
+			Output: newFSRW(dnode{
+				mode: fs.ModeDir | fs.ModePerm,
+			}),
 		},
 		{ // 3
-			FS: FSRW{
-				FS: FS{
-					modtime: time.Unix(1, 2),
-					mode:    fs.ModeDir | fs.ModePerm,
-				},
-			},
+			FS: newFSRW(dnode{
+				modtime: time.Unix(1, 2),
+				mode:    fs.ModeDir | fs.ModePerm,
+			}),
 			MTime: time.Unix(3, 4),
-			Output: FSRW{
-				FS: FS{
-					modtime: time.Unix(3, 4),
-					mode:    fs.ModeDir | fs.ModePerm,
-				},
-			},
+			Output: newFSRW(dnode{
+				modtime: time.Unix(3, 4),
+				mode:    fs.ModeDir | fs.ModePerm,
+			}),
 		},
 		{ // 4
-			FS: FSRW{
-				FS: FS{
-					modtime: time.Unix(1, 2),
-					mode:    fs.ModeDir | fs.ModePerm,
-				},
-			},
+			FS: newFSRW(dnode{
+				modtime: time.Unix(1, 2),
+				mode:    fs.ModeDir | fs.ModePerm,
+			}),
 			Path:  "/a",
 			MTime: time.Unix(3, 4),
-			Output: FSRW{
-				FS: FS{
-					modtime: time.Unix(1, 2),
-					mode:    fs.ModeDir | fs.ModePerm,
-				},
-			},
+			Output: newFSRW(dnode{
+				modtime: time.Unix(1, 2),
+				mode:    fs.ModeDir | fs.ModePerm,
+			}),
 			Err: &fs.PathError{
 				Op:   "chtimes",
 				Path: "/a",
@@ -3864,132 +3565,120 @@ func TestChtimes(t *testing.T) {
 			},
 		},
 		{ // 5
-			FS: FSRW{
-				FS: FS{
-					entries: []*dirEnt{
-						{
-							directoryEntry: &inodeRW{
-								inode: inode{
-									modtime: time.Unix(3, 4),
-								},
+			FS: newFSRW(dnode{
+				entries: []*dirEnt{
+					{
+						directoryEntry: &inodeRW{
+							inode: inode{
+								modtime: time.Unix(3, 4),
 							},
-							name: "a",
 						},
+						name: "a",
 					},
-					modtime: time.Unix(1, 2),
-					mode:    fs.ModeDir | fs.ModePerm,
 				},
-			},
+				modtime: time.Unix(1, 2),
+				mode:    fs.ModeDir | fs.ModePerm,
+			}),
 			Path:  "/a",
 			MTime: time.Unix(5, 6),
-			Output: FSRW{
-				FS: FS{
-					entries: []*dirEnt{
-						{
-							directoryEntry: &inodeRW{
-								inode: inode{
-									modtime: time.Unix(5, 6),
-								},
+			Output: newFSRW(dnode{
+				entries: []*dirEnt{
+					{
+						directoryEntry: &inodeRW{
+							inode: inode{
+								modtime: time.Unix(5, 6),
 							},
-							name: "a",
 						},
+						name: "a",
 					},
-					modtime: time.Unix(1, 2),
-					mode:    fs.ModeDir | fs.ModePerm,
 				},
-			},
+				modtime: time.Unix(1, 2),
+				mode:    fs.ModeDir | fs.ModePerm,
+			}),
 		},
 		{ // 6
-			FS: FSRW{
-				FS: FS{
-					entries: []*dirEnt{
-						{
-							directoryEntry: &dnodeRW{
-								dnode: dnode{
-									modtime: time.Unix(3, 4),
-								},
+			FS: newFSRW(dnode{
+				entries: []*dirEnt{
+					{
+						directoryEntry: &dnodeRW{
+							dnode: dnode{
+								modtime: time.Unix(3, 4),
 							},
-							name: "a",
 						},
+						name: "a",
 					},
-					modtime: time.Unix(1, 2),
-					mode:    fs.ModeDir | fs.ModePerm,
 				},
-			},
+				modtime: time.Unix(1, 2),
+				mode:    fs.ModeDir | fs.ModePerm,
+			}),
 			Path:  "/a",
 			MTime: time.Unix(5, 6),
-			Output: FSRW{
-				FS: FS{
-					entries: []*dirEnt{
-						{
-							directoryEntry: &dnodeRW{
-								dnode: dnode{
-									modtime: time.Unix(5, 6),
-								},
+			Output: newFSRW(dnode{
+				entries: []*dirEnt{
+					{
+						directoryEntry: &dnodeRW{
+							dnode: dnode{
+								modtime: time.Unix(5, 6),
 							},
-							name: "a",
 						},
+						name: "a",
 					},
-					modtime: time.Unix(1, 2),
-					mode:    fs.ModeDir | fs.ModePerm,
 				},
-			},
+				modtime: time.Unix(1, 2),
+				mode:    fs.ModeDir | fs.ModePerm,
+			}),
 		},
 		{ // 7
-			FS: FSRW{
-				FS: FS{
-					entries: []*dirEnt{
-						{
-							directoryEntry: &inodeRW{
-								inode: inode{
-									data:    []byte("/b"),
-									mode:    fs.ModeSymlink | 0o444,
-									modtime: time.Unix(3, 4),
-								},
+			FS: newFSRW(dnode{
+				entries: []*dirEnt{
+					{
+						directoryEntry: &inodeRW{
+							inode: inode{
+								data:    []byte("/b"),
+								mode:    fs.ModeSymlink | 0o444,
+								modtime: time.Unix(3, 4),
 							},
-							name: "a",
 						},
-						{
-							directoryEntry: &dnodeRW{
-								dnode: dnode{
-									modtime: time.Unix(5, 6),
-								},
-							},
-							name: "b",
-						},
+						name: "a",
 					},
-					modtime: time.Unix(1, 2),
-					mode:    fs.ModeDir | fs.ModePerm,
+					{
+						directoryEntry: &dnodeRW{
+							dnode: dnode{
+								modtime: time.Unix(5, 6),
+							},
+						},
+						name: "b",
+					},
 				},
-			},
+				modtime: time.Unix(1, 2),
+				mode:    fs.ModeDir | fs.ModePerm,
+			}),
 			Path:  "/a",
 			MTime: time.Unix(7, 8),
-			Output: FSRW{
-				FS: FS{
-					entries: []*dirEnt{
-						{
-							directoryEntry: &inodeRW{
-								inode: inode{
-									data:    []byte("/b"),
-									mode:    fs.ModeSymlink | 0o444,
-									modtime: time.Unix(3, 4),
-								},
+			Output: newFSRW(dnode{
+				entries: []*dirEnt{
+					{
+						directoryEntry: &inodeRW{
+							inode: inode{
+								data:    []byte("/b"),
+								mode:    fs.ModeSymlink | 0o444,
+								modtime: time.Unix(3, 4),
 							},
-							name: "a",
 						},
-						{
-							directoryEntry: &dnodeRW{
-								dnode: dnode{
-									modtime: time.Unix(7, 8),
-								},
-							},
-							name: "b",
-						},
+						name: "a",
 					},
-					modtime: time.Unix(1, 2),
-					mode:    fs.ModeDir | fs.ModePerm,
+					{
+						directoryEntry: &dnodeRW{
+							dnode: dnode{
+								modtime: time.Unix(7, 8),
+							},
+						},
+						name: "b",
+					},
 				},
-			},
+				modtime: time.Unix(1, 2),
+				mode:    fs.ModeDir | fs.ModePerm,
+			}),
 		},
 	} {
 		if err := test.FS.Chtimes(test.Path, time.Time{}, test.MTime); !reflect.DeepEqual(err, test.Err) {
@@ -4009,6 +3698,8 @@ func TestLchtimes(t *testing.T) {
 		Err    error
 	}{
 		{ // 1
+			FS:     newFSRW(dnode{}),
+			Output: newFSRW(dnode{}),
 			Err: &fs.PathError{
 				Op:   "lchtimes",
 				Path: "",
@@ -4016,48 +3707,36 @@ func TestLchtimes(t *testing.T) {
 			},
 		},
 		{ // 2
-			FS: FSRW{
-				FS: FS{
-					modtime: time.Unix(1, 2),
-					mode:    fs.ModeDir | fs.ModePerm,
-				},
-			},
-			Output: FSRW{
-				FS: FS{
-					mode: fs.ModeDir | fs.ModePerm,
-				},
-			},
+			FS: newFSRW(dnode{
+				modtime: time.Unix(1, 2),
+				mode:    fs.ModeDir | fs.ModePerm,
+			}),
+			Output: newFSRW(dnode{
+				mode: fs.ModeDir | fs.ModePerm,
+			}),
 		},
 		{ // 3
-			FS: FSRW{
-				FS: FS{
-					modtime: time.Unix(1, 2),
-					mode:    fs.ModeDir | fs.ModePerm,
-				},
-			},
+			FS: newFSRW(dnode{
+				modtime: time.Unix(1, 2),
+				mode:    fs.ModeDir | fs.ModePerm,
+			}),
 			MTime: time.Unix(3, 4),
-			Output: FSRW{
-				FS: FS{
-					modtime: time.Unix(3, 4),
-					mode:    fs.ModeDir | fs.ModePerm,
-				},
-			},
+			Output: newFSRW(dnode{
+				modtime: time.Unix(3, 4),
+				mode:    fs.ModeDir | fs.ModePerm,
+			}),
 		},
 		{ // 4
-			FS: FSRW{
-				FS: FS{
-					modtime: time.Unix(1, 2),
-					mode:    fs.ModeDir | fs.ModePerm,
-				},
-			},
+			FS: newFSRW(dnode{
+				modtime: time.Unix(1, 2),
+				mode:    fs.ModeDir | fs.ModePerm,
+			}),
 			Path:  "/a",
 			MTime: time.Unix(3, 4),
-			Output: FSRW{
-				FS: FS{
-					modtime: time.Unix(1, 2),
-					mode:    fs.ModeDir | fs.ModePerm,
-				},
-			},
+			Output: newFSRW(dnode{
+				modtime: time.Unix(1, 2),
+				mode:    fs.ModeDir | fs.ModePerm,
+			}),
 			Err: &fs.PathError{
 				Op:   "lchtimes",
 				Path: "/a",
@@ -4065,132 +3744,120 @@ func TestLchtimes(t *testing.T) {
 			},
 		},
 		{ // 5
-			FS: FSRW{
-				FS: FS{
-					entries: []*dirEnt{
-						{
-							directoryEntry: &inodeRW{
-								inode: inode{
-									modtime: time.Unix(3, 4),
-								},
+			FS: newFSRW(dnode{
+				entries: []*dirEnt{
+					{
+						directoryEntry: &inodeRW{
+							inode: inode{
+								modtime: time.Unix(3, 4),
 							},
-							name: "a",
 						},
+						name: "a",
 					},
-					modtime: time.Unix(1, 2),
-					mode:    fs.ModeDir | fs.ModePerm,
 				},
-			},
+				modtime: time.Unix(1, 2),
+				mode:    fs.ModeDir | fs.ModePerm,
+			}),
 			Path:  "/a",
 			MTime: time.Unix(5, 6),
-			Output: FSRW{
-				FS: FS{
-					entries: []*dirEnt{
-						{
-							directoryEntry: &inodeRW{
-								inode: inode{
-									modtime: time.Unix(5, 6),
-								},
+			Output: newFSRW(dnode{
+				entries: []*dirEnt{
+					{
+						directoryEntry: &inodeRW{
+							inode: inode{
+								modtime: time.Unix(5, 6),
 							},
-							name: "a",
 						},
+						name: "a",
 					},
-					modtime: time.Unix(1, 2),
-					mode:    fs.ModeDir | fs.ModePerm,
 				},
-			},
+				modtime: time.Unix(1, 2),
+				mode:    fs.ModeDir | fs.ModePerm,
+			}),
 		},
 		{ // 6
-			FS: FSRW{
-				FS: FS{
-					entries: []*dirEnt{
-						{
-							directoryEntry: &dnodeRW{
-								dnode: dnode{
-									modtime: time.Unix(3, 4),
-								},
+			FS: newFSRW(dnode{
+				entries: []*dirEnt{
+					{
+						directoryEntry: &dnodeRW{
+							dnode: dnode{
+								modtime: time.Unix(3, 4),
 							},
-							name: "a",
 						},
+						name: "a",
 					},
-					modtime: time.Unix(1, 2),
-					mode:    fs.ModeDir | fs.ModePerm,
 				},
-			},
+				modtime: time.Unix(1, 2),
+				mode:    fs.ModeDir | fs.ModePerm,
+			}),
 			Path:  "/a",
 			MTime: time.Unix(5, 6),
-			Output: FSRW{
-				FS: FS{
-					entries: []*dirEnt{
-						{
-							directoryEntry: &dnodeRW{
-								dnode: dnode{
-									modtime: time.Unix(5, 6),
-								},
+			Output: newFSRW(dnode{
+				entries: []*dirEnt{
+					{
+						directoryEntry: &dnodeRW{
+							dnode: dnode{
+								modtime: time.Unix(5, 6),
 							},
-							name: "a",
 						},
+						name: "a",
 					},
-					modtime: time.Unix(1, 2),
-					mode:    fs.ModeDir | fs.ModePerm,
 				},
-			},
+				modtime: time.Unix(1, 2),
+				mode:    fs.ModeDir | fs.ModePerm,
+			}),
 		},
 		{ // 7
-			FS: FSRW{
-				FS: FS{
-					entries: []*dirEnt{
-						{
-							directoryEntry: &inodeRW{
-								inode: inode{
-									data:    []byte("/b"),
-									mode:    fs.ModeSymlink | 0o444,
-									modtime: time.Unix(3, 4),
-								},
+			FS: newFSRW(dnode{
+				entries: []*dirEnt{
+					{
+						directoryEntry: &inodeRW{
+							inode: inode{
+								data:    []byte("/b"),
+								mode:    fs.ModeSymlink | 0o444,
+								modtime: time.Unix(3, 4),
 							},
-							name: "a",
 						},
-						{
-							directoryEntry: &dnodeRW{
-								dnode: dnode{
-									modtime: time.Unix(5, 6),
-								},
-							},
-							name: "b",
-						},
+						name: "a",
 					},
-					modtime: time.Unix(1, 2),
-					mode:    fs.ModeDir | fs.ModePerm,
+					{
+						directoryEntry: &dnodeRW{
+							dnode: dnode{
+								modtime: time.Unix(5, 6),
+							},
+						},
+						name: "b",
+					},
 				},
-			},
+				modtime: time.Unix(1, 2),
+				mode:    fs.ModeDir | fs.ModePerm,
+			}),
 			Path:  "/a",
 			MTime: time.Unix(7, 8),
-			Output: FSRW{
-				FS: FS{
-					entries: []*dirEnt{
-						{
-							directoryEntry: &inodeRW{
-								inode: inode{
-									data:    []byte("/b"),
-									mode:    fs.ModeSymlink | 0o444,
-									modtime: time.Unix(7, 8),
-								},
+			Output: newFSRW(dnode{
+				entries: []*dirEnt{
+					{
+						directoryEntry: &inodeRW{
+							inode: inode{
+								data:    []byte("/b"),
+								mode:    fs.ModeSymlink | 0o444,
+								modtime: time.Unix(7, 8),
 							},
-							name: "a",
 						},
-						{
-							directoryEntry: &dnodeRW{
-								dnode: dnode{
-									modtime: time.Unix(5, 6),
-								},
-							},
-							name: "b",
-						},
+						name: "a",
 					},
-					modtime: time.Unix(1, 2),
-					mode:    fs.ModeDir | fs.ModePerm,
+					{
+						directoryEntry: &dnodeRW{
+							dnode: dnode{
+								modtime: time.Unix(5, 6),
+							},
+						},
+						name: "b",
+					},
 				},
-			},
+				modtime: time.Unix(1, 2),
+				mode:    fs.ModeDir | fs.ModePerm,
+			}),
 		},
 	} {
 		if err := test.FS.Lchtimes(test.Path, time.Time{}, test.MTime); !reflect.DeepEqual(err, test.Err) {

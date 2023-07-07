@@ -24,7 +24,7 @@ type dNode interface {
 	hasEntries() bool
 	getEntries() ([]fs.DirEntry, error)
 	removeEntry(string) error
-	fs.FileInfo
+	Mode() fs.FileMode
 }
 
 type dirEnt struct {

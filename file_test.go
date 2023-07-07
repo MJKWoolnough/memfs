@@ -744,7 +744,9 @@ func TestSeek(t *testing.T) {
 
 func TestClose(t *testing.T) {
 	f := file{
-		inode:  &inode{},
+		inode: &inode{
+			data: []byte("123"),
+		},
 		opMode: opWrite,
 	}
 

@@ -155,12 +155,12 @@ func (f *FS) getEntryWithParent(path string, exists exists) (dNode, *dirEnt, err
 	}
 
 	c, err := d.getEntry(child)
-	if errors.Is(err, fs.ErrNotExist) && exists != mustExist {
-		err = nil
-	} else if err != nil {
-		return nil, nil, err
-	} else if exists == mustNotExist {
-		return nil, nil, fs.ErrExist
+	if !errors.Is(err, fs.ErrNotExist) || exists == mustExist {
+		if err != nil {
+			return nil, nil, err
+		} else if exists == mustNotExist {
+			return nil, nil, fs.ErrExist
+		}
 	}
 
 	return d, c, nil

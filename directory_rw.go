@@ -87,6 +87,21 @@ func (d *dnodeRW) setTimes(_, mtime time.Time) {
 	d.modtime = mtime
 }
 
+func (d *dnodeRW) seal() directoryEntry {
+	d.mu.Lock()
+	defer d.mu.Unlock()
+
+	de := d.dnode
+
+	for n, e := range de.entries {
+		de.entries[n].directoryEntry = e.seal()
+	}
+
+	d.dnode = dnode{}
+
+	return &de
+}
+
 func (d *dnodeRW) Type() fs.FileMode {
 	d.mu.RLock()
 	defer d.mu.RUnlock()

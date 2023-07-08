@@ -27,6 +27,12 @@ func New() *FSRW {
 	}
 }
 
+func (f *FSRW) Seal() *FS {
+	return &FS{
+		de: f.de.seal(),
+	}
+}
+
 func (f *FSRW) ReadDir(path string) ([]fs.DirEntry, error) {
 	d, err := f.getDirEnt(path)
 	if err != nil {

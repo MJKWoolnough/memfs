@@ -38,6 +38,16 @@ func (i *inodeRW) bytes() ([]byte, error) {
 	return i.inode.bytes()
 }
 
+func (i *inodeRW) seal() directoryEntry {
+	i.mu.Lock()
+	defer i.mu.Unlock()
+
+	de := i.inode
+	i.inode = inode{}
+
+	return &de
+}
+
 func (i *inodeRW) Size() int64 {
 	i.mu.RLock()
 	defer i.mu.RUnlock()

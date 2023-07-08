@@ -3867,3 +3867,106 @@ func TestLchtimes(t *testing.T) {
 		}
 	}
 }
+
+func TestSeal(t *testing.T) {
+	input := FSRW{
+		FS: FS{
+			de: &dnodeRW{
+				dnode: dnode{
+					modtime: time.Unix(1, 2),
+					mode:    0,
+					entries: []*dirEnt{
+						{
+							name: "a",
+							directoryEntry: &inodeRW{
+								inode: inode{
+									modtime: time.Unix(3, 4),
+									mode:    1,
+									data:    []byte("Foo"),
+								},
+							},
+						},
+						{
+							name: "b",
+							directoryEntry: &dnodeRW{
+								dnode: dnode{
+									modtime: time.Unix(5, 6),
+									mode:    2,
+									entries: []*dirEnt{
+										{
+											name: "c",
+											directoryEntry: &inodeRW{
+												inode: inode{
+													modtime: time.Unix(7, 8),
+													mode:    3,
+													data:    []byte("Hello"),
+												},
+											},
+										},
+										{
+											name: "d",
+											directoryEntry: &inodeRW{
+												inode: inode{
+													modtime: time.Unix(9, 10),
+													mode:    4,
+													data:    []byte("World"),
+												},
+											},
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+	}
+	expected := FS{
+		de: &dnode{
+			modtime: time.Unix(1, 2),
+			mode:    0,
+			entries: []*dirEnt{
+				{
+					name: "a",
+					directoryEntry: &inode{
+						modtime: time.Unix(3, 4),
+						mode:    1,
+						data:    []byte("Foo"),
+					},
+				},
+				{
+					name: "b",
+					directoryEntry: &dnode{
+						modtime: time.Unix(5, 6),
+						mode:    2,
+						entries: []*dirEnt{
+							{
+								name: "c",
+								directoryEntry: &inode{
+									modtime: time.Unix(7, 8),
+									mode:    3,
+									data:    []byte("Hello"),
+								},
+							},
+							{
+								name: "d",
+								directoryEntry: &inode{
+									modtime: time.Unix(9, 10),
+									mode:    4,
+									data:    []byte("World"),
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+	}
+
+	output := input.Seal()
+
+	if !reflect.DeepEqual(&expected, output) {
+		t.Errorf("output did not match expected")
+	}
+}

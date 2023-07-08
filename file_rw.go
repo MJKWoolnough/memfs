@@ -38,6 +38,20 @@ func (i *inodeRW) bytes() ([]byte, error) {
 	return i.inode.bytes()
 }
 
+func (i *inodeRW) setMode(mode fs.FileMode) {
+	i.mu.Lock()
+	defer i.mu.Unlock()
+
+	i.mode = i.mode&fs.ModeSymlink | mode
+}
+
+func (i *inodeRW) setTimes(_, mtime time.Time) {
+	i.mu.Lock()
+	defer i.mu.Unlock()
+
+	i.modtime = mtime
+}
+
 func (i *inodeRW) seal() directoryEntry {
 	i.mu.Lock()
 	defer i.mu.Unlock()

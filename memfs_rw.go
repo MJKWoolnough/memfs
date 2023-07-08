@@ -28,12 +28,18 @@ func New() *FSRW {
 }
 
 func (f *FSRW) Seal() *FS {
+	f.mu.Lock()
+	defer f.mu.Unlock()
+
 	return &FS{
 		de: f.de.seal(),
 	}
 }
 
 func (f *FSRW) ReadDir(path string) ([]fs.DirEntry, error) {
+	f.mu.RLock()
+	defer f.mu.RUnlock()
+
 	d, err := f.getDirEnt(path)
 	if err != nil {
 		return nil, &fs.PathError{

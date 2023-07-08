@@ -50,6 +50,10 @@ func (i *inode) setTimes(_, mtime time.Time) {
 	i.modtime = mtime
 }
 
+func (i *inode) seal() directoryEntry {
+	return i
+}
+
 type file struct {
 	name string
 	*inode

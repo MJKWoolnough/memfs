@@ -134,6 +134,10 @@ func (d *dnode) setTimes(_, mtime time.Time) {
 	d.modtime = mtime
 }
 
+func (d *dnode) seal() directoryEntry {
+	return d
+}
+
 type directory struct {
 	*dnode
 	name string

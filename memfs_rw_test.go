@@ -21,7 +21,7 @@ func newFSRW(d dnode) FSRW {
 }
 
 func TestOpenRW(t *testing.T) {
-	for n, test := range [...]struct {
+	for n, test := range [...]*struct {
 		FS   FSRW
 		Path string
 		File fs.File
@@ -157,7 +157,7 @@ func TestOpenRW(t *testing.T) {
 }
 
 func TestFSReadDirRW(t *testing.T) {
-	for n, test := range [...]struct {
+	for n, test := range [...]*struct {
 		FS     FSRW
 		Path   string
 		Output []fs.DirEntry
@@ -418,7 +418,7 @@ func TestFSReadDirRW(t *testing.T) {
 }
 
 func TestReadFileRW(t *testing.T) {
-	for n, test := range [...]struct {
+	for n, test := range [...]*struct {
 		FS     FSRW
 		Path   string
 		Output []byte
@@ -553,7 +553,7 @@ func TestReadFileRW(t *testing.T) {
 }
 
 func TestStatRW(t *testing.T) {
-	for n, test := range [...]struct {
+	for n, test := range [...]*struct {
 		FS     FSRW
 		Path   string
 		Output fs.FileInfo
@@ -771,7 +771,7 @@ func TestStatRW(t *testing.T) {
 
 func TestMkdir(t *testing.T) {
 	now := time.Now()
-	for n, test := range [...]struct {
+	for n, test := range [...]*struct {
 		FS        FSRW
 		Path      string
 		PathPerms fs.FileMode
@@ -982,8 +982,8 @@ func TestMkdir(t *testing.T) {
 			t.Errorf("test %d: expecting error %s, got %s", n+1, test.Err, err)
 		} else {
 			fixTimes(test.FS.de.(*dnodeRW), now)
-			if !reflect.DeepEqual(test.Output, test.FS) {
-				t.Errorf("test %d: expecting to get %v, got %v", n+1, test.Output, test.FS)
+			if !reflect.DeepEqual(&test.Output, &test.FS) {
+				t.Errorf("test %d: expecting to get %v, got %v", n+1, &test.Output, &test.FS)
 			}
 		}
 	}
@@ -1009,7 +1009,7 @@ func fixTimes(d *dnodeRW, now time.Time) {
 
 func TestMkdirAll(t *testing.T) {
 	now := time.Now()
-	for n, test := range [...]struct {
+	for n, test := range [...]*struct {
 		FS        FSRW
 		Path      string
 		PathPerms fs.FileMode
@@ -1265,8 +1265,8 @@ func TestMkdirAll(t *testing.T) {
 			t.Errorf("test %d: expecting error %s, got %s", n+1, test.Err, err)
 		} else {
 			fixTimes(test.FS.de.(*dnodeRW), now)
-			if !reflect.DeepEqual(test.Output, test.FS) {
-				t.Errorf("test %d: expecting to get %v, got %v", n+1, test.Output, test.FS)
+			if !reflect.DeepEqual(&test.Output, &test.FS) {
+				t.Errorf("test %d: expecting to get %v, got %v", n+1, &test.Output, &test.FS)
 			}
 		}
 	}
@@ -1274,7 +1274,7 @@ func TestMkdirAll(t *testing.T) {
 
 func TestCreate(t *testing.T) {
 	now := time.Now()
-	for n, test := range [...]struct {
+	for n, test := range [...]*struct {
 		FS         FSRW
 		Path       string
 		PathPerms  fs.FileMode
@@ -1508,8 +1508,8 @@ func TestCreate(t *testing.T) {
 			fixTimes(test.FS.de.(*dnodeRW), now)
 			if !reflect.DeepEqual(test.OutputFile, f) {
 				t.Errorf("test %d: expecting to get file %v, got %v", n+1, test.OutputFile, f)
-			} else if !reflect.DeepEqual(test.OutputFS, test.FS) {
-				t.Errorf("test %d: expecting to get FS %v, got %v", n+1, test.OutputFS, test.FS)
+			} else if !reflect.DeepEqual(&test.OutputFS, &test.FS) {
+				t.Errorf("test %d: expecting to get FS %v, got %v", n+1, &test.OutputFS, &test.FS)
 			}
 		}
 	}
@@ -1517,7 +1517,7 @@ func TestCreate(t *testing.T) {
 
 func TestLink(t *testing.T) {
 	now := time.Now()
-	for n, test := range [...]struct {
+	for n, test := range [...]*struct {
 		FS       FSRW
 		From, To string
 		Output   FSRW
@@ -1807,8 +1807,8 @@ func TestLink(t *testing.T) {
 			t.Errorf("test %d: expecting error %s, got %s", n+1, test.Err, err)
 		} else {
 			fixTimes(test.FS.de.(*dnodeRW), now)
-			if !reflect.DeepEqual(test.Output, test.FS) {
-				t.Errorf("test %d: expecting to get FS %v, got %v", n+1, test.Output, test.FS)
+			if !reflect.DeepEqual(&test.Output, &test.FS) {
+				t.Errorf("test %d: expecting to get FS %v, got %v", n+1, &test.Output, &test.FS)
 			}
 		}
 	}
@@ -1816,7 +1816,7 @@ func TestLink(t *testing.T) {
 
 func TestSymlink(t *testing.T) {
 	now := time.Now()
-	for n, test := range [...]struct {
+	for n, test := range [...]*struct {
 		FS       FSRW
 		From, To string
 		Output   FSRW
@@ -2112,15 +2112,15 @@ func TestSymlink(t *testing.T) {
 			t.Errorf("test %d: expecting error %s, got %s", n+1, test.Err, err)
 		} else {
 			fixTimes(test.FS.de.(*dnodeRW), now)
-			if !reflect.DeepEqual(test.Output, test.FS) {
-				t.Errorf("test %d: expecting to get FS %v, got %v", n+1, test.Output, test.FS)
+			if !reflect.DeepEqual(&test.Output, &test.FS) {
+				t.Errorf("test %d: expecting to get FS %v, got %v", n+1, &test.Output, &test.FS)
 			}
 		}
 	}
 }
 
 func TestSymlinkResolveFileRW(t *testing.T) {
-	for n, test := range [...]struct {
+	for n, test := range [...]*struct {
 		FS     FSRW
 		Path   string
 		Output []byte
@@ -2408,7 +2408,7 @@ func TestSymlinkResolveFileRW(t *testing.T) {
 }
 
 func TestSymlinkResolveDirRW(t *testing.T) {
-	for n, test := range [...]struct {
+	for n, test := range [...]*struct {
 		FS     FSRW
 		Path   string
 		Output []fs.DirEntry
@@ -2564,7 +2564,7 @@ func TestSymlinkResolveDirRW(t *testing.T) {
 
 func TestRemove(t *testing.T) {
 	now := time.Now()
-	for n, test := range [...]struct {
+	for n, test := range [...]*struct {
 		FS     FSRW
 		Path   string
 		Output FSRW
@@ -2682,8 +2682,8 @@ func TestRemove(t *testing.T) {
 			t.Errorf("test %d: expecting error %s, got %s", n+1, test.Err, err)
 		} else {
 			fixTimes(test.FS.de.(*dnodeRW), now)
-			if !reflect.DeepEqual(test.Output, test.FS) {
-				t.Errorf("test %d: expecting to get FS %v, got %v", n+1, test.Output, test.FS)
+			if !reflect.DeepEqual(&test.Output, &test.FS) {
+				t.Errorf("test %d: expecting to get FS %v, got %v", n+1, &test.Output, &test.FS)
 			}
 		}
 	}
@@ -2691,7 +2691,7 @@ func TestRemove(t *testing.T) {
 
 func TestRemoveAll(t *testing.T) {
 	now := time.Now()
-	for n, test := range [...]struct {
+	for n, test := range [...]*struct {
 		FS     FSRW
 		Path   string
 		Output FSRW
@@ -2790,15 +2790,15 @@ func TestRemoveAll(t *testing.T) {
 			t.Errorf("test %d: expecting error %s, got %s", n+1, test.Err, err)
 		} else {
 			fixTimes(test.FS.de.(*dnodeRW), now)
-			if !reflect.DeepEqual(test.Output, test.FS) {
-				t.Errorf("test %d: expecting to get FS %v, got %v", n+1, test.Output, test.FS)
+			if !reflect.DeepEqual(&test.Output, &test.FS) {
+				t.Errorf("test %d: expecting to get FS %v, got %v", n+1, &test.Output, &test.FS)
 			}
 		}
 	}
 }
 
 func TestLStatRW(t *testing.T) {
-	for n, test := range [...]struct {
+	for n, test := range [...]*struct {
 		FS     FSRW
 		Path   string
 		Output fs.FileInfo
@@ -3014,7 +3014,7 @@ func TestLStatRW(t *testing.T) {
 }
 
 func TestReadlinkRW(t *testing.T) {
-	for n, test := range [...]struct {
+	for n, test := range [...]*struct {
 		FS     FSRW
 		Path   string
 		Output string
@@ -3137,7 +3137,7 @@ func TestReadlinkRW(t *testing.T) {
 }
 
 func TestChown(t *testing.T) {
-	for n, test := range [...]struct {
+	for n, test := range [...]*struct {
 		FS   FSRW
 		Path string
 		Err  error
@@ -3247,7 +3247,7 @@ func TestChown(t *testing.T) {
 }
 
 func TestChmod(t *testing.T) {
-	for n, test := range [...]struct {
+	for n, test := range [...]*struct {
 		FS     FSRW
 		Path   string
 		Mode   fs.FileMode
@@ -3421,14 +3421,14 @@ func TestChmod(t *testing.T) {
 	} {
 		if err := test.FS.Chmod(test.Path, test.Mode); !reflect.DeepEqual(err, test.Err) {
 			t.Errorf("test %d: expecting error %s, got %s", n+1, test.Err, err)
-		} else if !reflect.DeepEqual(test.FS, test.Output) {
-			t.Errorf("test %d: expected %v, got %v", n+1, test.Output, test.FS)
+		} else if !reflect.DeepEqual(&test.FS, &test.Output) {
+			t.Errorf("test %d: expected %v, got %v", n+1, &test.Output, &test.FS)
 		}
 	}
 }
 
 func TestLchown(t *testing.T) {
-	for n, test := range [...]struct {
+	for n, test := range [...]*struct {
 		FS   FSRW
 		Path string
 		Err  error
@@ -3511,7 +3511,7 @@ func TestLchown(t *testing.T) {
 }
 
 func TestChtimes(t *testing.T) {
-	for n, test := range [...]struct {
+	for n, test := range [...]*struct {
 		FS     FSRW
 		Path   string
 		MTime  time.Time
@@ -3683,14 +3683,14 @@ func TestChtimes(t *testing.T) {
 	} {
 		if err := test.FS.Chtimes(test.Path, time.Time{}, test.MTime); !reflect.DeepEqual(err, test.Err) {
 			t.Errorf("test %d: expecting error %s, got %s", n+1, test.Err, err)
-		} else if !reflect.DeepEqual(test.FS, test.Output) {
-			t.Errorf("test %d: expected %v, got %v", n+1, test.Output, test.FS)
+		} else if !reflect.DeepEqual(&test.FS, &test.Output) {
+			t.Errorf("test %d: expected %v, got %v", n+1, &test.Output, &test.FS)
 		}
 	}
 }
 
 func TestLchtimes(t *testing.T) {
-	for n, test := range [...]struct {
+	for n, test := range [...]*struct {
 		FS     FSRW
 		Path   string
 		MTime  time.Time
@@ -3862,8 +3862,8 @@ func TestLchtimes(t *testing.T) {
 	} {
 		if err := test.FS.Lchtimes(test.Path, time.Time{}, test.MTime); !reflect.DeepEqual(err, test.Err) {
 			t.Errorf("test %d: expecting error %s, got %s", n+1, test.Err, err)
-		} else if !reflect.DeepEqual(test.FS, test.Output) {
-			t.Errorf("test %d: expected %v, got %v", n+1, test.Output, test.FS)
+		} else if !reflect.DeepEqual(&test.FS, &test.Output) {
+			t.Errorf("test %d: expected %v, got %v", n+1, &test.Output, &test.FS)
 		}
 	}
 }

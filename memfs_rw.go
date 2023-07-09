@@ -413,8 +413,8 @@ func (f *FSRW) Readlink(path string) (string, error) {
 }
 
 func (f *FSRW) Chown(path string, uid, gid int) error {
-	f.mu.Lock()
-	defer f.mu.Unlock()
+	f.mu.RLock()
+	defer f.mu.RUnlock()
 
 	if _, err := f.getEntry(path); err != nil {
 		return &fs.PathError{
@@ -428,8 +428,8 @@ func (f *FSRW) Chown(path string, uid, gid int) error {
 }
 
 func (f *FSRW) Chmod(path string, mode fs.FileMode) error {
-	f.mu.Lock()
-	defer f.mu.Unlock()
+	f.mu.RLock()
+	defer f.mu.RUnlock()
 
 	de, err := f.getEntry(path)
 	if err != nil {
@@ -446,8 +446,8 @@ func (f *FSRW) Chmod(path string, mode fs.FileMode) error {
 }
 
 func (f *FSRW) Lchown(path string, uid, gid int) error {
-	f.mu.Lock()
-	defer f.mu.Unlock()
+	f.mu.RLock()
+	defer f.mu.RUnlock()
 
 	if _, err := f.getLEntry(path); err != nil {
 		return &fs.PathError{
@@ -461,8 +461,8 @@ func (f *FSRW) Lchown(path string, uid, gid int) error {
 }
 
 func (f *FSRW) Chtimes(path string, atime time.Time, mtime time.Time) error {
-	f.mu.Lock()
-	defer f.mu.Unlock()
+	f.mu.RLock()
+	defer f.mu.RUnlock()
 
 	de, err := f.getEntry(path)
 	if err != nil {
@@ -479,8 +479,8 @@ func (f *FSRW) Chtimes(path string, atime time.Time, mtime time.Time) error {
 }
 
 func (f *FSRW) Lchtimes(path string, atime time.Time, mtime time.Time) error {
-	f.mu.Lock()
-	defer f.mu.Unlock()
+	f.mu.RLock()
+	defer f.mu.RUnlock()
 
 	de, err := f.getLEntry(path)
 	if err != nil {

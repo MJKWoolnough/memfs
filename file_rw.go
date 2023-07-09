@@ -1,6 +1,7 @@
 package memfs
 
 import (
+	"errors"
 	"io"
 	"io/fs"
 	"sync"
@@ -263,4 +264,33 @@ func (f *fileRW) WriteRune(r rune) (int, error) {
 	f.modtime = time.Now()
 
 	return n, nil
+}
+
+func (f *fileRW) ReadFrom(r io.Reader) (int64, error) {
+	f.mu.Lock()
+	defer f.mu.Unlock()
+
+	if err := f.validTo("readfrom", opWrite, false); err != nil {
+		return 0, err
+	}
+
+	var count int64
+
+	for {
+		f.grow(int(f.pos + 1))
+
+		n, err := r.Read(f.data[f.pos:cap(f.data)])
+
+		count += int64(n)
+		f.pos += int64(n)
+		f.data = f.data[:f.pos]
+
+		if errors.Is(err, io.EOF) {
+			return count, nil
+		}
+
+		if err != nil {
+			return count, err
+		}
+	}
 }

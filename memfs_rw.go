@@ -11,12 +11,12 @@ import (
 
 type FSRW struct {
 	mu sync.RWMutex
-	FS
+	fsRO
 }
 
 func New() *FSRW {
 	return &FSRW{
-		FS: FS{
+		fsRO: fsRO{
 			de: &dnodeRW{
 				dnode: dnode{
 					mode:    fs.ModeDir | fs.ModePerm,
@@ -27,11 +27,11 @@ func New() *FSRW {
 	}
 }
 
-func (f *FSRW) Seal() *FS {
+func (f *FSRW) Seal() *fsRO {
 	f.mu.Lock()
 	defer f.mu.Unlock()
 
-	return &FS{
+	return &fsRO{
 		de: f.de.seal(),
 	}
 }
@@ -65,14 +65,14 @@ func (f *FSRW) ReadFile(path string) ([]byte, error) {
 	f.mu.RLock()
 	defer f.mu.RUnlock()
 
-	return f.FS.ReadFile(path)
+	return f.fsRO.ReadFile(path)
 }
 
 func (f *FSRW) Stat(path string) (fs.FileInfo, error) {
 	f.mu.RLock()
 	defer f.mu.RUnlock()
 
-	return f.FS.Stat(path)
+	return f.fsRO.Stat(path)
 }
 
 func (f *FSRW) Mkdir(path string, perm fs.FileMode) error {
@@ -402,14 +402,14 @@ func (f *FSRW) LStat(path string) (fs.FileInfo, error) {
 	f.mu.RLock()
 	defer f.mu.RUnlock()
 
-	return f.FS.LStat(path)
+	return f.fsRO.LStat(path)
 }
 
 func (f *FSRW) Readlink(path string) (string, error) {
 	f.mu.RLock()
 	defer f.mu.RUnlock()
 
-	return f.FS.Readlink(path)
+	return f.fsRO.Readlink(path)
 }
 
 func (f *FSRW) Chown(path string, uid, gid int) error {
@@ -500,13 +500,13 @@ func (f *FSRW) Sub(path string) (fs.FS, error) {
 	f.mu.RLock()
 	defer f.mu.RUnlock()
 
-	de, err := f.FS.sub(path)
+	de, err := f.fsRO.sub(path)
 	if err != nil {
 		return nil, err
 	}
 
 	return &FSRW{
-		FS: FS{
+		fsRO: fsRO{
 			de: de,
 		},
 	}, nil

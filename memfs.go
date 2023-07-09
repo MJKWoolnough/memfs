@@ -8,15 +8,15 @@ import (
 	"strings"
 )
 
-type FS struct {
+type fsRO struct {
 	de directoryEntry
 }
 
-func (f *FS) joinRoot(path string) string {
+func (f *fsRO) joinRoot(path string) string {
 	return filepath.Join("/", path)
 }
 
-func (f *FS) Open(path string) (fs.File, error) {
+func (f *fsRO) Open(path string) (fs.File, error) {
 	de, err := f.getEntry(path)
 	if err != nil {
 		return nil, &fs.PathError{
@@ -40,7 +40,7 @@ func (f *FS) Open(path string) (fs.File, error) {
 	return of, nil
 }
 
-func (f *FS) getDirEnt(path string) (dNode, error) {
+func (f *fsRO) getDirEnt(path string) (dNode, error) {
 	redirectsRemaining := maxRedirects
 
 	de, err := f.getResolvedDirEnt(f.joinRoot(path), &redirectsRemaining)
@@ -55,7 +55,7 @@ func (f *FS) getDirEnt(path string) (dNode, error) {
 
 var maxRedirects uint8 = 255
 
-func (f *FS) getResolvedDirEnt(path string, remainingRedirects *uint8) (directoryEntry, error) {
+func (f *fsRO) getResolvedDirEnt(path string, remainingRedirects *uint8) (directoryEntry, error) {
 	var (
 		de  directoryEntry
 		d   *dirEnt
@@ -105,13 +105,13 @@ func (f *FS) getResolvedDirEnt(path string, remainingRedirects *uint8) (director
 	return f.getResolvedDirEnt(link, remainingRedirects)
 }
 
-func (f *FS) getEntry(path string) (directoryEntry, error) {
+func (f *fsRO) getEntry(path string) (directoryEntry, error) {
 	redirectsRemaining := maxRedirects
 
 	return f.getResolvedDirEnt(f.joinRoot(path), &redirectsRemaining)
 }
 
-func (f *FS) getLEntry(path string) (*dirEnt, error) {
+func (f *fsRO) getLEntry(path string) (*dirEnt, error) {
 	jpath := f.joinRoot(path)
 	dirName, fileName := filepath.Split(jpath)
 	redirectsRemaining := maxRedirects
@@ -143,7 +143,7 @@ const (
 	doesntMatter
 )
 
-func (f *FS) getEntryWithParent(path string, exists exists) (dNode, *dirEnt, error) {
+func (f *fsRO) getEntryWithParent(path string, exists exists) (dNode, *dirEnt, error) {
 	parent, child := filepath.Split(path)
 	if child == "" {
 		return nil, nil, fs.ErrInvalid
@@ -166,7 +166,7 @@ func (f *FS) getEntryWithParent(path string, exists exists) (dNode, *dirEnt, err
 	return d, c, nil
 }
 
-func (f *FS) ReadDir(path string) ([]fs.DirEntry, error) {
+func (f *fsRO) ReadDir(path string) ([]fs.DirEntry, error) {
 	d, err := f.getDirEnt(path)
 	if err != nil {
 		return nil, &fs.PathError{
@@ -188,7 +188,7 @@ func (f *FS) ReadDir(path string) ([]fs.DirEntry, error) {
 	return es, nil
 }
 
-func (f *FS) ReadFile(path string) ([]byte, error) {
+func (f *fsRO) ReadFile(path string) ([]byte, error) {
 	de, err := f.getEntry(path)
 	if err != nil {
 		return nil, &fs.PathError{
@@ -214,7 +214,7 @@ func (f *FS) ReadFile(path string) ([]byte, error) {
 	return data, nil
 }
 
-func (f *FS) Stat(path string) (fs.FileInfo, error) {
+func (f *fsRO) Stat(path string) (fs.FileInfo, error) {
 	de, err := f.getEntry(path)
 	if err != nil {
 		return nil, &fs.PathError{
@@ -236,7 +236,7 @@ func (f *FS) Stat(path string) (fs.FileInfo, error) {
 	}, nil
 }
 
-func (f *FS) LStat(path string) (fs.FileInfo, error) {
+func (f *fsRO) LStat(path string) (fs.FileInfo, error) {
 	de, err := f.getLEntry(path)
 	if err != nil {
 		return nil, &fs.PathError{
@@ -249,7 +249,7 @@ func (f *FS) LStat(path string) (fs.FileInfo, error) {
 	return de, nil
 }
 
-func (f *FS) Readlink(path string) (string, error) {
+func (f *fsRO) Readlink(path string) (string, error) {
 	de, err := f.getLEntry(path)
 	if err != nil {
 		return "", &fs.PathError{
@@ -279,7 +279,7 @@ func (f *FS) Readlink(path string) (string, error) {
 	return string(b), nil
 }
 
-func (f *FS) sub(path string) (directoryEntry, error) {
+func (f *fsRO) sub(path string) (directoryEntry, error) {
 	redirectsRemaining := maxRedirects
 
 	de, err := f.getResolvedDirEnt(f.joinRoot(path), &redirectsRemaining)
@@ -300,13 +300,13 @@ func (f *FS) sub(path string) (directoryEntry, error) {
 	return de, nil
 }
 
-func (f *FS) Sub(path string) (fs.FS, error) {
+func (f *fsRO) Sub(path string) (fs.FS, error) {
 	de, err := f.sub(path)
 	if err != nil {
 		return nil, err
 	}
 
-	return &FS{
+	return &fsRO{
 		de: de,
 	}, nil
 }

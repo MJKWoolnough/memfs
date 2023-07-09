@@ -12,7 +12,7 @@ import (
 
 func newFSRW(d dnode) FSRW {
 	return FSRW{
-		FS: FS{
+		fsRO: fsRO{
 			de: &dnodeRW{
 				dnode: d,
 			},
@@ -3870,7 +3870,7 @@ func TestLchtimes(t *testing.T) {
 
 func TestSeal(t *testing.T) {
 	input := FSRW{
-		FS: FS{
+		fsRO: fsRO{
 			de: &dnodeRW{
 				dnode: dnode{
 					modtime: time.Unix(1, 2),
@@ -3922,7 +3922,7 @@ func TestSeal(t *testing.T) {
 			},
 		},
 	}
-	expected := FS{
+	expected := fsRO{
 		de: &dnode{
 			modtime: time.Unix(1, 2),
 			mode:    0,
@@ -3980,7 +3980,7 @@ func TestSubRW(t *testing.T) {
 	}{
 		{ // 1
 			FS: FSRW{
-				FS: FS{
+				fsRO: fsRO{
 					de: &dnodeRW{},
 				},
 			},
@@ -3992,7 +3992,7 @@ func TestSubRW(t *testing.T) {
 		},
 		{ // 2
 			FS: FSRW{
-				FS: FS{
+				fsRO: fsRO{
 					de: &dnodeRW{
 						dnode: dnode{
 							modtime: time.Unix(1, 2),
@@ -4044,7 +4044,7 @@ func TestSubRW(t *testing.T) {
 			},
 			Path: "/b",
 			Output: &FSRW{
-				FS: FS{
+				fsRO: fsRO{
 					de: &dnodeRW{
 						dnode: dnode{
 							modtime: time.Unix(5, 6),
@@ -4078,7 +4078,7 @@ func TestSubRW(t *testing.T) {
 		},
 		{ // 3
 			FS: FSRW{
-				FS: FS{
+				fsRO: fsRO{
 					de: &dnodeRW{
 						dnode: dnode{
 							modtime: time.Unix(1, 2),

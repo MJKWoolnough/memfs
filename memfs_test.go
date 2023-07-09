@@ -9,15 +9,15 @@ import (
 	"time"
 )
 
-func newFS(d dnode) FS {
-	return FS{
+func newFS(d dnode) fsRO {
+	return fsRO{
 		de: &d,
 	}
 }
 
 func TestOpen(t *testing.T) {
 	for n, test := range [...]struct {
-		FS   FS
+		FS   fsRO
 		Path string
 		File fs.File
 		Err  error
@@ -139,7 +139,7 @@ func TestOpen(t *testing.T) {
 
 func TestFSReadDir(t *testing.T) {
 	for n, test := range [...]struct {
-		FS     FS
+		FS     fsRO
 		Path   string
 		Output []fs.DirEntry
 		Err    error
@@ -362,7 +362,7 @@ func TestFSReadDir(t *testing.T) {
 
 func TestReadFile(t *testing.T) {
 	for n, test := range [...]struct {
-		FS     FS
+		FS     fsRO
 		Path   string
 		Output []byte
 		Err    error
@@ -489,7 +489,7 @@ func TestReadFile(t *testing.T) {
 
 func TestStat(t *testing.T) {
 	for n, test := range [...]struct {
-		FS     FS
+		FS     fsRO
 		Path   string
 		Output fs.FileInfo
 		Err    error
@@ -680,7 +680,7 @@ func TestStat(t *testing.T) {
 
 func TestSymlinkResolveFile(t *testing.T) {
 	for n, test := range [...]struct {
-		FS     FS
+		FS     fsRO
 		Path   string
 		Output []byte
 		Err    error
@@ -926,7 +926,7 @@ func TestSymlinkResolveFile(t *testing.T) {
 
 func TestSymlinkResolveDir(t *testing.T) {
 	for n, test := range [...]struct {
-		FS     FS
+		FS     fsRO
 		Path   string
 		Output []fs.DirEntry
 		Err    error
@@ -1055,7 +1055,7 @@ func TestSymlinkResolveDir(t *testing.T) {
 
 func TestLStat(t *testing.T) {
 	for n, test := range [...]struct {
-		FS     FS
+		FS     fsRO
 		Path   string
 		Output fs.FileInfo
 		Err    error
@@ -1245,7 +1245,7 @@ func TestLStat(t *testing.T) {
 
 func TestReadlink(t *testing.T) {
 	for n, test := range [...]struct {
-		FS     FS
+		FS     fsRO
 		Path   string
 		Output string
 		Err    error
@@ -1362,13 +1362,13 @@ func TestReadlink(t *testing.T) {
 
 func TestSub(t *testing.T) {
 	for n, test := range [...]struct {
-		FS     FS
+		FS     fsRO
 		Path   string
 		Output fs.FS
 		Err    error
 	}{
 		{ // 1
-			FS: FS{
+			FS: fsRO{
 				de: &dnode{},
 			},
 			Err: &fs.PathError{
@@ -1378,7 +1378,7 @@ func TestSub(t *testing.T) {
 			},
 		},
 		{ // 2
-			FS: FS{
+			FS: fsRO{
 				de: &dnode{
 					modtime: time.Unix(1, 2),
 					mode:    fs.ModeDir | 0x444,
@@ -1420,7 +1420,7 @@ func TestSub(t *testing.T) {
 				},
 			},
 			Path: "/b",
-			Output: &FS{
+			Output: &fsRO{
 				de: &dnode{
 					modtime: time.Unix(5, 6),
 					mode:    fs.ModeDir | 0x444,
@@ -1446,7 +1446,7 @@ func TestSub(t *testing.T) {
 			},
 		},
 		{ // 3
-			FS: FS{
+			FS: fsRO{
 				de: &dnode{
 					modtime: time.Unix(1, 2),
 					mode:    fs.ModeDir | 0x444,

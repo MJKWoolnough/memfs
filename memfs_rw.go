@@ -27,7 +27,17 @@ func New() *FSRW {
 	}
 }
 
-func (f *FSRW) Seal() *fsRO {
+type FSRO interface {
+	fs.FS
+	fs.ReadDirFS
+	fs.ReadFileFS
+	fs.StatFS
+	fs.SubFS
+	LStat(path string) (fs.FileInfo, error)
+	Readlink(path string) (string, error)
+}
+
+func (f *FSRW) Seal() FSRO {
 	f.mu.Lock()
 	defer f.mu.Unlock()
 

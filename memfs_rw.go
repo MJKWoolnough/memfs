@@ -495,3 +495,19 @@ func (f *FSRW) Lchtimes(path string, atime time.Time, mtime time.Time) error {
 
 	return nil
 }
+
+func (f *FSRW) Sub(path string) (fs.FS, error) {
+	f.mu.RLock()
+	defer f.mu.RUnlock()
+
+	de, err := f.FS.sub(path)
+	if err != nil {
+		return nil, err
+	}
+
+	return &FSRW{
+		FS: FS{
+			de: de,
+		},
+	}, nil
+}

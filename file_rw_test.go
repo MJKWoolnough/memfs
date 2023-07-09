@@ -1082,3 +1082,31 @@ func TestCloseRW(t *testing.T) {
 		t.Errorf("test 9: expecting ErrClosed error, got %s", err)
 	}
 }
+
+func TestReadFrom(t *testing.T) {
+	buf := make([]byte, 0, 255*1024*1024)
+
+	for i := 0; i < 1024*1024; i++ {
+		for j := 0; j < 255; j++ {
+			buf = append(buf, byte(j))
+		}
+	}
+
+	f := fileRW{
+		mu: &sync.RWMutex{},
+		file: file{
+			inode:  &inode{},
+			opMode: opWrite,
+		},
+	}
+
+	n, err := f.ReadFrom(bytes.NewBuffer(buf))
+
+	if err != nil {
+		t.Errorf("unexpected error: %v", err)
+	} else if n != 255*1024*1024 {
+		t.Errorf("expected to read %d bytes, read %d", 255*1024*1024, n)
+	} else if !bytes.Equal(buf, f.data) {
+		t.Errorf("File data does not match buf data")
+	}
+}

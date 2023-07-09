@@ -1359,3 +1359,146 @@ func TestReadlink(t *testing.T) {
 		}
 	}
 }
+
+func TestSub(t *testing.T) {
+	for n, test := range [...]struct {
+		FS     FS
+		Path   string
+		Output fs.FS
+		Err    error
+	}{
+		{ // 1
+			FS: FS{
+				de: &dnode{},
+			},
+			Err: &fs.PathError{
+				Op:   "sub",
+				Path: "",
+				Err:  fs.ErrPermission,
+			},
+		},
+		{ // 2
+			FS: FS{
+				de: &dnode{
+					modtime: time.Unix(1, 2),
+					mode:    fs.ModeDir | 0x444,
+					entries: []*dirEnt{
+						{
+							name: "a",
+							directoryEntry: &inode{
+								modtime: time.Unix(3, 4),
+								mode:    1,
+								data:    []byte("Foo"),
+							},
+						},
+						{
+							name: "b",
+							directoryEntry: &dnode{
+								modtime: time.Unix(5, 6),
+								mode:    fs.ModeDir | 0x444,
+								entries: []*dirEnt{
+									{
+										name: "c",
+										directoryEntry: &inode{
+											modtime: time.Unix(7, 8),
+											mode:    3,
+											data:    []byte("Hello"),
+										},
+									},
+									{
+										name: "d",
+										directoryEntry: &inode{
+											modtime: time.Unix(9, 10),
+											mode:    4,
+											data:    []byte("World"),
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			Path: "/b",
+			Output: &FS{
+				de: &dnode{
+					modtime: time.Unix(5, 6),
+					mode:    fs.ModeDir | 0x444,
+					entries: []*dirEnt{
+						{
+							name: "c",
+							directoryEntry: &inode{
+								modtime: time.Unix(7, 8),
+								mode:    3,
+								data:    []byte("Hello"),
+							},
+						},
+						{
+							name: "d",
+							directoryEntry: &inode{
+								modtime: time.Unix(9, 10),
+								mode:    4,
+								data:    []byte("World"),
+							},
+						},
+					},
+				},
+			},
+		},
+		{ // 3
+			FS: FS{
+				de: &dnode{
+					modtime: time.Unix(1, 2),
+					mode:    fs.ModeDir | 0x444,
+					entries: []*dirEnt{
+						{
+							name: "a",
+							directoryEntry: &inode{
+								modtime: time.Unix(3, 4),
+								mode:    1,
+								data:    []byte("Foo"),
+							},
+						},
+						{
+							name: "b",
+							directoryEntry: &dnode{
+								modtime: time.Unix(5, 6),
+								mode:    fs.ModeDir | 0x444,
+								entries: []*dirEnt{
+									{
+										name: "c",
+										directoryEntry: &inode{
+											modtime: time.Unix(7, 8),
+											mode:    3,
+											data:    []byte("Hello"),
+										},
+									},
+									{
+										name: "d",
+										directoryEntry: &inode{
+											modtime: time.Unix(9, 10),
+											mode:    4,
+											data:    []byte("World"),
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			Path: "/a",
+			Err: &fs.PathError{
+				Op:   "sub",
+				Path: "/a",
+				Err:  fs.ErrInvalid,
+			},
+		},
+	} {
+		if output, err := test.FS.Sub(test.Path); !reflect.DeepEqual(err, test.Err) {
+			t.Errorf("test %d: expecting error %s, got %s", n+1, test.Err, err)
+		} else if !reflect.DeepEqual(output, test.Output) {
+			t.Errorf("test %d: expected FS %v, got %v", n+1, test.Output, output)
+		}
+	}
+}

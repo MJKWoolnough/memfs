@@ -279,7 +279,7 @@ func (f *FS) Readlink(path string) (string, error) {
 	return string(b), nil
 }
 
-func (f *FS) Sub(path string) (fs.FS, error) {
+func (f *FS) sub(path string) (directoryEntry, error) {
 	redirectsRemaining := maxRedirects
 
 	de, err := f.getResolvedDirEnt(f.joinRoot(path), &redirectsRemaining)
@@ -295,6 +295,15 @@ func (f *FS) Sub(path string) (fs.FS, error) {
 			Path: path,
 			Err:  fs.ErrInvalid,
 		}
+	}
+
+	return de, nil
+}
+
+func (f *FS) Sub(path string) (fs.FS, error) {
+	de, err := f.sub(path)
+	if err != nil {
+		return nil, err
 	}
 
 	return &FS{

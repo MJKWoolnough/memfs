@@ -148,12 +148,7 @@ func (f *FS) MkdirAll(path string, perm fs.FileMode) error {
 	return f.mkdir("mkdirall", path, cpath, perm)
 }
 
-type File interface {
-	fs.File
-	Write([]byte) (int, error)
-}
-
-func (f *FS) Create(path string) (File, error) {
+func (f *FS) Create(path string) (*File, error) {
 	f.mu.Lock()
 	defer f.mu.Unlock()
 
@@ -187,7 +182,7 @@ func (f *FS) Create(path string) (File, error) {
 			}
 		}
 
-		return &fileRW{
+		return &File{
 			mu: &i.mu,
 			file: file{
 				name:   fileName,
@@ -206,7 +201,7 @@ func (f *FS) Create(path string) (File, error) {
 		}
 	}
 
-	ef, ok := of.(*fileRW)
+	ef, ok := of.(*File)
 	if !ok {
 		return nil, &fs.PathError{
 			Op:   "create",

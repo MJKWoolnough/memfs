@@ -20,7 +20,7 @@ var _ interface {
 	io.RuneScanner
 	io.ByteScanner
 	io.ByteWriter
-} = &fileRW{}
+} = &File{}
 
 func TestReadRW(t *testing.T) {
 	for n, test := range [...]struct {
@@ -53,7 +53,7 @@ func TestReadRW(t *testing.T) {
 			},
 		},
 	} {
-		f := fileRW{
+		f := File{
 			mu: &sync.RWMutex{},
 			file: file{
 				inode: &inode{
@@ -142,7 +142,7 @@ func TestReadAtRW(t *testing.T) {
 			},
 		},
 	} {
-		f := fileRW{
+		f := File{
 			mu: &sync.RWMutex{},
 			file: file{
 				inode: &inode{
@@ -250,7 +250,7 @@ Tests:
 			Mode: opRead,
 		},
 	} {
-		f := fileRW{
+		f := File{
 			mu: &sync.RWMutex{},
 			file: file{
 				inode: &inode{
@@ -285,7 +285,7 @@ Tests:
 }
 
 func TestUnreadByteRW(t *testing.T) {
-	f := fileRW{
+	f := File{
 		mu: &sync.RWMutex{},
 		file: file{
 			inode: &inode{
@@ -387,7 +387,7 @@ func TestUnreadByteRW(t *testing.T) {
 }
 
 func TestReadRuneRW(t *testing.T) {
-	f := fileRW{
+	f := File{
 		mu: &sync.RWMutex{},
 		file: file{
 			inode: &inode{
@@ -486,7 +486,7 @@ func TestReadRuneRW(t *testing.T) {
 }
 
 func TestUnreadRuneRW(t *testing.T) {
-	f := fileRW{
+	f := File{
 		mu: &sync.RWMutex{},
 		file: file{
 			inode: &inode{
@@ -620,7 +620,7 @@ func TestUnreadRuneRW(t *testing.T) {
 }
 
 func TestWriteToRW(t *testing.T) {
-	f := fileRW{
+	f := File{
 		mu: &sync.RWMutex{},
 		file: file{
 			inode: &inode{
@@ -670,7 +670,7 @@ func TestWriteToRW(t *testing.T) {
 }
 
 func TestSeekRW(t *testing.T) {
-	f := fileRW{
+	f := File{
 		mu: &sync.RWMutex{},
 		file: file{
 			inode: &inode{
@@ -777,7 +777,7 @@ func TestWrite(t *testing.T) {
 		toWrite[n] = byte(n)
 	}
 
-	f := fileRW{
+	f := File{
 		mu: &sync.RWMutex{},
 		file: file{
 			inode: &inode{
@@ -801,7 +801,7 @@ func TestWrite(t *testing.T) {
 		if n == 0 {
 			continue
 		}
-		f := fileRW{
+		f := File{
 			mu: &sync.RWMutex{},
 			file: file{
 				inode: &inode{
@@ -826,7 +826,7 @@ func TestWrite(t *testing.T) {
 }
 
 func TestWriteAt(t *testing.T) {
-	f := fileRW{
+	f := File{
 		mu: &sync.RWMutex{},
 		file: file{
 			inode: &inode{
@@ -902,7 +902,7 @@ func TestWriteString(t *testing.T) {
 		toWrite[n] = byte(n)
 	}
 
-	f := fileRW{
+	f := File{
 		mu: &sync.RWMutex{},
 		file: file{
 			inode: &inode{
@@ -926,7 +926,7 @@ func TestWriteString(t *testing.T) {
 		if n == 0 {
 			continue
 		}
-		f := fileRW{
+		f := File{
 			mu: &sync.RWMutex{},
 			file: file{
 				inode: &inode{
@@ -977,7 +977,7 @@ Tests:
 			Mode: opWrite,
 		},
 	} {
-		f := fileRW{
+		f := File{
 			mu: &sync.RWMutex{},
 			file: file{
 				inode: &inode{
@@ -1007,7 +1007,7 @@ Tests:
 }
 
 func TestCloseRW(t *testing.T) {
-	f := fileRW{
+	f := File{
 		mu: &sync.RWMutex{},
 		file: file{
 			inode:  &inode{},
@@ -1092,7 +1092,7 @@ func TestReadFrom(t *testing.T) {
 		}
 	}
 
-	f := fileRW{
+	f := File{
 		mu: &sync.RWMutex{},
 		file: file{
 			inode:  &inode{},

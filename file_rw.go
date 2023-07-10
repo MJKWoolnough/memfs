@@ -22,7 +22,7 @@ func (i *inodeRW) open(name string, mode opMode) (fs.File, error) {
 		return nil, fs.ErrPermission
 	}
 
-	return &fileRW{
+	return &File{
 		mu: &i.mu,
 		file: file{
 			name:   name,
@@ -91,75 +91,75 @@ func (i *inodeRW) ModTime() time.Time {
 	return i.modtime
 }
 
-type fileRW struct {
+type File struct {
 	mu *sync.RWMutex
 	file
 }
 
-func (f *fileRW) Read(p []byte) (int, error) {
+func (f *File) Read(p []byte) (int, error) {
 	f.mu.Lock()
 	defer f.mu.Unlock()
 
 	return f.file.Read(p)
 }
 
-func (f *fileRW) ReadAt(p []byte, off int64) (int, error) {
+func (f *File) ReadAt(p []byte, off int64) (int, error) {
 	f.mu.Lock()
 	defer f.mu.Unlock()
 
 	return f.file.ReadAt(p, off)
 }
 
-func (f *fileRW) ReadByte() (byte, error) {
+func (f *File) ReadByte() (byte, error) {
 	f.mu.Lock()
 	defer f.mu.Unlock()
 
 	return f.file.ReadByte()
 }
 
-func (f *fileRW) UnreadByte() error {
+func (f *File) UnreadByte() error {
 	f.mu.Lock()
 	defer f.mu.Unlock()
 
 	return f.file.UnreadByte()
 }
 
-func (f *fileRW) ReadRune() (rune, int, error) {
+func (f *File) ReadRune() (rune, int, error) {
 	f.mu.Lock()
 	defer f.mu.Unlock()
 
 	return f.file.ReadRune()
 }
 
-func (f *fileRW) UnreadRune() error {
+func (f *File) UnreadRune() error {
 	f.mu.Lock()
 	defer f.mu.Unlock()
 
 	return f.file.UnreadRune()
 }
 
-func (f *fileRW) WriteTo(w io.Writer) (int64, error) {
+func (f *File) WriteTo(w io.Writer) (int64, error) {
 	f.mu.Lock()
 	defer f.mu.Unlock()
 
 	return f.file.WriteTo(w)
 }
 
-func (f *fileRW) Seek(offset int64, whence int) (int64, error) {
+func (f *File) Seek(offset int64, whence int) (int64, error) {
 	f.mu.Lock()
 	defer f.mu.Unlock()
 
 	return f.file.Seek(offset, whence)
 }
 
-func (f *fileRW) Close() error {
+func (f *File) Close() error {
 	f.mu.Lock()
 	defer f.mu.Unlock()
 
 	return f.file.Close()
 }
 
-func (f *fileRW) grow(size int) {
+func (f *File) grow(size int) {
 	if size > len(f.data) {
 		if size < cap(f.data) {
 			f.data = (f.data)[:size]
@@ -176,7 +176,7 @@ func (f *fileRW) grow(size int) {
 	}
 }
 
-func (f *fileRW) Write(p []byte) (int, error) {
+func (f *File) Write(p []byte) (int, error) {
 	f.mu.Lock()
 	defer f.mu.Unlock()
 
@@ -194,7 +194,7 @@ func (f *fileRW) Write(p []byte) (int, error) {
 	return n, nil
 }
 
-func (f *fileRW) WriteAt(p []byte, off int64) (int, error) {
+func (f *File) WriteAt(p []byte, off int64) (int, error) {
 	f.mu.Lock()
 	defer f.mu.Unlock()
 
@@ -210,7 +210,7 @@ func (f *fileRW) WriteAt(p []byte, off int64) (int, error) {
 	return n, nil
 }
 
-func (f *fileRW) WriteString(str string) (int, error) {
+func (f *File) WriteString(str string) (int, error) {
 	f.mu.Lock()
 	defer f.mu.Unlock()
 
@@ -228,7 +228,7 @@ func (f *fileRW) WriteString(str string) (int, error) {
 	return n, nil
 }
 
-func (f *fileRW) WriteByte(c byte) error {
+func (f *File) WriteByte(c byte) error {
 	f.mu.Lock()
 	defer f.mu.Unlock()
 
@@ -246,7 +246,7 @@ func (f *fileRW) WriteByte(c byte) error {
 	return nil
 }
 
-func (f *fileRW) WriteRune(r rune) (int, error) {
+func (f *File) WriteRune(r rune) (int, error) {
 	f.mu.Lock()
 	defer f.mu.Unlock()
 
@@ -266,7 +266,7 @@ func (f *fileRW) WriteRune(r rune) (int, error) {
 	return n, nil
 }
 
-func (f *fileRW) ReadFrom(r io.Reader) (int64, error) {
+func (f *File) ReadFrom(r io.Reader) (int64, error) {
 	f.mu.Lock()
 	defer f.mu.Unlock()
 

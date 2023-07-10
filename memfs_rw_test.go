@@ -78,7 +78,7 @@ func TestOpenRW(t *testing.T) {
 				mode: fs.ModeDir | fs.ModePerm,
 			}),
 			Path: "/file",
-			File: &fileRW{
+			File: &File{
 				mu: &sync.RWMutex{},
 				file: file{
 					name: "file",
@@ -135,7 +135,7 @@ func TestOpenRW(t *testing.T) {
 				mode: fs.ModeDir | fs.ModePerm,
 			}),
 			Path: "/dir/deepFile",
-			File: &fileRW{
+			File: &File{
 				mu: &sync.RWMutex{},
 				file: file{
 					name: "deepFile",
@@ -1279,7 +1279,7 @@ func TestCreate(t *testing.T) {
 		Path       string
 		PathPerms  fs.FileMode
 		OutputFS   FS
-		OutputFile fs.File
+		OutputFile *File
 		Err        error
 	}{
 		{ // 1
@@ -1348,7 +1348,7 @@ func TestCreate(t *testing.T) {
 				modtime: now,
 				mode:    fs.ModeDir | fs.ModePerm,
 			}),
-			OutputFile: &fileRW{
+			OutputFile: &File{
 				mu: &sync.RWMutex{},
 				file: file{
 					inode: &inode{
@@ -1394,7 +1394,7 @@ func TestCreate(t *testing.T) {
 				modtime: now.Add(-20 * time.Second),
 				mode:    fs.ModeDir | fs.ModePerm,
 			}),
-			OutputFile: &fileRW{
+			OutputFile: &File{
 				mu: &sync.RWMutex{},
 				file: file{
 					inode: &inode{
@@ -1450,7 +1450,7 @@ func TestCreate(t *testing.T) {
 				modtime: now,
 				mode:    fs.ModeDir | fs.ModePerm,
 			}),
-			OutputFile: &fileRW{
+			OutputFile: &File{
 				mu: &sync.RWMutex{},
 				file: file{
 					inode: &inode{

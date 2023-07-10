@@ -9,13 +9,13 @@ import (
 	"time"
 )
 
-type FSRW struct {
+type FS struct {
 	mu sync.RWMutex
 	fsRO
 }
 
-func New() *FSRW {
-	return &FSRW{
+func New() *FS {
+	return &FS{
 		fsRO: fsRO{
 			de: &dnodeRW{
 				dnode: dnode{
@@ -37,7 +37,7 @@ type FSRO interface {
 	Readlink(path string) (string, error)
 }
 
-func (f *FSRW) Seal() FSRO {
+func (f *FS) Seal() FSRO {
 	f.mu.Lock()
 	defer f.mu.Unlock()
 
@@ -46,7 +46,7 @@ func (f *FSRW) Seal() FSRO {
 	}
 }
 
-func (f *FSRW) ReadDir(path string) ([]fs.DirEntry, error) {
+func (f *FS) ReadDir(path string) ([]fs.DirEntry, error) {
 	f.mu.RLock()
 	defer f.mu.RUnlock()
 
@@ -71,28 +71,28 @@ func (f *FSRW) ReadDir(path string) ([]fs.DirEntry, error) {
 	return des, nil
 }
 
-func (f *FSRW) ReadFile(path string) ([]byte, error) {
+func (f *FS) ReadFile(path string) ([]byte, error) {
 	f.mu.RLock()
 	defer f.mu.RUnlock()
 
 	return f.fsRO.ReadFile(path)
 }
 
-func (f *FSRW) Stat(path string) (fs.FileInfo, error) {
+func (f *FS) Stat(path string) (fs.FileInfo, error) {
 	f.mu.RLock()
 	defer f.mu.RUnlock()
 
 	return f.fsRO.Stat(path)
 }
 
-func (f *FSRW) Mkdir(path string, perm fs.FileMode) error {
+func (f *FS) Mkdir(path string, perm fs.FileMode) error {
 	f.mu.Lock()
 	defer f.mu.Unlock()
 
 	return f.mkdir("mkdir", path, path, perm)
 }
 
-func (f *FSRW) mkdir(op, opath, path string, perm fs.FileMode) error {
+func (f *FS) mkdir(op, opath, path string, perm fs.FileMode) error {
 	d, _, err := f.getEntryWithParent(path, mustNotExist)
 	if err != nil {
 		return &fs.PathError{
@@ -121,7 +121,7 @@ func (f *FSRW) mkdir(op, opath, path string, perm fs.FileMode) error {
 	return nil
 }
 
-func (f *FSRW) MkdirAll(path string, perm fs.FileMode) error {
+func (f *FS) MkdirAll(path string, perm fs.FileMode) error {
 	f.mu.Lock()
 	defer f.mu.Unlock()
 
@@ -153,7 +153,7 @@ type File interface {
 	Write([]byte) (int, error)
 }
 
-func (f *FSRW) Create(path string) (File, error) {
+func (f *FS) Create(path string) (File, error) {
 	f.mu.Lock()
 	defer f.mu.Unlock()
 
@@ -221,7 +221,7 @@ func (f *FSRW) Create(path string) (File, error) {
 	return ef, nil
 }
 
-func (f *FSRW) Link(oldPath, newPath string) error {
+func (f *FS) Link(oldPath, newPath string) error {
 	f.mu.Lock()
 	defer f.mu.Unlock()
 
@@ -263,7 +263,7 @@ func (f *FSRW) Link(oldPath, newPath string) error {
 	return nil
 }
 
-func (f *FSRW) Symlink(oldPath, newPath string) error {
+func (f *FS) Symlink(oldPath, newPath string) error {
 	f.mu.Lock()
 	defer f.mu.Unlock()
 
@@ -296,7 +296,7 @@ func (f *FSRW) Symlink(oldPath, newPath string) error {
 	return nil
 }
 
-func (f *FSRW) Rename(oldPath, newPath string) error {
+func (f *FS) Rename(oldPath, newPath string) error {
 	f.mu.Lock()
 	defer f.mu.Unlock()
 
@@ -346,7 +346,7 @@ func (f *FSRW) Rename(oldPath, newPath string) error {
 	return nil
 }
 
-func (f *FSRW) Remove(path string) error {
+func (f *FS) Remove(path string) error {
 	f.mu.Lock()
 	defer f.mu.Unlock()
 
@@ -382,7 +382,7 @@ func (f *FSRW) Remove(path string) error {
 	return nil
 }
 
-func (f *FSRW) RemoveAll(path string) error {
+func (f *FS) RemoveAll(path string) error {
 	f.mu.Lock()
 	defer f.mu.Unlock()
 
@@ -408,21 +408,21 @@ func (f *FSRW) RemoveAll(path string) error {
 	return nil
 }
 
-func (f *FSRW) LStat(path string) (fs.FileInfo, error) {
+func (f *FS) LStat(path string) (fs.FileInfo, error) {
 	f.mu.RLock()
 	defer f.mu.RUnlock()
 
 	return f.fsRO.LStat(path)
 }
 
-func (f *FSRW) Readlink(path string) (string, error) {
+func (f *FS) Readlink(path string) (string, error) {
 	f.mu.RLock()
 	defer f.mu.RUnlock()
 
 	return f.fsRO.Readlink(path)
 }
 
-func (f *FSRW) Chown(path string, uid, gid int) error {
+func (f *FS) Chown(path string, uid, gid int) error {
 	f.mu.RLock()
 	defer f.mu.RUnlock()
 
@@ -437,7 +437,7 @@ func (f *FSRW) Chown(path string, uid, gid int) error {
 	return nil
 }
 
-func (f *FSRW) Chmod(path string, mode fs.FileMode) error {
+func (f *FS) Chmod(path string, mode fs.FileMode) error {
 	f.mu.RLock()
 	defer f.mu.RUnlock()
 
@@ -455,7 +455,7 @@ func (f *FSRW) Chmod(path string, mode fs.FileMode) error {
 	return nil
 }
 
-func (f *FSRW) Lchown(path string, uid, gid int) error {
+func (f *FS) Lchown(path string, uid, gid int) error {
 	f.mu.RLock()
 	defer f.mu.RUnlock()
 
@@ -470,7 +470,7 @@ func (f *FSRW) Lchown(path string, uid, gid int) error {
 	return nil
 }
 
-func (f *FSRW) Chtimes(path string, atime time.Time, mtime time.Time) error {
+func (f *FS) Chtimes(path string, atime time.Time, mtime time.Time) error {
 	f.mu.RLock()
 	defer f.mu.RUnlock()
 
@@ -488,7 +488,7 @@ func (f *FSRW) Chtimes(path string, atime time.Time, mtime time.Time) error {
 	return nil
 }
 
-func (f *FSRW) Lchtimes(path string, atime time.Time, mtime time.Time) error {
+func (f *FS) Lchtimes(path string, atime time.Time, mtime time.Time) error {
 	f.mu.RLock()
 	defer f.mu.RUnlock()
 
@@ -506,7 +506,7 @@ func (f *FSRW) Lchtimes(path string, atime time.Time, mtime time.Time) error {
 	return nil
 }
 
-func (f *FSRW) Sub(path string) (fs.FS, error) {
+func (f *FS) Sub(path string) (fs.FS, error) {
 	f.mu.RLock()
 	defer f.mu.RUnlock()
 
@@ -515,7 +515,7 @@ func (f *FSRW) Sub(path string) (fs.FS, error) {
 		return nil, err
 	}
 
-	return &FSRW{
+	return &FS{
 		fsRO: fsRO{
 			de: de,
 		},

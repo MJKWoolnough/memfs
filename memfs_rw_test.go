@@ -10,8 +10,8 @@ import (
 	"time"
 )
 
-func newFSRW(d dnode) FSRW {
-	return FSRW{
+func newFSRW(d dnode) FS {
+	return FS{
 		fsRO: fsRO{
 			de: &dnodeRW{
 				dnode: d,
@@ -22,7 +22,7 @@ func newFSRW(d dnode) FSRW {
 
 func TestOpenRW(t *testing.T) {
 	for n, test := range [...]*struct {
-		FS   FSRW
+		FS   FS
 		Path string
 		File fs.File
 		Err  error
@@ -158,7 +158,7 @@ func TestOpenRW(t *testing.T) {
 
 func TestFSReadDirRW(t *testing.T) {
 	for n, test := range [...]*struct {
-		FS     FSRW
+		FS     FS
 		Path   string
 		Output []fs.DirEntry
 		Err    error
@@ -419,7 +419,7 @@ func TestFSReadDirRW(t *testing.T) {
 
 func TestReadFileRW(t *testing.T) {
 	for n, test := range [...]*struct {
-		FS     FSRW
+		FS     FS
 		Path   string
 		Output []byte
 		Err    error
@@ -554,7 +554,7 @@ func TestReadFileRW(t *testing.T) {
 
 func TestStatRW(t *testing.T) {
 	for n, test := range [...]*struct {
-		FS     FSRW
+		FS     FS
 		Path   string
 		Output fs.FileInfo
 		Err    error
@@ -772,10 +772,10 @@ func TestStatRW(t *testing.T) {
 func TestMkdir(t *testing.T) {
 	now := time.Now()
 	for n, test := range [...]*struct {
-		FS        FSRW
+		FS        FS
 		Path      string
 		PathPerms fs.FileMode
-		Output    FSRW
+		Output    FS
 		Err       error
 	}{
 		{ // 1
@@ -1010,10 +1010,10 @@ func fixTimes(d *dnodeRW, now time.Time) {
 func TestMkdirAll(t *testing.T) {
 	now := time.Now()
 	for n, test := range [...]*struct {
-		FS        FSRW
+		FS        FS
 		Path      string
 		PathPerms fs.FileMode
-		Output    FSRW
+		Output    FS
 		Err       error
 	}{
 		{ // 1
@@ -1275,10 +1275,10 @@ func TestMkdirAll(t *testing.T) {
 func TestCreate(t *testing.T) {
 	now := time.Now()
 	for n, test := range [...]*struct {
-		FS         FSRW
+		FS         FS
 		Path       string
 		PathPerms  fs.FileMode
-		OutputFS   FSRW
+		OutputFS   FS
 		OutputFile fs.File
 		Err        error
 	}{
@@ -1518,9 +1518,9 @@ func TestCreate(t *testing.T) {
 func TestLink(t *testing.T) {
 	now := time.Now()
 	for n, test := range [...]*struct {
-		FS       FSRW
+		FS       FS
 		From, To string
-		Output   FSRW
+		Output   FS
 		Err      error
 	}{
 		{ // 1
@@ -1817,9 +1817,9 @@ func TestLink(t *testing.T) {
 func TestSymlink(t *testing.T) {
 	now := time.Now()
 	for n, test := range [...]*struct {
-		FS       FSRW
+		FS       FS
 		From, To string
-		Output   FSRW
+		Output   FS
 		Err      error
 	}{
 		{ // 1
@@ -2121,7 +2121,7 @@ func TestSymlink(t *testing.T) {
 
 func TestSymlinkResolveFileRW(t *testing.T) {
 	for n, test := range [...]*struct {
-		FS     FSRW
+		FS     FS
 		Path   string
 		Output []byte
 		Err    error
@@ -2409,7 +2409,7 @@ func TestSymlinkResolveFileRW(t *testing.T) {
 
 func TestSymlinkResolveDirRW(t *testing.T) {
 	for n, test := range [...]*struct {
-		FS     FSRW
+		FS     FS
 		Path   string
 		Output []fs.DirEntry
 		Err    error
@@ -2565,9 +2565,9 @@ func TestSymlinkResolveDirRW(t *testing.T) {
 func TestRemove(t *testing.T) {
 	now := time.Now()
 	for n, test := range [...]*struct {
-		FS     FSRW
+		FS     FS
 		Path   string
-		Output FSRW
+		Output FS
 		Err    error
 	}{
 		{ // 1
@@ -2692,9 +2692,9 @@ func TestRemove(t *testing.T) {
 func TestRemoveAll(t *testing.T) {
 	now := time.Now()
 	for n, test := range [...]*struct {
-		FS     FSRW
+		FS     FS
 		Path   string
-		Output FSRW
+		Output FS
 		Err    error
 	}{
 		{ // 1
@@ -2799,7 +2799,7 @@ func TestRemoveAll(t *testing.T) {
 
 func TestLStatRW(t *testing.T) {
 	for n, test := range [...]*struct {
-		FS     FSRW
+		FS     FS
 		Path   string
 		Output fs.FileInfo
 		Err    error
@@ -3015,7 +3015,7 @@ func TestLStatRW(t *testing.T) {
 
 func TestReadlinkRW(t *testing.T) {
 	for n, test := range [...]*struct {
-		FS     FSRW
+		FS     FS
 		Path   string
 		Output string
 		Err    error
@@ -3138,7 +3138,7 @@ func TestReadlinkRW(t *testing.T) {
 
 func TestChown(t *testing.T) {
 	for n, test := range [...]*struct {
-		FS   FSRW
+		FS   FS
 		Path string
 		Err  error
 	}{
@@ -3248,10 +3248,10 @@ func TestChown(t *testing.T) {
 
 func TestChmod(t *testing.T) {
 	for n, test := range [...]*struct {
-		FS     FSRW
+		FS     FS
 		Path   string
 		Mode   fs.FileMode
-		Output FSRW
+		Output FS
 		Err    error
 	}{
 		{ // 1
@@ -3429,7 +3429,7 @@ func TestChmod(t *testing.T) {
 
 func TestLchown(t *testing.T) {
 	for n, test := range [...]*struct {
-		FS   FSRW
+		FS   FS
 		Path string
 		Err  error
 	}{
@@ -3512,10 +3512,10 @@ func TestLchown(t *testing.T) {
 
 func TestChtimes(t *testing.T) {
 	for n, test := range [...]*struct {
-		FS     FSRW
+		FS     FS
 		Path   string
 		MTime  time.Time
-		Output FSRW
+		Output FS
 		Err    error
 	}{
 		{ // 1
@@ -3691,10 +3691,10 @@ func TestChtimes(t *testing.T) {
 
 func TestLchtimes(t *testing.T) {
 	for n, test := range [...]*struct {
-		FS     FSRW
+		FS     FS
 		Path   string
 		MTime  time.Time
-		Output FSRW
+		Output FS
 		Err    error
 	}{
 		{ // 1
@@ -3869,7 +3869,7 @@ func TestLchtimes(t *testing.T) {
 }
 
 func TestSeal(t *testing.T) {
-	input := FSRW{
+	input := FS{
 		fsRO: fsRO{
 			de: &dnodeRW{
 				dnode: dnode{
@@ -3973,13 +3973,13 @@ func TestSeal(t *testing.T) {
 
 func TestSubRW(t *testing.T) {
 	for n, test := range [...]struct {
-		FS     FSRW
+		FS     FS
 		Path   string
 		Output fs.FS
 		Err    error
 	}{
 		{ // 1
-			FS: FSRW{
+			FS: FS{
 				fsRO: fsRO{
 					de: &dnodeRW{},
 				},
@@ -3991,7 +3991,7 @@ func TestSubRW(t *testing.T) {
 			},
 		},
 		{ // 2
-			FS: FSRW{
+			FS: FS{
 				fsRO: fsRO{
 					de: &dnodeRW{
 						dnode: dnode{
@@ -4043,7 +4043,7 @@ func TestSubRW(t *testing.T) {
 				},
 			},
 			Path: "/b",
-			Output: &FSRW{
+			Output: &FS{
 				fsRO: fsRO{
 					de: &dnodeRW{
 						dnode: dnode{
@@ -4077,7 +4077,7 @@ func TestSubRW(t *testing.T) {
 			},
 		},
 		{ // 3
-			FS: FSRW{
+			FS: FS{
 				fsRO: fsRO{
 					de: &dnodeRW{
 						dnode: dnode{

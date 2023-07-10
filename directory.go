@@ -17,6 +17,7 @@ type directoryEntry interface {
 	setMode(fs.FileMode)
 	setTimes(time.Time, time.Time)
 	seal() directoryEntry
+	getEntry(string) (*dirEnt, error)
 }
 
 type dNode interface {

@@ -85,9 +85,7 @@ func (f *fsRO) getEntry(path string) (directoryEntry, error) {
 			continue
 		}
 
-		if dn, ok := curr.(dNode); !ok {
-			return nil, fs.ErrInvalid
-		} else if next, err := dn.getEntry(name); err != nil {
+		if next, err := curr.getEntry(name); err != nil {
 			return nil, err
 		} else if next.Mode()&fs.ModeSymlink == 0 {
 			curr = next.directoryEntry

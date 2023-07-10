@@ -54,6 +54,10 @@ func (i *inode) seal() directoryEntry {
 	return i
 }
 
+func (i *inode) getEntry(_ string) (*dirEnt, error) {
+	return nil, fs.ErrInvalid
+}
+
 type file struct {
 	name string
 	*inode

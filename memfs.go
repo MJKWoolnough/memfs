@@ -41,9 +41,7 @@ func (f *fsRO) Open(path string) (fs.File, error) {
 }
 
 func (f *fsRO) getDirEnt(path string) (dNode, error) {
-	redirectsRemaining := maxRedirects
-
-	de, err := f.getResolvedDirEnt(f.joinRoot(path), &redirectsRemaining)
+	de, err := f.getResolvedDirEnt(path)
 	if err != nil {
 		return nil, err
 	} else if d, ok := de.(dNode); !ok {
@@ -53,70 +51,82 @@ func (f *fsRO) getDirEnt(path string) (dNode, error) {
 	}
 }
 
-var maxRedirects uint8 = 255
+var (
+	maxRedirects uint8 = 255
+	slash              = string(filepath.Separator)
+)
 
-func (f *fsRO) getResolvedDirEnt(path string, remainingRedirects *uint8) (directoryEntry, error) {
-	var (
-		de  directoryEntry
-		d   *dirEnt
-		dn  dNode
-		err error
-		ok  bool
-	)
+func (f *fsRO) getResolvedDirEnt(path string) (directoryEntry, error) {
+	if f.de.Mode()&0o444 == 0 {
+		return nil, fs.ErrPermission
+	}
 
-	dir, base := filepath.Split(path)
-	if dir == "" || dir == "/" {
-		if f.de.Mode()&0o444 == 0 {
-			return nil, fs.ErrPermission
+	path = f.joinRoot(path)
+	remainingRedirects := maxRedirects
+
+	curr := f.de
+	currPath := slash
+	path = path[1:]
+
+	for path != "" {
+		slashPos := strings.Index(path, slash)
+
+		var name string
+
+		if slashPos == -1 {
+			name = path
+			path = ""
+		} else {
+			name = path[:slashPos]
+			path = path[slashPos+1:]
 		}
 
-		de = f.de
-	} else {
-		if de, err = f.getResolvedDirEnt(filepath.Clean(dir), remainingRedirects); err != nil {
+		if name == "" {
+			continue
+		}
+
+		if dn, ok := curr.(dNode); !ok {
+			return nil, fs.ErrInvalid
+		} else if next, err := dn.getEntry(name); err != nil {
 			return nil, err
+		} else if next.Mode()&fs.ModeSymlink == 0 {
+			curr = next.directoryEntry
+			currPath = filepath.Join(currPath, name)
+		} else if remainingRedirects == 0 {
+			return nil, fs.ErrInvalid
+		} else {
+
+			remainingRedirects--
+
+			b, err := next.bytes()
+			if err != nil {
+				return nil, err
+			}
+
+			link := filepath.Clean(string(b))
+
+			if !strings.HasPrefix(link, slash) {
+				link = filepath.Join(currPath, link)
+			}
+
+			currPath = slash
+			path = filepath.Join(link, path)
+			curr = f.de
 		}
 	}
 
-	if base == "" {
-		return de, nil
-	} else if dn, ok = de.(dNode); !ok {
-		return nil, fs.ErrInvalid
-	} else if d, err = dn.getEntry(base); err != nil {
-		return nil, err
-	} else if d.Mode()&fs.ModeSymlink == 0 {
-		return d.directoryEntry, nil
-	} else if *remainingRedirects == 0 {
-		return nil, fs.ErrInvalid
-	}
-
-	*remainingRedirects--
-
-	b, err := d.bytes()
-	if err != nil {
-		return nil, err
-	}
-
-	link := string(b)
-
-	if !strings.HasPrefix(link, "/") {
-		link = filepath.Join(dir, link)
-	}
-
-	return f.getResolvedDirEnt(link, remainingRedirects)
+	return curr, nil
 }
 
 func (f *fsRO) getEntry(path string) (directoryEntry, error) {
-	redirectsRemaining := maxRedirects
-
-	return f.getResolvedDirEnt(f.joinRoot(path), &redirectsRemaining)
+	return f.getResolvedDirEnt(path)
 }
 
 func (f *fsRO) getLEntry(path string) (*dirEnt, error) {
 	jpath := f.joinRoot(path)
 	dirName, fileName := filepath.Split(jpath)
-	redirectsRemaining := maxRedirects
 
-	de, err := f.getResolvedDirEnt(dirName, &redirectsRemaining)
+	de, err := f.getResolvedDirEnt(dirName)
 	if err != nil {
 		return nil, err
 	}
@@ -280,9 +290,7 @@ func (f *fsRO) Readlink(path string) (string, error) {
 }
 
 func (f *fsRO) sub(path string) (directoryEntry, error) {
-	redirectsRemaining := maxRedirects
-
-	de, err := f.getResolvedDirEnt(f.joinRoot(path), &redirectsRemaining)
+	de, err := f.getResolvedDirEnt(path)
 	if err != nil {
 		return nil, &fs.PathError{
 			Op:   "sub",

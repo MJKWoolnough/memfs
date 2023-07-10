@@ -41,7 +41,7 @@ func (f *fsRO) Open(path string) (fs.File, error) {
 }
 
 func (f *fsRO) getDirEnt(path string) (dNode, error) {
-	de, err := f.getResolvedDirEnt(path)
+	de, err := f.getEntry(path)
 	if err != nil {
 		return nil, err
 	} else if d, ok := de.(dNode); !ok {
@@ -56,7 +56,7 @@ var (
 	slash              = string(filepath.Separator)
 )
 
-func (f *fsRO) getResolvedDirEnt(path string) (directoryEntry, error) {
+func (f *fsRO) getEntry(path string) (directoryEntry, error) {
 	if f.de.Mode()&0o444 == 0 {
 		return nil, fs.ErrPermission
 	}
@@ -118,15 +118,11 @@ func (f *fsRO) getResolvedDirEnt(path string) (directoryEntry, error) {
 	return curr, nil
 }
 
-func (f *fsRO) getEntry(path string) (directoryEntry, error) {
-	return f.getResolvedDirEnt(path)
-}
-
 func (f *fsRO) getLEntry(path string) (*dirEnt, error) {
 	jpath := f.joinRoot(path)
 	dirName, fileName := filepath.Split(jpath)
 
-	de, err := f.getResolvedDirEnt(dirName)
+	de, err := f.getEntry(dirName)
 	if err != nil {
 		return nil, err
 	}
@@ -290,7 +286,7 @@ func (f *fsRO) Readlink(path string) (string, error) {
 }
 
 func (f *fsRO) sub(path string) (directoryEntry, error) {
-	de, err := f.getResolvedDirEnt(path)
+	de, err := f.getEntry(path)
 	if err != nil {
 		return nil, &fs.PathError{
 			Op:   "sub",

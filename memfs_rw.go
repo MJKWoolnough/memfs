@@ -125,7 +125,7 @@ func (f *FS) MkdirAll(path string, perm fs.FileMode) error {
 	f.mu.Lock()
 	defer f.mu.Unlock()
 
-	cpath := filepath.Join("/", path)
+	cpath := filepath.Join(slash, path)
 	last := 0
 
 	for {

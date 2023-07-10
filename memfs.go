@@ -13,7 +13,7 @@ type fsRO struct {
 }
 
 func (f *fsRO) joinRoot(path string) string {
-	return filepath.Join("/", path)
+	return filepath.Join(slash, path)
 }
 
 func (f *fsRO) Open(path string) (fs.File, error) {
@@ -135,10 +135,10 @@ func (f *fsRO) getLEntry(path string) (*dirEnt, error) {
 	if !ok {
 		fmt.Printf("%T %v", de, de)
 		return nil, fs.ErrInvalid
-	} else if jpath == "/" {
+	} else if jpath == slash {
 		return &dirEnt{
 			directoryEntry: f.de,
-			name:           "/",
+			name:           slash,
 		}, nil
 	}
 
@@ -237,7 +237,7 @@ func (f *fsRO) Stat(path string) (fs.FileInfo, error) {
 	base := filepath.Base(path)
 
 	if base == "." {
-		base = "/"
+		base = slash
 	}
 
 	return &dirEnt{

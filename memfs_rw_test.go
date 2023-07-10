@@ -3972,7 +3972,7 @@ func TestSeal(t *testing.T) {
 }
 
 func TestSubRW(t *testing.T) {
-	for n, test := range [...]struct {
+	for n, test := range [...]*struct {
 		FS     FS
 		Path   string
 		Output fs.FS

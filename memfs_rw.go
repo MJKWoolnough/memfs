@@ -149,13 +149,35 @@ func (f *FS) MkdirAll(path string, perm fs.FileMode) error {
 }
 
 func (f *FS) Create(path string) (*File, error) {
+	return f.openFile("create", path, ReadWrite|Create|Truncate, 0o666)
+}
+
+const (
+	ReadOnly int = 1 << iota
+	WriteOnly
+	Append
+	Create
+	Excl
+	Truncate
+
+	ReadWrite = ReadOnly | WriteOnly
+)
+
+func (f *FS) openFile(op string, path string, mode int, perm fs.FileMode) (*File, error) {
 	f.mu.Lock()
 	defer f.mu.Unlock()
 
-	d, existingFile, err := f.getEntryWithParent(path, doesntMatter)
+	doesItExist := doesntMatter
+	if mode&Excl != 0 {
+		doesItExist = mustNotExist
+	} else if mode&Create == 0 {
+		doesItExist = mustExist
+	}
+
+	d, existingFile, err := f.getEntryWithParent(path, doesItExist)
 	if err != nil {
 		return nil, &fs.PathError{
-			Op:   "create",
+			Op:   op,
 			Path: path,
 			Err:  err,
 		}
@@ -167,7 +189,7 @@ func (f *FS) Create(path string) (*File, error) {
 		i := &inodeRW{
 			inode: inode{
 				modtime: time.Now(),
-				mode:    0o666,
+				mode:    perm,
 			},
 		}
 
@@ -176,7 +198,7 @@ func (f *FS) Create(path string) (*File, error) {
 			name:           fileName,
 		}); err != nil {
 			return nil, &fs.PathError{
-				Op:   "create",
+				Op:   op,
 				Path: path,
 				Err:  err,
 			}
@@ -192,10 +214,19 @@ func (f *FS) Create(path string) (*File, error) {
 		}, nil
 	}
 
-	of, err := existingFile.open(fileName, opRead|opWrite|opSeek)
+	openMode := opSeek
+	if mode&ReadOnly != 0 {
+		openMode |= opRead
+	}
+
+	if mode&WriteOnly != 0 {
+		openMode |= opWrite
+	}
+
+	of, err := existingFile.open(fileName, openMode)
 	if err != nil {
 		return nil, &fs.PathError{
-			Op:   "create",
+			Op:   op,
 			Path: path,
 			Err:  err,
 		}
@@ -204,16 +235,26 @@ func (f *FS) Create(path string) (*File, error) {
 	ef, ok := of.(*File)
 	if !ok {
 		return nil, &fs.PathError{
-			Op:   "create",
+			Op:   op,
 			Path: path,
 			Err:  fs.ErrInvalid,
 		}
 	}
 
-	ef.modtime = time.Now()
-	ef.data = ef.data[:0]
+	if mode&Truncate != 0 {
+		ef.data = ef.data[:0]
+		ef.modtime = time.Now()
+	}
+
+	if mode&Append != 0 {
+		ef.pos = int64(len(ef.data))
+	}
 
 	return ef, nil
+}
+
+func (f *FS) OpenFile(path string, mode int, perm fs.FileMode) (*File, error) {
+	return f.openFile("openfile", path, mode, perm)
 }
 
 func (f *FS) Link(oldPath, newPath string) error {

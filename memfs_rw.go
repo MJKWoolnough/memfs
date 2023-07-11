@@ -167,7 +167,7 @@ func (f *FS) Create(path string) (*File, error) {
 		i := &inodeRW{
 			inode: inode{
 				modtime: time.Now(),
-				mode:    fs.ModePerm,
+				mode:    0o666,
 			},
 		}
 

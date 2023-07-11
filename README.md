@@ -2,8 +2,23 @@
 --
     import "vimagination.zapto.org/memfs"
 
+Package memfs contains both ReadOnly and ReadWrite implementations of an in
+memory FileSystem, supporting all of the FS interfaces and more.
 
 ## Usage
+
+```go
+const (
+	ReadOnly int = 1 << iota
+	WriteOnly
+	Append
+	Create
+	Excl
+	Truncate
+
+	ReadWrite = ReadOnly | WriteOnly
+)
+```
 
 #### type FS
 
@@ -12,6 +27,8 @@ type FS struct {
 }
 ```
 
+FS represents an in-memory fs.FS implementation, with additional methods for a
+more 'OS' like experience.
 
 #### func  New
 
@@ -85,6 +102,12 @@ func (f *FS) MkdirAll(path string, perm fs.FileMode) error
 func (f *FS) Open(path string) (fs.File, error)
 ```
 
+#### func (*FS) OpenFile
+
+```go
+func (f *FS) OpenFile(path string, mode int, perm fs.FileMode) (*File, error)
+```
+
 #### func (*FS) ReadDir
 
 ```go
@@ -126,6 +149,11 @@ func (f *FS) Rename(oldPath, newPath string) error
 ```go
 func (f *FS) Seal() FSRO
 ```
+Seal converts the Read-Write FS into a Read-only one.
+
+The resulting FSRO cannot be changed, and has no locking. As the current
+implementation doesn't copy any data, it destroys the current FS in order to
+remove the need for locks on the resulting FSRO.
 
 #### func (*FS) Stat
 
@@ -159,6 +187,7 @@ type FSRO interface {
 }
 ```
 
+FSRO represents all of the methods on a read-only FS implementation.
 
 #### type File
 
@@ -167,6 +196,11 @@ type File struct {
 }
 ```
 
+File represents an open file, that can be used for reading and writing
+(depending on how it was opened).
+
+The file locks when making any changes, and so can be safely used from multiple
+goroutines.
 
 #### func (*File) Close
 

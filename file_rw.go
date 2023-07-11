@@ -91,6 +91,11 @@ func (i *inodeRW) ModTime() time.Time {
 	return i.modtime
 }
 
+// File represents an open file, that can be used for reading and writing
+// (depending on how it was opened).
+//
+// The file locks when making any changes, and so can be safely used from
+// multiple goroutines.
 type File struct {
 	mu *sync.RWMutex
 	file

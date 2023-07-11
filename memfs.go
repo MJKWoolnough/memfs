@@ -124,17 +124,14 @@ func (f *fsRO) getLEntry(path string) (*dirEnt, error) {
 		return nil, err
 	}
 
-	d, ok := de.(dNode)
-	if !ok {
-		return nil, fs.ErrInvalid
-	} else if jpath == slash {
+	if jpath == slash {
 		return &dirEnt{
 			directoryEntry: f.de,
 			name:           slash,
 		}, nil
 	}
 
-	return d.getEntry(fileName)
+	return de.getEntry(fileName)
 }
 
 type exists byte

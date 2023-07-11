@@ -1,4 +1,4 @@
-package memfs
+package memfs // import "vimagination.zapto.org/memfs"
 
 import (
 	"errors"

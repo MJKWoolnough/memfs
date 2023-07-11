@@ -9,6 +9,8 @@ import (
 	"time"
 )
 
+// FS represents an in-memory fs.FS implementation, with additional methods for
+// a more 'OS' like experience.
 type FS struct {
 	mu sync.RWMutex
 	fsRO
@@ -27,6 +29,7 @@ func New() *FS {
 	}
 }
 
+// FSRO represents all of the methods on a read-only FS implementation.
 type FSRO interface {
 	fs.FS
 	fs.ReadDirFS
@@ -37,6 +40,11 @@ type FSRO interface {
 	Readlink(path string) (string, error)
 }
 
+// Seal converts the Read-Write FS into a Read-only one.
+//
+// The resulting FSRO cannot be changed, and has no locking. As the current
+// implementation doesn't copy any data, it destroys the current FS in order to
+// remove the need for locks on the resulting FSRO.
 func (f *FS) Seal() FSRO {
 	f.mu.Lock()
 	defer f.mu.Unlock()

@@ -1,3 +1,5 @@
+// Package memfs contains both ReadOnly and ReadWrite implementations of an in
+// memory FileSystem, supporting all of the FS interfaces and more.
 package memfs // import "vimagination.zapto.org/memfs"
 
 import (

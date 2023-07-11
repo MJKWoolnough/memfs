@@ -2,7 +2,6 @@ package memfs
 
 import (
 	"errors"
-	"fmt"
 	"io/fs"
 	"path/filepath"
 	"strings"
@@ -127,7 +126,6 @@ func (f *fsRO) getLEntry(path string) (*dirEnt, error) {
 
 	d, ok := de.(dNode)
 	if !ok {
-		fmt.Printf("%T %v", de, de)
 		return nil, fs.ErrInvalid
 	} else if jpath == slash {
 		return &dirEnt{

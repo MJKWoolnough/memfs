@@ -160,8 +160,10 @@ func (f *FS) Create(path string) (*File, error) {
 	return f.openFile("create", path, ReadWrite|Create|Truncate, 0o666)
 }
 
+type Mode uint8
+
 const (
-	ReadOnly int = 1 << iota
+	ReadOnly Mode = 1 << iota
 	WriteOnly
 	Append
 	Create
@@ -171,7 +173,7 @@ const (
 	ReadWrite = ReadOnly | WriteOnly
 )
 
-func (f *FS) openFile(op string, path string, mode int, perm fs.FileMode) (*File, error) {
+func (f *FS) openFile(op string, path string, mode Mode, perm fs.FileMode) (*File, error) {
 	f.mu.Lock()
 	defer f.mu.Unlock()
 
@@ -261,7 +263,7 @@ func (f *FS) openFile(op string, path string, mode int, perm fs.FileMode) (*File
 	return ef, nil
 }
 
-func (f *FS) OpenFile(path string, mode int, perm fs.FileMode) (*File, error) {
+func (f *FS) OpenFile(path string, mode Mode, perm fs.FileMode) (*File, error) {
 	return f.openFile("openfile", path, mode, perm)
 }
 

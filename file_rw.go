@@ -109,8 +109,8 @@ func (f *File) Read(p []byte) (int, error) {
 }
 
 func (f *File) ReadAt(p []byte, off int64) (int, error) {
-	f.mu.Lock()
-	defer f.mu.Unlock()
+	f.mu.RLock()
+	defer f.mu.RUnlock()
 
 	return f.file.ReadAt(p, off)
 }

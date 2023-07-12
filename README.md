@@ -7,19 +7,6 @@ memory FileSystem, supporting all of the FS interfaces and more.
 
 ## Usage
 
-```go
-const (
-	ReadOnly int = 1 << iota
-	WriteOnly
-	Append
-	Create
-	Excl
-	Truncate
-
-	ReadWrite = ReadOnly | WriteOnly
-)
-```
-
 #### type FS
 
 ```go
@@ -105,7 +92,7 @@ func (f *FS) Open(path string) (fs.File, error)
 #### func (*FS) OpenFile
 
 ```go
-func (f *FS) OpenFile(path string, mode int, perm fs.FileMode) (*File, error)
+func (f *FS) OpenFile(path string, mode Mode, perm fs.FileMode) (*File, error)
 ```
 
 #### func (*FS) ReadDir
@@ -314,4 +301,27 @@ func (f *File) WriteString(str string) (int, error)
 
 ```go
 func (f *File) WriteTo(w io.Writer) (int64, error)
+```
+
+#### type Mode
+
+```go
+type Mode uint8
+```
+
+Mode is used to determine how a file is opened.
+
+Each value of Mode matches the intention of its similarly named OS counterpart.
+
+```go
+const (
+	ReadOnly Mode = 1 << iota
+	WriteOnly
+	Append
+	Create
+	Excl
+	Truncate
+
+	ReadWrite = ReadOnly | WriteOnly
+)
 ```

@@ -160,6 +160,10 @@ func (f *FS) Create(path string) (*File, error) {
 	return f.openFile("create", path, ReadWrite|Create|Truncate, 0o666)
 }
 
+// Mode is used to determine how a file is opened.
+//
+// Each value of Mode matches the intention of its similarly named OS
+// counterpart.
 type Mode uint8
 
 const (

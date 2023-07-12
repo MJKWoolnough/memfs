@@ -129,8 +129,8 @@ type directoryRW struct {
 }
 
 func (d *directoryRW) ReadDir(n int) ([]fs.DirEntry, error) {
-	d.mu.RLock()
-	defer d.mu.RUnlock()
+	d.mu.Lock()
+	defer d.mu.Unlock()
 
 	return d.directory.ReadDir(n)
 }

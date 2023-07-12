@@ -195,6 +195,15 @@ func (f *FS) openFile(op string, path string, mode Mode, perm fs.FileMode) (*Fil
 
 	fileName := filepath.Base(path)
 
+	openMode := opSeek
+	if mode&ReadOnly != 0 {
+		openMode |= opRead
+	}
+
+	if mode&WriteOnly != 0 {
+		openMode |= opWrite
+	}
+
 	if existingFile == nil {
 		i := &inodeRW{
 			inode: inode{
@@ -219,18 +228,9 @@ func (f *FS) openFile(op string, path string, mode Mode, perm fs.FileMode) (*Fil
 			file: file{
 				name:   fileName,
 				inode:  &i.inode,
-				opMode: opRead | opWrite | opSeek,
+				opMode: openMode,
 			},
 		}, nil
-	}
-
-	openMode := opSeek
-	if mode&ReadOnly != 0 {
-		openMode |= opRead
-	}
-
-	if mode&WriteOnly != 0 {
-		openMode |= opWrite
 	}
 
 	of, err := existingFile.open(fileName, openMode)

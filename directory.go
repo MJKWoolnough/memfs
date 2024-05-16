@@ -166,9 +166,7 @@ func (d *directory) Close() error {
 }
 
 func (d *directory) ReadDir(n int) ([]fs.DirEntry, error) {
-	if n <= 0 {
-		return d.getEntries()
-	} else if d.mode&0o444 == 0 {
+	if d.mode&0o444 == 0 {
 		return nil, &fs.PathError{
 			Op:   "readdir",
 			Path: d.name,
@@ -178,15 +176,21 @@ func (d *directory) ReadDir(n int) ([]fs.DirEntry, error) {
 
 	left := len(d.entries) - d.pos
 
-	if left < n {
-		n = left
+	m := n
+
+	if left < n || n <= 0 {
+		m = left
 	}
 
-	if n == 0 {
+	if m == 0 {
+		if n <= 0 {
+			return nil, nil
+		}
+
 		return nil, io.EOF
 	}
 
-	dirs := make([]fs.DirEntry, n)
+	dirs := make([]fs.DirEntry, m)
 
 	for i := range dirs {
 		dirs[i] = d.entries[d.pos]

@@ -259,7 +259,7 @@ func (i *inode) Size() int64 {
 }
 
 func (i *inode) Type() fs.FileMode {
-	return i.mode
+	return i.mode.Type()
 }
 
 func (i *inode) Mode() fs.FileMode {

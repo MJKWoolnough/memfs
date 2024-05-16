@@ -58,6 +58,14 @@ var (
 )
 
 func (f *fsRO) getEntry(path string) (directoryEntry, error) {
+	if !fs.ValidPath(path) {
+		return nil, fs.ErrInvalid
+	}
+
+	return f.getEntryWithoutCheck(path)
+}
+
+func (f *fsRO) getEntryWithoutCheck(path string) (directoryEntry, error) {
 	if f.de.Mode()&0o444 == 0 {
 		return nil, fs.ErrPermission
 	}
@@ -118,10 +126,14 @@ func (f *fsRO) getEntry(path string) (directoryEntry, error) {
 }
 
 func (f *fsRO) getLEntry(path string) (*dirEnt, error) {
+	if !fs.ValidPath(path) {
+		return nil, fs.ErrInvalid
+	}
+
 	jpath := f.joinRoot(path)
 	dirName, fileName := filepath.Split(jpath)
 
-	de, err := f.getEntry(dirName)
+	de, err := f.getEntryWithoutCheck(dirName)
 	if err != nil {
 		return nil, err
 	}

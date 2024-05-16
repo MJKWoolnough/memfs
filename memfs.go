@@ -157,7 +157,7 @@ const (
 )
 
 func (f *fsRO) getEntryWithParent(path string, exists exists) (dNode, *dirEnt, error) {
-	parent, child := filepath.Split(path)
+	parent, child := splitPath(path)
 	if child == "" {
 		return nil, nil, fs.ErrInvalid
 	}

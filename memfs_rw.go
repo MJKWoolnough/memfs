@@ -425,11 +425,27 @@ func (f *FS) Remove(path string) error {
 	return nil
 }
 
+func splitPath(path string) (string, string) {
+	dirName, fileName := filepath.Split(filepath.Join("/", path))
+
+	if dirName == "/" {
+		dirName = "."
+	} else if strings.HasPrefix(dirName, "/") {
+		dirName = dirName[1:]
+	}
+
+	if strings.HasSuffix(dirName, "/") {
+		dirName = dirName[:len(dirName)-1]
+	}
+
+	return dirName, fileName
+}
+
 func (f *FS) RemoveAll(path string) error {
 	f.mu.Lock()
 	defer f.mu.Unlock()
 
-	dirName, fileName := filepath.Split(path)
+	dirName, fileName := splitPath(path)
 
 	d, err := f.getDirEnt(dirName)
 	if err != nil {

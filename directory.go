@@ -205,7 +205,7 @@ func (d *dnode) Size() int64 {
 }
 
 func (d *dnode) Type() fs.FileMode {
-	return d.mode
+	return d.mode.Type()
 }
 
 func (d *dnode) Mode() fs.FileMode {

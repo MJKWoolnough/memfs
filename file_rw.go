@@ -36,7 +36,12 @@ func (i *inodeRW) bytes() ([]byte, error) {
 	i.mu.RLock()
 	defer i.mu.RUnlock()
 
-	return i.inode.bytes()
+	bytes, err := i.inode.bytes()
+	if err != nil {
+		return nil, err
+	}
+
+	return append(make([]byte, 0, len(bytes)), bytes...), nil
 }
 
 func (i *inodeRW) setMode(mode fs.FileMode) {
@@ -147,7 +152,17 @@ func (f *File) WriteTo(w io.Writer) (int64, error) {
 	f.mu.Lock()
 	defer f.mu.Unlock()
 
-	return f.file.WriteTo(w)
+	if err := f.validTo("writeto", opRead, true); err != nil {
+		return 0, err
+	}
+
+	data := f.data[f.pos:]
+
+	n, err := w.Write(append(make([]byte, 0, len(data)), data...))
+	f.pos += int64(n)
+	f.lastRead = 0
+
+	return int64(n), err
 }
 
 func (f *File) Seek(offset int64, whence int) (int64, error) {

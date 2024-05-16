@@ -6,6 +6,7 @@ import (
 	"io/fs"
 	"reflect"
 	"testing"
+	"testing/fstest"
 	"time"
 )
 
@@ -1500,5 +1501,53 @@ func TestSub(t *testing.T) {
 		} else if !reflect.DeepEqual(output, test.Output) {
 			t.Errorf("test %d: expected FS %v, got %v", n+1, test.Output, output)
 		}
+	}
+}
+
+func TestFSTest(t *testing.T) {
+	fs := fsRO{
+		de: &dnode{
+			modtime: time.Unix(1, 2),
+			mode:    fs.ModeDir | 0x444,
+			entries: []*dirEnt{
+				{
+					name: "a",
+					directoryEntry: &inode{
+						modtime: time.Unix(3, 4),
+						mode:    0x444,
+						data:    []byte("Foo"),
+					},
+				},
+				{
+					name: "b",
+					directoryEntry: &dnode{
+						modtime: time.Unix(5, 6),
+						mode:    fs.ModeDir | 0x444,
+						entries: []*dirEnt{
+							{
+								name: "c",
+								directoryEntry: &inode{
+									modtime: time.Unix(7, 8),
+									mode:    0x444,
+									data:    []byte("Hello"),
+								},
+							},
+							{
+								name: "d",
+								directoryEntry: &inode{
+									modtime: time.Unix(9, 10),
+									mode:    0x444,
+									data:    []byte("World"),
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+	}
+
+	if err := fstest.TestFS(&fs, "b/d"); err != nil {
+		t.Errorf("error during fstest: %s", err)
 	}
 }

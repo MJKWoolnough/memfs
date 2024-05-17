@@ -16,6 +16,7 @@ func testReadAll(d *directory) ([]fs.DirEntry, error) {
 
 func testReadOnes(d *directory) ([]fs.DirEntry, error) {
 	var read []fs.DirEntry
+
 	for {
 		des, err := d.ReadDir(1)
 		if errors.Is(err, io.EOF) {
@@ -30,6 +31,7 @@ func testReadOnes(d *directory) ([]fs.DirEntry, error) {
 
 func testReadTwos(d *directory) ([]fs.DirEntry, error) {
 	var read []fs.DirEntry
+
 	for {
 		des, err := d.ReadDir(2)
 		if errors.Is(err, io.EOF) {

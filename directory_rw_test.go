@@ -17,6 +17,7 @@ func testReadAllRW(d *directoryRW) ([]fs.DirEntry, error) {
 
 func testReadOnesRW(d *directoryRW) ([]fs.DirEntry, error) {
 	var read []fs.DirEntry
+
 	for {
 		des, err := d.ReadDir(1)
 		if errors.Is(err, io.EOF) {
@@ -31,6 +32,7 @@ func testReadOnesRW(d *directoryRW) ([]fs.DirEntry, error) {
 
 func testReadTwosRW(d *directoryRW) ([]fs.DirEntry, error) {
 	var read []fs.DirEntry
+
 	for {
 		des, err := d.ReadDir(2)
 		if errors.Is(err, io.EOF) {

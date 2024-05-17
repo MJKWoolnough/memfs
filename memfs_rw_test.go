@@ -4174,3 +4174,118 @@ func TestSubRW(t *testing.T) {
 		}
 	}
 }
+
+func TestSubRWRemove(t *testing.T) {
+	for n, test := range [...]*struct {
+		FS     FS
+		Path   string
+		Rm     string
+		Output fs.FS
+		Err    error
+	}{
+		{ // 1
+			FS: FS{
+				fsRO: fsRO{
+					de: &dnodeRW{},
+				},
+			},
+			Path: ".",
+			Err: &fs.PathError{
+				Op:   "sub",
+				Path: ".",
+				Err:  fs.ErrPermission,
+			},
+		},
+		{ // 2
+			FS: FS{
+				fsRO: fsRO{
+					de: &dnodeRW{
+						dnode: dnode{
+							modtime: time.Unix(1, 2),
+							mode:    fs.ModeDir | 0x444,
+							entries: []*dirEnt{
+								{
+									name: "a",
+									directoryEntry: &inode{
+										modtime: time.Unix(3, 4),
+										mode:    1,
+										data:    []byte("Foo"),
+									},
+								},
+								{
+									name: "b",
+									directoryEntry: &dnodeRW{
+										dnode: dnode{
+											modtime: time.Unix(5, 6),
+											mode:    fs.ModeDir | 0x777,
+											entries: []*dirEnt{
+												{
+													name: "c",
+													directoryEntry: &inodeRW{
+														inode: inode{
+															modtime: time.Unix(7, 8),
+															mode:    3,
+															data:    []byte("Hello"),
+														},
+													},
+												},
+												{
+													name: "d",
+													directoryEntry: &inodeRW{
+														inode: inode{
+															modtime: time.Unix(9, 10),
+															mode:    4,
+															data:    []byte("World"),
+														},
+													},
+												},
+											},
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			Path: "b",
+			Rm:   "d",
+			Output: &FS{
+				fsRO: fsRO{
+					de: &dnodeRW{
+						dnode: dnode{
+							modtime: time.Unix(5, 6),
+							mode:    fs.ModeDir | 0x777,
+							entries: []*dirEnt{
+								{
+									name: "c",
+									directoryEntry: &inodeRW{
+										inode: inode{
+											modtime: time.Unix(7, 8),
+											mode:    3,
+											data:    []byte("Hello"),
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+	} {
+		if output, err := test.FS.Sub(test.Path); !reflect.DeepEqual(err, test.Err) {
+			t.Errorf("test %d: expecting error %s, got %s", n+1, test.Err, err)
+		} else if fs, ok := output.(*FS); ok {
+			if err = fs.Remove(test.Rm); err != nil {
+				t.Errorf("test %d: unexpected error %s", n+1, err)
+			} else {
+				fs.de.(*dnodeRW).modtime = time.Unix(5, 6)
+
+				if !reflect.DeepEqual(fs, test.Output) {
+					t.Errorf("test %d: expected FS %v, got %v", n+1, test.Output, fs)
+				}
+			}
+		}
+	}
+}

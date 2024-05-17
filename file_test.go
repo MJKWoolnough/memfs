@@ -632,6 +632,7 @@ func TestWriteTo(t *testing.T) {
 	}
 
 	f.pos = 1
+
 	sb.Reset()
 
 	n, err = f.WriteTo(&sb)

@@ -657,6 +657,7 @@ func TestWriteToRW(t *testing.T) {
 	}
 
 	f.pos = 1
+
 	sb.Reset()
 
 	n, err = f.WriteTo(&sb)
@@ -801,6 +802,7 @@ func TestWrite(t *testing.T) {
 		if n == 0 {
 			continue
 		}
+
 		f := File{
 			mu: &sync.RWMutex{},
 			file: file{
@@ -810,6 +812,7 @@ func TestWrite(t *testing.T) {
 				opMode: opWrite,
 			},
 		}
+
 		for i := 0; i < 100; i++ {
 			m, err := f.Write(toWrite[:n])
 			if !errors.Is(err, nil) {
@@ -818,6 +821,7 @@ func TestWrite(t *testing.T) {
 				t.Errorf("test %d: expecting to write %d bytes, wrote %d", n+1, n, m)
 			}
 		}
+
 		expected := bytes.Repeat(toWrite[:n], 100)
 		if !bytes.Equal(f.data, expected) {
 			t.Errorf("test %d: expecting to write %v, wrote %v", n+1, expected, f.data)
@@ -926,6 +930,7 @@ func TestWriteString(t *testing.T) {
 		if n == 0 {
 			continue
 		}
+
 		f := File{
 			mu: &sync.RWMutex{},
 			file: file{
@@ -935,6 +940,7 @@ func TestWriteString(t *testing.T) {
 				opMode: opWrite,
 			},
 		}
+
 		for i := 0; i < 100; i++ {
 			m, err := f.WriteString(string(toWrite[:n]))
 			if !errors.Is(err, nil) {
@@ -943,6 +949,7 @@ func TestWriteString(t *testing.T) {
 				t.Errorf("test %d: expecting to write %d bytes, wrote %d", n+1, n, m)
 			}
 		}
+
 		expected := bytes.Repeat(toWrite[:n], 100)
 		if !bytes.Equal(f.data, expected) {
 			t.Errorf("test %d: expecting to write %v, wrote %v", n+1, expected, f.data)

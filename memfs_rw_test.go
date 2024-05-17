@@ -990,6 +990,7 @@ func TestMkdir(t *testing.T) {
 			t.Errorf("test %d: expecting error %s, got %s", n+1, test.Err, err)
 		} else {
 			fixTimes(test.FS.de.(*dnodeRW), now)
+
 			if !reflect.DeepEqual(&test.Output, &test.FS) {
 				t.Errorf("test %d: expecting to get %v, got %v", n+1, &test.Output, &test.FS)
 			}
@@ -1273,6 +1274,7 @@ func TestMkdirAll(t *testing.T) {
 			t.Errorf("test %d: expecting error %s, got %s", n+1, test.Err, err)
 		} else {
 			fixTimes(test.FS.de.(*dnodeRW), now)
+
 			if !reflect.DeepEqual(&test.Output, &test.FS) {
 				t.Errorf("test %d: expecting to get %v, got %v", n+1, &test.Output, &test.FS)
 			}
@@ -1514,6 +1516,7 @@ func TestCreate(t *testing.T) {
 			t.Errorf("test %d: expecting error %s, got %s", n+1, test.Err, err)
 		} else {
 			fixTimes(test.FS.de.(*dnodeRW), now)
+
 			if !reflect.DeepEqual(test.OutputFile, f) {
 				t.Errorf("test %d: expecting to get file %v, got %v", n+1, test.OutputFile, f)
 			} else if !reflect.DeepEqual(&test.OutputFS, &test.FS) {
@@ -1817,6 +1820,7 @@ func TestLink(t *testing.T) {
 			t.Errorf("test %d: expecting error %s, got %s", n+1, test.Err, err)
 		} else {
 			fixTimes(test.FS.de.(*dnodeRW), now)
+
 			if !reflect.DeepEqual(&test.Output, &test.FS) {
 				t.Errorf("test %d: expecting to get FS %v, got %v", n+1, &test.Output, &test.FS)
 			}
@@ -2122,6 +2126,7 @@ func TestSymlink(t *testing.T) {
 			t.Errorf("test %d: expecting error %s, got %s", n+1, test.Err, err)
 		} else {
 			fixTimes(test.FS.de.(*dnodeRW), now)
+
 			if !reflect.DeepEqual(&test.Output, &test.FS) {
 				t.Errorf("test %d: expecting to get FS %v, got %v", n+1, &test.Output, &test.FS)
 			}
@@ -2693,6 +2698,7 @@ func TestRemove(t *testing.T) {
 			t.Errorf("test %d: expecting error %s, got %s", n+1, test.Err, err)
 		} else {
 			fixTimes(test.FS.de.(*dnodeRW), now)
+
 			if !reflect.DeepEqual(&test.Output, &test.FS) {
 				t.Errorf("test %d: expecting to get FS %v, got %v", n+1, &test.Output, &test.FS)
 			}
@@ -2802,6 +2808,7 @@ func TestRemoveAll(t *testing.T) {
 			t.Errorf("test %d: expecting error %s, got %s", n+1, test.Err, err)
 		} else {
 			fixTimes(test.FS.de.(*dnodeRW), now)
+
 			if !reflect.DeepEqual(&test.Output, &test.FS) {
 				t.Errorf("test %d: expecting to get FS %v, got %v", n+1, &test.Output, &test.FS)
 			}

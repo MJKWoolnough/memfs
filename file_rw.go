@@ -190,6 +190,7 @@ func (f *File) grow(size int) {
 			} else {
 				newData = make([]byte, size, size+(size>>2))
 			}
+
 			copy(newData, f.data)
 			f.data = newData
 		}

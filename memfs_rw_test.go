@@ -2479,7 +2479,7 @@ func TestSymlinkResolveDirRW(t *testing.T) {
 			Path: "e",
 			Err:  fs.ErrNotExist,
 		},
-		{ // 1
+		{ // 2
 			FS: newFSRW(dnode{
 				entries: []*dirEnt{
 					{

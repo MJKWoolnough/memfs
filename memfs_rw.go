@@ -430,15 +430,11 @@ func splitPath(path string) (string, string) {
 
 	if dirName == "/" {
 		dirName = "."
-	} else if strings.HasPrefix(dirName, "/") {
-		dirName = dirName[1:]
+	} else {
+		dirName = strings.TrimPrefix(dirName, "/")
 	}
 
-	if strings.HasSuffix(dirName, "/") {
-		dirName = dirName[:len(dirName)-1]
-	}
-
-	return dirName, fileName
+	return strings.TrimSuffix(dirName, "/"), fileName
 }
 
 func (f *FS) RemoveAll(path string) error {

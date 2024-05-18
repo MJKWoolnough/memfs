@@ -156,8 +156,10 @@ func (f *FS) MkdirAll(path string, perm fs.FileMode) error {
 	return f.mkdir("mkdirall", path, cpath, perm)
 }
 
+const defaultPerms = 0o666
+
 func (f *FS) Create(path string) (*File, error) {
-	return f.openFile("create", path, ReadWrite|Create|Truncate, 0o666)
+	return f.openFile("create", path, ReadWrite|Create|Truncate, defaultPerms)
 }
 
 // Mode is used to determine how a file is opened.

@@ -1349,7 +1349,7 @@ func TestCreate(t *testing.T) {
 						directoryEntry: &inodeRW{
 							inode: inode{
 								modtime: now,
-								mode:    0o666,
+								mode:    defaultPerms,
 							},
 						},
 						name: "a",
@@ -1363,7 +1363,7 @@ func TestCreate(t *testing.T) {
 				file: file{
 					inode: &inode{
 						modtime: now,
-						mode:    0o666,
+						mode:    defaultPerms,
 					},
 					name:   "a",
 					opMode: opRead | opWrite | opSeek,
@@ -1444,7 +1444,7 @@ func TestCreate(t *testing.T) {
 										directoryEntry: &inodeRW{
 											inode: inode{
 												modtime: now,
-												mode:    0o666,
+												mode:    defaultPerms,
 											},
 										},
 										name: "b",
@@ -1465,7 +1465,7 @@ func TestCreate(t *testing.T) {
 				file: file{
 					inode: &inode{
 						modtime: now,
-						mode:    0o666,
+						mode:    defaultPerms,
 					},
 					name:   "b",
 					opMode: opRead | opWrite | opSeek,

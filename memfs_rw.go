@@ -179,50 +179,17 @@ const (
 	ReadWrite = ReadOnly | WriteOnly
 )
 
-func (f *FS) openFile(op string, path string, mode Mode, perm fs.FileMode) (*File, error) {
-	f.mu.Lock()
-	defer f.mu.Unlock()
-
-	doesItExist := doesntMatter
+func existCheck(mode Mode) exists {
 	if mode&Excl != 0 {
-		doesItExist = mustNotExist
+		return mustNotExist
 	} else if mode&Create == 0 {
-		doesItExist = mustExist
+		return mustExist
 	}
 
-	d, existingFile, err := f.getEntryWithParent(path, doesItExist)
-	if err != nil {
-		return nil, &fs.PathError{
-			Op:   op,
-			Path: path,
-			Err:  err,
-		}
-	}
+	return doesntMatter
+}
 
-	fileName := filepath.Base(path)
-
-	if existingFile == nil {
-		i := &inodeRW{
-			inode: inode{
-				modtime: time.Now(),
-				mode:    perm,
-			},
-		}
-
-		existingFile = &dirEnt{
-			directoryEntry: i,
-			name:           fileName,
-		}
-
-		if err = d.setEntry(existingFile); err != nil {
-			return nil, &fs.PathError{
-				Op:   op,
-				Path: path,
-				Err:  err,
-			}
-		}
-	}
-
+func openMode(mode Mode) opMode {
 	openMode := opSeek
 	if mode&ReadOnly != 0 {
 		openMode |= opRead
@@ -232,32 +199,51 @@ func (f *FS) openFile(op string, path string, mode Mode, perm fs.FileMode) (*Fil
 		openMode |= opWrite
 	}
 
-	of, err := existingFile.open(fileName, openMode)
+	return openMode
+}
+
+func (f *FS) openOrCreateFile(path string, mode Mode, perm fs.FileMode) (fs.File, error) {
+	d, existingFile, err := f.getEntryWithParent(path, existCheck(mode))
 	if err != nil {
-		return nil, &fs.PathError{
-			Op:   op,
-			Path: path,
-			Err:  err,
+		return nil, err
+	}
+
+	fileName := filepath.Base(path)
+
+	if existingFile == nil {
+		existingFile = &dirEnt{
+			directoryEntry: &inodeRW{
+				inode: inode{
+					modtime: time.Now(),
+					mode:    perm,
+				},
+			},
+			name: fileName,
 		}
+
+		if err = d.setEntry(existingFile); err != nil {
+			return nil, err
+		}
+	}
+
+	return existingFile.open(fileName, openMode(mode))
+}
+
+func (f *FS) openFile(op, path string, mode Mode, perm fs.FileMode) (*File, error) {
+	f.mu.Lock()
+	defer f.mu.Unlock()
+
+	of, err := f.openOrCreateFile(path, mode, perm)
+	if err != nil {
+		return nil, &fs.PathError{Op: op, Path: path, Err: err}
 	}
 
 	ef, ok := of.(*File)
 	if !ok {
-		return nil, &fs.PathError{
-			Op:   op,
-			Path: path,
-			Err:  fs.ErrInvalid,
-		}
+		return nil, &fs.PathError{Op: op, Path: path, Err: fs.ErrInvalid}
 	}
 
-	if mode&Truncate != 0 {
-		ef.data = ef.data[:0]
-		ef.modtime = time.Now()
-	}
-
-	if mode&Append != 0 {
-		ef.pos = int64(len(ef.data))
-	}
+	ef.handleOpenMode(mode)
 
 	return ef, nil
 }

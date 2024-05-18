@@ -320,3 +320,14 @@ func (f *File) ReadFrom(r io.Reader) (int64, error) {
 		}
 	}
 }
+
+func (f *File) handleOpenMode(mode Mode) {
+	if mode&Truncate != 0 {
+		f.data = f.data[:0]
+		f.modtime = time.Now()
+	}
+
+	if mode&Append != 0 {
+		f.pos = int64(len(f.data))
+	}
+}

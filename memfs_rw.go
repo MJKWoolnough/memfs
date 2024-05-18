@@ -397,31 +397,15 @@ func (f *FS) Remove(path string) error {
 
 	d, de, err := f.getEntryWithParent(path, mustExist)
 	if err != nil {
-		return &fs.PathError{
-			Op:   "remove",
-			Path: path,
-			Err:  err,
-		}
+		return &fs.PathError{Op: "remove", Path: path, Err: err}
 	}
 
-	if de.IsDir() {
-		dir, _ := de.directoryEntry.(dNode)
-
-		if dir.hasEntries() {
-			return &fs.PathError{
-				Op:   "remove",
-				Path: path,
-				Err:  fs.ErrInvalid,
-			}
-		}
+	if dir, ok := de.directoryEntry.(dNode); ok && dir.hasEntries() {
+		return &fs.PathError{Op: "remove", Path: path, Err: fs.ErrInvalid}
 	}
 
-	if err := d.removeEntry(de.name); err != nil {
-		return &fs.PathError{
-			Op:   "remove",
-			Path: path,
-			Err:  err,
-		}
+	if err = d.removeEntry(de.name); err != nil {
+		return &fs.PathError{Op: "remove", Path: path, Err: err}
 	}
 
 	return nil

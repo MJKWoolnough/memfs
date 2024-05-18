@@ -52,7 +52,7 @@ func (f *fsRO) getDirEnt(path string) (dNode, error) {
 	}
 }
 
-var (
+const (
 	maxRedirects uint8 = 255
 	slash              = string(filepath.Separator)
 )

@@ -185,10 +185,15 @@ func (f *File) grow(size int) {
 			f.data = (f.data)[:size]
 		} else {
 			var newData []byte
-			if len(f.data) < 512 {
+
+			const simpleGrowLimit = 512
+
+			if len(f.data) < simpleGrowLimit {
 				newData = make([]byte, size, size<<1)
 			} else {
-				newData = make([]byte, size, size+(size>>2))
+				const growShift = 2
+
+				newData = make([]byte, size, size+(size>>growShift))
 			}
 
 			copy(newData, f.data)

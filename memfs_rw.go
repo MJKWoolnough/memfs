@@ -479,7 +479,7 @@ func (f *FS) Readlink(path string) (string, error) {
 	return f.fsRO.Readlink(path)
 }
 
-func (f *FS) Chown(path string, uid, gid int) error {
+func (f *FS) Chown(path string, _, _ int) error {
 	f.mu.RLock()
 	defer f.mu.RUnlock()
 
@@ -512,7 +512,7 @@ func (f *FS) Chmod(path string, mode fs.FileMode) error {
 	return nil
 }
 
-func (f *FS) Lchown(path string, uid, gid int) error {
+func (f *FS) Lchown(path string, _, _ int) error {
 	f.mu.RLock()
 	defer f.mu.RUnlock()
 

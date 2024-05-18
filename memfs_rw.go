@@ -341,51 +341,22 @@ func (f *FS) Symlink(oldPath, newPath string) error {
 	return nil
 }
 
+const canWrite = 0o222
+
 func (f *FS) Rename(oldPath, newPath string) error {
 	f.mu.Lock()
 	defer f.mu.Unlock()
 
-	od, oldFile, err := f.getEntryWithParent(oldPath, mustExist)
-	if err != nil {
-		return &fs.PathError{
-			Op:   "rename",
-			Path: oldPath,
-			Err:  err,
-		}
-	}
-
-	nd, _, err := f.getEntryWithParent(newPath, mustNotExist)
-	if err != nil {
-		return &fs.PathError{
-			Op:   "rename",
-			Path: newPath,
-			Err:  err,
-		}
-	} else if nd.Mode()&0o222 == 0 {
-		return &fs.PathError{
-			Op:   "rename",
-			Path: newPath,
-			Err:  fs.ErrPermission,
-		}
-	}
-
-	if err := od.removeEntry(oldFile.name); err != nil {
-		return &fs.PathError{
-			Op:   "rename",
-			Path: newPath,
-			Err:  err,
-		}
-	}
-
-	if err := nd.setEntry(&dirEnt{
-		directoryEntry: oldFile.directoryEntry,
-		name:           filepath.Base(newPath),
-	}); err != nil {
-		return &fs.PathError{
-			Op:   "rename",
-			Path: newPath,
-			Err:  err,
-		}
+	if od, oldFile, err := f.getEntryWithParent(oldPath, mustExist); err != nil {
+		return &fs.PathError{Op: "rename", Path: oldPath, Err: err}
+	} else if nd, _, err := f.getEntryWithParent(newPath, mustNotExist); err != nil {
+		return &fs.PathError{Op: "rename", Path: newPath, Err: err}
+	} else if nd.Mode()&canWrite == 0 {
+		return &fs.PathError{Op: "rename", Path: newPath, Err: fs.ErrPermission}
+	} else if err = od.removeEntry(oldFile.name); err != nil {
+		return &fs.PathError{Op: "rename", Path: newPath, Err: err}
+	} else if err = nd.setEntry(&dirEnt{directoryEntry: oldFile.directoryEntry, name: filepath.Base(newPath)}); err != nil {
+		return &fs.PathError{Op: "rename", Path: newPath, Err: err}
 	}
 
 	return nil

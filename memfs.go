@@ -102,7 +102,6 @@ func (f *fsRO) getEntryWithoutCheck(path string) (directoryEntry, error) {
 		} else if remainingRedirects == 0 {
 			return nil, fs.ErrInvalid
 		} else {
-
 			remainingRedirects--
 
 			b, err := next.bytes()

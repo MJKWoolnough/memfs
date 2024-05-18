@@ -270,39 +270,14 @@ func (f *FS) Link(oldPath, newPath string) error {
 	f.mu.Lock()
 	defer f.mu.Unlock()
 
-	oe, err := f.getLEntry(oldPath)
-	if err != nil {
-		return &fs.PathError{
-			Op:   "link",
-			Path: oldPath,
-			Err:  err,
-		}
+	if oe, err := f.getLEntry(oldPath); err != nil {
+		return &fs.PathError{Op: "link", Path: oldPath, Err: err}
 	} else if oe.IsDir() {
-		return &fs.PathError{
-			Op:   "link",
-			Path: oldPath,
-			Err:  fs.ErrInvalid,
-		}
-	}
-
-	d, _, err := f.getEntryWithParent(newPath, mustNotExist)
-	if err != nil {
-		return &fs.PathError{
-			Op:   "link",
-			Path: newPath,
-			Err:  err,
-		}
-	}
-
-	if err := d.setEntry(&dirEnt{
-		directoryEntry: oe.directoryEntry,
-		name:           filepath.Base(newPath),
-	}); err != nil {
-		return &fs.PathError{
-			Op:   "link",
-			Path: newPath,
-			Err:  err,
-		}
+		return &fs.PathError{Op: "link", Path: oldPath, Err: fs.ErrInvalid}
+	} else if d, _, err := f.getEntryWithParent(newPath, mustNotExist); err != nil {
+		return &fs.PathError{Op: "link", Path: newPath, Err: err}
+	} else if err := d.setEntry(&dirEnt{directoryEntry: oe.directoryEntry, name: filepath.Base(newPath)}); err != nil {
+		return &fs.PathError{Op: "link", Path: newPath, Err: err}
 	}
 
 	return nil

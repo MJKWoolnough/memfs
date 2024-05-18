@@ -214,7 +214,7 @@ func (f *FS) openFile(op string, path string, mode Mode, perm fs.FileMode) (*Fil
 			name:           fileName,
 		}
 
-		if err := d.setEntry(existingFile); err != nil {
+		if err = d.setEntry(existingFile); err != nil {
 			return nil, &fs.PathError{
 				Op:   op,
 				Path: path,

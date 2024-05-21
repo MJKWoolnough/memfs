@@ -68,19 +68,11 @@ type file struct {
 
 func (f *file) validTo(op string, m opMode, needValidPos bool) error {
 	if f.opMode == opClose {
-		return &fs.PathError{
-			Op:   op,
-			Path: f.name,
-			Err:  fs.ErrClosed,
-		}
+		return fs.ErrClosed
 	}
 
 	if f.opMode&m != m {
-		return &fs.PathError{
-			Op:   op,
-			Path: f.name,
-			Err:  fs.ErrInvalid,
-		}
+		return fs.ErrInvalid
 	}
 
 	if needValidPos && f.pos >= int64(len(f.data)) {
@@ -148,11 +140,7 @@ func (f *file) UnreadByte() error {
 	}
 
 	if f.lastRead != 1 {
-		return &fs.PathError{
-			Op:   "unreadbyte",
-			Path: f.name,
-			Err:  fs.ErrInvalid,
-		}
+		return fs.ErrInvalid
 	}
 
 	f.lastRead = 0
@@ -180,11 +168,7 @@ func (f *file) UnreadRune() error {
 	}
 
 	if f.lastRead == 0 {
-		return &fs.PathError{
-			Op:   "unreadrune",
-			Path: f.name,
-			Err:  fs.ErrInvalid,
-		}
+		return fs.ErrInvalid
 	}
 
 	f.pos -= int64(f.lastRead)
@@ -218,7 +202,7 @@ func (f *file) Seek(offset int64, whence int) (int64, error) {
 	case io.SeekEnd:
 		f.pos = int64(len(f.data)) + offset
 	default:
-		return 0, &fs.PathError{Op: "seek", Path: f.name, Err: fs.ErrInvalid}
+		return 0, fs.ErrInvalid
 	}
 
 	f.lastRead = 0
@@ -226,7 +210,7 @@ func (f *file) Seek(offset int64, whence int) (int64, error) {
 	if f.pos < 0 {
 		f.pos = 0
 
-		return f.pos, &fs.PathError{Op: "seek", Path: f.name, Err: fs.ErrInvalid}
+		return f.pos, fs.ErrInvalid
 	}
 
 	return f.pos, nil

@@ -154,11 +154,7 @@ func (d *directory) Stat() (fs.FileInfo, error) {
 }
 
 func (d *directory) Read(_ []byte) (int, error) {
-	return 0, &fs.PathError{
-		Op:   "read",
-		Path: d.name,
-		Err:  fs.ErrInvalid,
-	}
+	return 0, fs.ErrInvalid
 }
 
 func (d *directory) Close() error {
@@ -167,7 +163,7 @@ func (d *directory) Close() error {
 
 func (d *directory) ReadDir(n int) ([]fs.DirEntry, error) {
 	if d.mode&0o444 == 0 {
-		return nil, &fs.PathError{Op: "readdir", Path: d.name, Err: fs.ErrPermission}
+		return nil, fs.ErrPermission
 	}
 
 	left := len(d.entries) - d.pos

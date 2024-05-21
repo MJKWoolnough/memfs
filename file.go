@@ -218,11 +218,7 @@ func (f *file) Seek(offset int64, whence int) (int64, error) {
 	case io.SeekEnd:
 		f.pos = int64(len(f.data)) + offset
 	default:
-		return 0, &fs.PathError{
-			Op:   "seek",
-			Path: f.name,
-			Err:  fs.ErrInvalid,
-		}
+		return 0, &fs.PathError{Op: "seek", Path: f.name, Err: fs.ErrInvalid}
 	}
 
 	f.lastRead = 0
@@ -230,11 +226,7 @@ func (f *file) Seek(offset int64, whence int) (int64, error) {
 	if f.pos < 0 {
 		f.pos = 0
 
-		return f.pos, &fs.PathError{
-			Op:   "seek",
-			Path: f.name,
-			Err:  fs.ErrInvalid,
-		}
+		return f.pos, &fs.PathError{Op: "seek", Path: f.name, Err: fs.ErrInvalid}
 	}
 
 	return f.pos, nil

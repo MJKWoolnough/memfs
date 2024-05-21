@@ -1080,7 +1080,7 @@ func TestCloseRW(t *testing.T) {
 		t.Errorf("test 8: expecting nil error, got %s", err)
 	}
 
-	pos, err = f.Seek(1, io.SeekStart)
+	_, err = f.Seek(1, io.SeekStart)
 	if !reflect.DeepEqual(err, &fs.PathError{
 		Op:   "seek",
 		Path: "",

@@ -298,11 +298,7 @@ func TestUnreadByteRW(t *testing.T) {
 	f.ReadByte()
 
 	err := f.UnreadByte()
-	if !reflect.DeepEqual(err, &fs.PathError{
-		Op:   "unreadbyte",
-		Path: "",
-		Err:  fs.ErrInvalid,
-	}) {
+	if !reflect.DeepEqual(err, &fs.PathError{Op: "unreadbyte", Path: "", Err: fs.ErrInvalid}) {
 		t.Errorf("test 1: expecting ErrClosed, got %s", err)
 
 		return
@@ -339,11 +335,7 @@ func TestUnreadByteRW(t *testing.T) {
 	}
 
 	err = f.UnreadByte()
-	if !reflect.DeepEqual(err, &fs.PathError{
-		Op:   "unreadbyte",
-		Path: "",
-		Err:  fs.ErrInvalid,
-	}) {
+	if !reflect.DeepEqual(err, &fs.PathError{Op: "unreadbyte", Path: "", Err: fs.ErrInvalid}) {
 		t.Errorf("test 6: expecting ErrInvalid error, got %s", err)
 
 		return
@@ -375,11 +367,7 @@ func TestUnreadByteRW(t *testing.T) {
 	f.Read([]byte{0})
 
 	err = f.UnreadByte()
-	if !reflect.DeepEqual(err, &fs.PathError{
-		Op:   "unreadbyte",
-		Path: "",
-		Err:  fs.ErrInvalid,
-	}) {
+	if !reflect.DeepEqual(err, &fs.PathError{Op: "unreadbyte", Path: "", Err: fs.ErrInvalid}) {
 		t.Errorf("test 10: expecting nil error, got %s", err)
 
 		return
@@ -499,11 +487,7 @@ func TestUnreadRuneRW(t *testing.T) {
 	f.ReadRune()
 
 	err := f.UnreadRune()
-	if !reflect.DeepEqual(err, &fs.PathError{
-		Op:   "unreadrune",
-		Path: "",
-		Err:  fs.ErrInvalid,
-	}) {
+	if !reflect.DeepEqual(err, &fs.PathError{Op: "unreadrune", Path: "", Err: fs.ErrInvalid}) {
 		t.Errorf("test 1: expecting ErrClosed, got %s", err)
 
 		return
@@ -541,11 +525,7 @@ func TestUnreadRuneRW(t *testing.T) {
 	}
 
 	err = f.UnreadRune()
-	if !reflect.DeepEqual(err, &fs.PathError{
-		Op:   "unreadrune",
-		Path: "",
-		Err:  fs.ErrInvalid,
-	}) {
+	if !reflect.DeepEqual(err, &fs.PathError{Op: "unreadrune", Path: "", Err: fs.ErrInvalid}) {
 		t.Errorf("test 6: expecting ErrInvalid error, got %s", err)
 
 		return
@@ -575,11 +555,7 @@ func TestUnreadRuneRW(t *testing.T) {
 	f.Read([]byte{0})
 
 	err = f.UnreadRune()
-	if !reflect.DeepEqual(err, &fs.PathError{
-		Op:   "unreadrune",
-		Path: "",
-		Err:  fs.ErrInvalid,
-	}) {
+	if !reflect.DeepEqual(err, &fs.PathError{Op: "unreadrune", Path: "", Err: fs.ErrInvalid}) {
 		t.Errorf("test 10: expecting nil error, got %s", err)
 
 		return
@@ -632,11 +608,7 @@ func TestWriteToRW(t *testing.T) {
 	var sb strings.Builder
 
 	_, err := f.WriteTo(&sb)
-	if !reflect.DeepEqual(err, &fs.PathError{
-		Op:   "writeto",
-		Path: "",
-		Err:  fs.ErrClosed,
-	}) {
+	if !reflect.DeepEqual(err, &fs.PathError{Op: "writeto", Path: "", Err: fs.ErrClosed}) {
 		t.Errorf("test 1: expecting to get error ErrClosed, got %s", err)
 	}
 
@@ -788,11 +760,7 @@ func TestWrite(t *testing.T) {
 	}
 
 	n, err := f.Write(toWrite[:10])
-	if !reflect.DeepEqual(err, &fs.PathError{
-		Op:   "write",
-		Path: "",
-		Err:  fs.ErrClosed,
-	}) {
+	if !reflect.DeepEqual(err, &fs.PathError{Op: "write", Path: "", Err: fs.ErrClosed}) {
 		t.Errorf("test 1: expecting ErrClosed, got %s", err)
 	} else if n != 0 {
 		t.Errorf("test 1: expecting to write 0 bytes, wrote %d", n)
@@ -840,11 +808,7 @@ func TestWriteAt(t *testing.T) {
 	}
 
 	n, err := f.WriteAt([]byte{0}, 0)
-	if !reflect.DeepEqual(err, &fs.PathError{
-		Op:   "writeat",
-		Path: "",
-		Err:  fs.ErrClosed,
-	}) {
+	if !reflect.DeepEqual(err, &fs.PathError{Op: "writeat", Path: "", Err: fs.ErrClosed}) {
 		t.Errorf("test 1: expecting ErrClosed, got %s", err)
 	} else if n != 0 {
 		t.Errorf("test 1: expecting to write 0 bytes, wrote %d", n)
@@ -916,11 +880,7 @@ func TestWriteString(t *testing.T) {
 	}
 
 	n, err := f.WriteString(string(toWrite[:10]))
-	if !reflect.DeepEqual(err, &fs.PathError{
-		Op:   "writestring",
-		Path: "",
-		Err:  fs.ErrClosed,
-	}) {
+	if !reflect.DeepEqual(err, &fs.PathError{Op: "writestring", Path: "", Err: fs.ErrClosed}) {
 		t.Errorf("test 1: expecting ErrClosed, got %s", err)
 	} else if n != 0 {
 		t.Errorf("test 1: expecting to write 0 bytes, wrote %d", n)
@@ -1033,11 +993,7 @@ func TestCloseRW(t *testing.T) {
 	}
 
 	_, err = f.WriteString("1")
-	if !reflect.DeepEqual(err, &fs.PathError{
-		Op:   "writestring",
-		Path: "",
-		Err:  fs.ErrClosed,
-	}) {
+	if !reflect.DeepEqual(err, &fs.PathError{Op: "writestring", Path: "", Err: fs.ErrClosed}) {
 		t.Errorf("test 3: expecting ErrClosed error, got %s", err)
 	}
 
@@ -1058,11 +1014,7 @@ func TestCloseRW(t *testing.T) {
 	}
 
 	_, err = f.Read(buf[:])
-	if !reflect.DeepEqual(err, &fs.PathError{
-		Op:   "read",
-		Path: "",
-		Err:  fs.ErrClosed,
-	}) {
+	if !reflect.DeepEqual(err, &fs.PathError{Op: "read", Path: "", Err: fs.ErrClosed}) {
 		t.Errorf("test 6: expecting ErrClosed error, got %s", err)
 	}
 
@@ -1081,11 +1033,7 @@ func TestCloseRW(t *testing.T) {
 	}
 
 	_, err = f.Seek(1, io.SeekStart)
-	if !reflect.DeepEqual(err, &fs.PathError{
-		Op:   "seek",
-		Path: "",
-		Err:  fs.ErrClosed,
-	}) {
+	if !reflect.DeepEqual(err, &fs.PathError{Op: "seek", Path: "", Err: fs.ErrClosed}) {
 		t.Errorf("test 9: expecting ErrClosed error, got %s", err)
 	}
 }

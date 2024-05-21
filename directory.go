@@ -167,11 +167,7 @@ func (d *directory) Close() error {
 
 func (d *directory) ReadDir(n int) ([]fs.DirEntry, error) {
 	if d.mode&0o444 == 0 {
-		return nil, &fs.PathError{
-			Op:   "readdir",
-			Path: d.name,
-			Err:  fs.ErrPermission,
-		}
+		return nil, &fs.PathError{Op: "readdir", Path: d.name, Err: fs.ErrPermission}
 	}
 
 	left := len(d.entries) - d.pos

@@ -316,7 +316,10 @@ func (f *FS) Rename(oldPath, newPath string) error {
 		return &fs.PathError{Op: "rename", Path: newPath, Err: fs.ErrPermission}
 	} else if err = od.removeEntry(oldFile.name); err != nil {
 		return &fs.PathError{Op: "rename", Path: newPath, Err: err}
-	} else if err = nd.setEntry(&dirEnt{directoryEntry: oldFile.directoryEntry, name: filepath.Base(newPath)}); err != nil {
+	} else if err = nd.setEntry(&dirEnt{
+		directoryEntry: oldFile.directoryEntry,
+		name:           filepath.Base(newPath),
+	}); err != nil {
 		return &fs.PathError{Op: "rename", Path: newPath, Err: err}
 	}
 

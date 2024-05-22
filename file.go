@@ -66,7 +66,7 @@ type file struct {
 	pos      int64
 }
 
-func (f *file) validTo(op string, m opMode, needValidPos bool) error {
+func (f *file) validTo(m opMode, needValidPos bool) error {
 	if f.opMode == opClose {
 		return fs.ErrClosed
 	}
@@ -91,7 +91,7 @@ func (f *file) Stat() (fs.FileInfo, error) {
 }
 
 func (f *file) Read(p []byte) (int, error) {
-	if err := f.validTo("read", opRead, true); err != nil {
+	if err := f.validTo(opRead, true); err != nil {
 		return 0, err
 	}
 
@@ -104,7 +104,7 @@ func (f *file) Read(p []byte) (int, error) {
 }
 
 func (f *file) ReadAt(p []byte, off int64) (int, error) {
-	if err := f.validTo("readat", opRead|opSeek, false); err != nil {
+	if err := f.validTo(opRead|opSeek, false); err != nil {
 		return 0, err
 	}
 
@@ -122,7 +122,7 @@ func (f *file) ReadAt(p []byte, off int64) (int, error) {
 }
 
 func (f *file) ReadByte() (byte, error) {
-	if err := f.validTo("readbyte", opRead, true); err != nil {
+	if err := f.validTo(opRead, true); err != nil {
 		return 0, err
 	}
 
@@ -135,7 +135,7 @@ func (f *file) ReadByte() (byte, error) {
 }
 
 func (f *file) UnreadByte() error {
-	if err := f.validTo("unreadbyte", opRead|opSeek, false); err != nil {
+	if err := f.validTo(opRead|opSeek, false); err != nil {
 		return err
 	}
 
@@ -150,7 +150,7 @@ func (f *file) UnreadByte() error {
 }
 
 func (f *file) ReadRune() (rune, int, error) {
-	if err := f.validTo("readrune", opRead, true); err != nil {
+	if err := f.validTo(opRead, true); err != nil {
 		return 0, 0, err
 	}
 
@@ -163,7 +163,7 @@ func (f *file) ReadRune() (rune, int, error) {
 }
 
 func (f *file) UnreadRune() error {
-	if err := f.validTo("unreadrune", opRead|opSeek, false); err != nil {
+	if err := f.validTo(opRead|opSeek, false); err != nil {
 		return err
 	}
 
@@ -178,7 +178,7 @@ func (f *file) UnreadRune() error {
 }
 
 func (f *file) WriteTo(w io.Writer) (int64, error) {
-	if err := f.validTo("writeto", opRead, true); err != nil {
+	if err := f.validTo(opRead, true); err != nil {
 		return 0, err
 	}
 
@@ -190,7 +190,7 @@ func (f *file) WriteTo(w io.Writer) (int64, error) {
 }
 
 func (f *file) Seek(offset int64, whence int) (int64, error) {
-	if err := f.validTo("seek", opSeek, false); err != nil {
+	if err := f.validTo(opSeek, false); err != nil {
 		return 0, err
 	}
 
@@ -217,7 +217,7 @@ func (f *file) Seek(offset int64, whence int) (int64, error) {
 }
 
 func (f *file) Close() error {
-	err := f.validTo("close", opClose, false)
+	err := f.validTo(opClose, false)
 
 	f.opMode = opClose
 	f.pos = 0

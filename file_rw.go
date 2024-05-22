@@ -152,7 +152,7 @@ func (f *File) WriteTo(w io.Writer) (int64, error) {
 	f.mu.Lock()
 	defer f.mu.Unlock()
 
-	if err := f.validTo("writeto", opRead, true); err != nil {
+	if err := f.validTo(opRead, true); err != nil {
 		return 0, err
 	}
 
@@ -206,7 +206,7 @@ func (f *File) Write(p []byte) (int, error) {
 	f.mu.Lock()
 	defer f.mu.Unlock()
 
-	if err := f.validTo("write", opWrite, false); err != nil {
+	if err := f.validTo(opWrite, false); err != nil {
 		return 0, err
 	}
 
@@ -224,7 +224,7 @@ func (f *File) WriteAt(p []byte, off int64) (int, error) {
 	f.mu.Lock()
 	defer f.mu.Unlock()
 
-	if err := f.validTo("writeat", opWrite|opSeek, false); err != nil {
+	if err := f.validTo(opWrite|opSeek, false); err != nil {
 		return 0, err
 	}
 
@@ -240,7 +240,7 @@ func (f *File) WriteString(str string) (int, error) {
 	f.mu.Lock()
 	defer f.mu.Unlock()
 
-	if err := f.validTo("writestring", opWrite, false); err != nil {
+	if err := f.validTo(opWrite, false); err != nil {
 		return 0, err
 	}
 
@@ -258,7 +258,7 @@ func (f *File) WriteByte(c byte) error {
 	f.mu.Lock()
 	defer f.mu.Unlock()
 
-	if err := f.validTo("writebyte", opWrite, false); err != nil {
+	if err := f.validTo(opWrite, false); err != nil {
 		return err
 	}
 
@@ -276,7 +276,7 @@ func (f *File) WriteRune(r rune) (int, error) {
 	f.mu.Lock()
 	defer f.mu.Unlock()
 
-	if err := f.validTo("writerune", opWrite, false); err != nil {
+	if err := f.validTo(opWrite, false); err != nil {
 		return 0, err
 	}
 
@@ -296,7 +296,7 @@ func (f *File) ReadFrom(r io.Reader) (int64, error) {
 	f.mu.Lock()
 	defer f.mu.Unlock()
 
-	if err := f.validTo("readfrom", opWrite, false); err != nil {
+	if err := f.validTo(opWrite, false); err != nil {
 		return 0, err
 	}
 

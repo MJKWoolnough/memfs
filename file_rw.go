@@ -44,6 +44,13 @@ func (i *inodeRW) bytes() ([]byte, error) {
 	return append(make([]byte, 0, len(bytes)), bytes...), nil
 }
 
+func (i *inodeRW) string() (string, error) {
+	i.mu.RLock()
+	defer i.mu.RUnlock()
+
+	return i.inode.string()
+}
+
 func (i *inodeRW) setMode(mode fs.FileMode) {
 	i.mu.Lock()
 	defer i.mu.Unlock()

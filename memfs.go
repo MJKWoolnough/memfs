@@ -131,18 +131,15 @@ func (r *resolver) handleSymlink(sym *dirEnt) error {
 		return fs.ErrInvalid
 	}
 
-	symPath, err := sym.bytes()
+	symPath, err := sym.string()
 	if err != nil {
 		return err
-	}
-
-	symPathS := string(symPath)
-	if strings.HasPrefix(symPathS, "/") {
-		r.fullPath = path.Clean(symPathS)[1:]
+	} else if strings.HasPrefix(symPath, "/") {
+		r.fullPath = path.Clean(symPath)[1:]
 	} else if r.path == "" {
-		r.fullPath = path.Join(r.fullPath[:r.cutAt], symPathS)
+		r.fullPath = path.Join(r.fullPath[:r.cutAt], symPath)
 	} else {
-		r.fullPath = path.Join(r.fullPath[:r.cutAt-len(sym.name)-1], symPathS, r.path)
+		r.fullPath = path.Join(r.fullPath[:r.cutAt-len(sym.name)-1], symPath, r.path)
 	}
 
 	r.path = r.fullPath
@@ -306,7 +303,7 @@ func (f *fsRO) Readlink(path string) (string, error) {
 		}
 	}
 
-	b, err := de.bytes()
+	b, err := de.string()
 	if err != nil {
 		return "", &fs.PathError{
 			Op:   "readlink",
@@ -315,7 +312,7 @@ func (f *fsRO) Readlink(path string) (string, error) {
 		}
 	}
 
-	return string(b), nil
+	return b, nil
 }
 
 func (f *fsRO) sub(path string) (directoryEntry, error) {

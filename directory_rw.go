@@ -57,20 +57,7 @@ func (d *dnodeRW) removeEntry(name string) error {
 	d.mu.Lock()
 	defer d.mu.Unlock()
 
-	if d.mode&modeWrite == 0 {
-		return fs.ErrPermission
-	}
-
-	for n, de := range d.entries {
-		if de.name == name {
-			d.entries = append(d.entries[:n], d.entries[n+1:]...)
-			d.modtime = time.Now()
-
-			return nil
-		}
-	}
-
-	return fs.ErrNotExist
+	return d.dnode.removeEntry(name)
 }
 
 func (d *dnodeRW) setMode(mode fs.FileMode) {

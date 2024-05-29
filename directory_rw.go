@@ -93,7 +93,7 @@ func (d *dnodeRW) Type() fs.FileMode {
 	d.mu.RLock()
 	defer d.mu.RUnlock()
 
-	return d.mode
+	return d.mode.Type()
 }
 
 func (d *dnodeRW) Mode() fs.FileMode {

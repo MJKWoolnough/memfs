@@ -5,28 +5,28 @@ package memfs // import "vimagination.zapto.org/memfs"
 import (
 	"errors"
 	"io/fs"
-	"path/filepath"
+	"path"
 )
 
 type fsRO struct {
 	de directoryEntry
 }
 
-func (f *fsRO) joinRoot(path string) string {
-	return filepath.Join(slash, path)
+func (f *fsRO) joinRoot(p string) string {
+	return path.Join(slash, p)
 }
 
-func (f *fsRO) Open(path string) (fs.File, error) {
-	de, err := f.getEntry(path)
+func (f *fsRO) Open(p string) (fs.File, error) {
+	de, err := f.getEntry(p)
 	if err != nil {
-		return nil, &fs.PathError{Op: "open", Path: path, Err: err}
+		return nil, &fs.PathError{Op: "open", Path: p, Err: err}
 	}
 
-	_, fileName := filepath.Split(path)
+	_, fileName := path.Split(p)
 
 	of, err := de.open(fileName, opRead|opSeek)
 	if err != nil {
-		return nil, &fs.PathError{Op: "open", Path: path, Err: err}
+		return nil, &fs.PathError{Op: "open", Path: p, Err: err}
 	}
 
 	return of, nil
@@ -45,7 +45,7 @@ func (f *fsRO) getDirEnt(path string) (dNode, error) {
 
 const (
 	maxRedirects uint8 = 255
-	slash              = string(filepath.Separator)
+	slash              = "/"
 )
 
 func (f *fsRO) getEntry(path string) (directoryEntry, error) {
@@ -56,13 +56,13 @@ func (f *fsRO) getEntry(path string) (directoryEntry, error) {
 	return f.getEntryWithoutCheck(path)
 }
 
-func (f *fsRO) getLEntry(path string) (*dirEnt, error) {
-	if !fs.ValidPath(path) {
+func (f *fsRO) getLEntry(p string) (*dirEnt, error) {
+	if !fs.ValidPath(p) {
 		return nil, fs.ErrInvalid
 	}
 
-	jpath := f.joinRoot(path)
-	dirName, fileName := filepath.Split(jpath)
+	jpath := f.joinRoot(p)
+	dirName, fileName := path.Split(jpath)
 
 	de, err := f.getEntryWithoutCheck(dirName)
 	if err != nil {
@@ -138,13 +138,13 @@ func (f *fsRO) ReadFile(path string) ([]byte, error) {
 	return data, nil
 }
 
-func (f *fsRO) Stat(path string) (fs.FileInfo, error) {
-	de, err := f.getEntry(path)
+func (f *fsRO) Stat(p string) (fs.FileInfo, error) {
+	de, err := f.getEntry(p)
 	if err != nil {
-		return nil, &fs.PathError{Op: "stat", Path: path, Err: err}
+		return nil, &fs.PathError{Op: "stat", Path: p, Err: err}
 	}
 
-	base := filepath.Base(path)
+	base := path.Base(p)
 
 	if base == "." {
 		base = slash

@@ -3,7 +3,7 @@ package memfs
 import (
 	"errors"
 	"io/fs"
-	"path/filepath"
+	"path"
 	"strings"
 	"sync"
 	"time"
@@ -92,8 +92,8 @@ func (f *FS) Mkdir(path string, perm fs.FileMode) error {
 	return f.mkdir("mkdir", path, path, perm)
 }
 
-func (f *FS) mkdir(op, opath, path string, perm fs.FileMode) error {
-	d, _, err := f.getEntryWithParent(path, mustNotExist)
+func (f *FS) mkdir(op, opath, p string, perm fs.FileMode) error {
+	d, _, err := f.getEntryWithParent(p, mustNotExist)
 	if err != nil {
 		return &fs.PathError{Op: op, Path: opath, Err: err}
 	}
@@ -105,7 +105,7 @@ func (f *FS) mkdir(op, opath, path string, perm fs.FileMode) error {
 				mode:    fs.ModeDir | perm,
 			},
 		},
-		name: filepath.Base(path),
+		name: path.Base(p),
 	}); err != nil {
 		return &fs.PathError{Op: op, Path: opath, Err: err}
 	}
@@ -113,15 +113,15 @@ func (f *FS) mkdir(op, opath, path string, perm fs.FileMode) error {
 	return nil
 }
 
-func (f *FS) MkdirAll(path string, perm fs.FileMode) error {
+func (f *FS) MkdirAll(p string, perm fs.FileMode) error {
 	f.mu.Lock()
 	defer f.mu.Unlock()
 
-	cpath := filepath.Join(slash, path)
+	cpath := path.Join(slash, p)
 	last := 0
 
 	for {
-		pos := strings.IndexRune(cpath[last:], filepath.Separator)
+		pos := strings.IndexRune(cpath[last:], '/')
 		if pos < 0 {
 			break
 		} else if pos == 0 {
@@ -132,12 +132,12 @@ func (f *FS) MkdirAll(path string, perm fs.FileMode) error {
 
 		last += pos
 
-		if err := f.mkdir("mkdirall", path, cpath[:last], perm); err != nil && !errors.Is(err, fs.ErrExist) {
+		if err := f.mkdir("mkdirall", p, cpath[:last], perm); err != nil && !errors.Is(err, fs.ErrExist) {
 			return err
 		}
 	}
 
-	return f.mkdir("mkdirall", path, cpath, perm)
+	return f.mkdir("mkdirall", p, cpath, perm)
 }
 
 const defaultPerms = 0o666
@@ -186,13 +186,13 @@ func openMode(mode Mode) opMode {
 	return openMode
 }
 
-func (f *FS) openOrCreateFile(path string, mode Mode, perm fs.FileMode) (fs.File, error) {
-	d, existingFile, err := f.getEntryWithParent(path, existCheck(mode))
+func (f *FS) openOrCreateFile(p string, mode Mode, perm fs.FileMode) (fs.File, error) {
+	d, existingFile, err := f.getEntryWithParent(p, existCheck(mode))
 	if err != nil {
 		return nil, err
 	}
 
-	fileName := filepath.Base(path)
+	fileName := path.Base(p)
 
 	if existingFile == nil {
 		existingFile = &dirEnt{
@@ -246,7 +246,7 @@ func (f *FS) Link(oldPath, newPath string) error {
 		return &fs.PathError{Op: "link", Path: oldPath, Err: fs.ErrInvalid}
 	} else if d, _, err := f.getEntryWithParent(newPath, mustNotExist); err != nil {
 		return &fs.PathError{Op: "link", Path: newPath, Err: err}
-	} else if err := d.setEntry(&dirEnt{directoryEntry: oe.directoryEntry, name: filepath.Base(newPath)}); err != nil {
+	} else if err := d.setEntry(&dirEnt{directoryEntry: oe.directoryEntry, name: path.Base(newPath)}); err != nil {
 		return &fs.PathError{Op: "link", Path: newPath, Err: err}
 	}
 
@@ -265,12 +265,12 @@ func (f *FS) Symlink(oldPath, newPath string) error {
 	if err = d.setEntry(&dirEnt{
 		directoryEntry: &inodeRW{
 			inode: inode{
-				data:    []byte(filepath.Clean(oldPath)),
+				data:    []byte(path.Clean(oldPath)),
 				modtime: time.Now(),
 				mode:    fs.ModeSymlink | fs.ModePerm,
 			},
 		},
-		name: filepath.Base(newPath),
+		name: path.Base(newPath),
 	}); err != nil {
 		return &fs.PathError{Op: "symlink", Path: newPath, Err: err}
 	}
@@ -294,7 +294,7 @@ func (f *FS) Rename(oldPath, newPath string) error {
 		return &fs.PathError{Op: "rename", Path: newPath, Err: err}
 	} else if err = nd.setEntry(&dirEnt{
 		directoryEntry: oldFile.directoryEntry,
-		name:           filepath.Base(newPath),
+		name:           path.Base(newPath),
 	}); err != nil {
 		return &fs.PathError{Op: "rename", Path: newPath, Err: err}
 	}
@@ -322,8 +322,8 @@ func (f *FS) Remove(path string) error {
 	return nil
 }
 
-func splitPath(path string) (string, string) {
-	dirName, fileName := filepath.Split(filepath.Join("/", path))
+func splitPath(p string) (string, string) {
+	dirName, fileName := path.Split(path.Join("/", p))
 
 	if dirName == "/" {
 		dirName = "."

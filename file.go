@@ -39,7 +39,7 @@ func (i *inode) bytes() ([]byte, error) {
 		return nil, fs.ErrPermission
 	}
 
-	return i.data, nil
+	return append(make([]byte, 0, len(i.data)), i.data...), nil
 }
 
 func (i *inode) string() (string, error) {

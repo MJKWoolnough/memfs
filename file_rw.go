@@ -36,12 +36,7 @@ func (i *inodeRW) bytes() ([]byte, error) {
 	i.mu.RLock()
 	defer i.mu.RUnlock()
 
-	bytes, err := i.inode.bytes()
-	if err != nil {
-		return nil, err
-	}
-
-	return append(make([]byte, 0, len(bytes)), bytes...), nil
+	return i.inode.bytes()
 }
 
 func (i *inodeRW) string() (string, error) {

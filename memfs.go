@@ -150,7 +150,7 @@ func (f *fsRO) ReadFile(path string) ([]byte, error) {
 		}
 	}
 
-	b, err := de.bytes()
+	data, err := de.bytes()
 	if err != nil {
 		return nil, &fs.PathError{
 			Op:   "readfile",
@@ -158,10 +158,6 @@ func (f *fsRO) ReadFile(path string) ([]byte, error) {
 			Err:  err,
 		}
 	}
-
-	data := make([]byte, len(b))
-
-	copy(data, b)
 
 	return data, nil
 }

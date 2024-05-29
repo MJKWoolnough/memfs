@@ -16,6 +16,11 @@ const (
 	opSeek
 )
 
+const (
+	modeRead  = 0o444
+	modeWrite = 0o222
+)
+
 type inode struct {
 	modtime time.Time
 	data    []byte
@@ -23,7 +28,7 @@ type inode struct {
 }
 
 func (i *inode) open(name string, mode opMode) (fs.File, error) {
-	if mode&opRead > 0 && i.mode&0o444 == 0 || mode&opWrite > 0 && i.mode&0o222 == 0 {
+	if mode&opRead > 0 && i.mode&modeRead == 0 || mode&opWrite > 0 && i.mode&modeWrite == 0 {
 		return nil, fs.ErrPermission
 	}
 
@@ -35,7 +40,7 @@ func (i *inode) open(name string, mode opMode) (fs.File, error) {
 }
 
 func (i *inode) bytes() ([]byte, error) {
-	if i.mode&0o444 == 0 {
+	if i.mode&modeRead == 0 {
 		return nil, fs.ErrPermission
 	}
 
@@ -43,7 +48,7 @@ func (i *inode) bytes() ([]byte, error) {
 }
 
 func (i *inode) string() (string, error) {
-	if i.mode&0o444 == 0 {
+	if i.mode&modeRead == 0 {
 		return "", fs.ErrPermission
 	}
 

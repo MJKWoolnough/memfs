@@ -18,7 +18,7 @@ func (i *inodeRW) open(name string, mode opMode) (fs.File, error) {
 	i.mu.Lock()
 	defer i.mu.Unlock()
 
-	if mode&opRead > 0 && i.mode&0o444 == 0 || mode&opWrite > 0 && i.mode&0o222 == 0 {
+	if mode&opRead > 0 && i.mode&modeRead == 0 || mode&opWrite > 0 && i.mode&modeWrite == 0 {
 		return nil, fs.ErrPermission
 	}
 

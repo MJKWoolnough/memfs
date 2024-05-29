@@ -26,7 +26,7 @@ func (r *resolver) resolve(root directoryEntry) (directoryEntry, error) {
 	curr := root
 
 	for r.path != "" {
-		if curr.Mode()&0o444 == 0 {
+		if curr.Mode()&modeRead == 0 {
 			return nil, fs.ErrPermission
 		} else if name := r.splitOffNamePart(); isEmptyName(name) {
 			continue

@@ -60,20 +60,12 @@ func (f *FS) ReadDir(path string) ([]fs.DirEntry, error) {
 
 	d, err := f.getDirEnt(path)
 	if err != nil {
-		return nil, &fs.PathError{
-			Op:   "readdir",
-			Path: path,
-			Err:  err,
-		}
+		return nil, &fs.PathError{Op: "readdir", Path: path, Err: err}
 	}
 
 	des, err := d.getEntries()
 	if err != nil {
-		return nil, &fs.PathError{
-			Op:   "readdir",
-			Path: path,
-			Err:  err,
-		}
+		return nil, &fs.PathError{Op: "readdir", Path: path, Err: err}
 	}
 
 	return des, nil
@@ -103,11 +95,7 @@ func (f *FS) Mkdir(path string, perm fs.FileMode) error {
 func (f *FS) mkdir(op, opath, path string, perm fs.FileMode) error {
 	d, _, err := f.getEntryWithParent(path, mustNotExist)
 	if err != nil {
-		return &fs.PathError{
-			Op:   op,
-			Path: opath,
-			Err:  err,
-		}
+		return &fs.PathError{Op: op, Path: opath, Err: err}
 	}
 
 	if err := d.setEntry(&dirEnt{
@@ -119,11 +107,7 @@ func (f *FS) mkdir(op, opath, path string, perm fs.FileMode) error {
 		},
 		name: filepath.Base(path),
 	}); err != nil {
-		return &fs.PathError{
-			Op:   op,
-			Path: opath,
-			Err:  err,
-		}
+		return &fs.PathError{Op: op, Path: opath, Err: err}
 	}
 
 	return nil
@@ -275,11 +259,7 @@ func (f *FS) Symlink(oldPath, newPath string) error {
 
 	d, _, err := f.getEntryWithParent(newPath, mustNotExist)
 	if err != nil {
-		return &fs.PathError{
-			Op:   "symlink",
-			Path: newPath,
-			Err:  err,
-		}
+		return &fs.PathError{Op: "symlink", Path: newPath, Err: err}
 	}
 
 	if err = d.setEntry(&dirEnt{
@@ -292,11 +272,7 @@ func (f *FS) Symlink(oldPath, newPath string) error {
 		},
 		name: filepath.Base(newPath),
 	}); err != nil {
-		return &fs.PathError{
-			Op:   "symlink",
-			Path: newPath,
-			Err:  err,
-		}
+		return &fs.PathError{Op: "symlink", Path: newPath, Err: err}
 	}
 
 	return nil
@@ -366,19 +342,11 @@ func (f *FS) RemoveAll(path string) error {
 
 	d, err := f.getDirEnt(dirName)
 	if err != nil {
-		return &fs.PathError{
-			Op:   "removeall",
-			Path: path,
-			Err:  err,
-		}
+		return &fs.PathError{Op: "removeall", Path: path, Err: err}
 	}
 
 	if err := d.removeEntry(fileName); err != nil {
-		return &fs.PathError{
-			Op:   "removeall",
-			Path: path,
-			Err:  err,
-		}
+		return &fs.PathError{Op: "removeall", Path: path, Err: err}
 	}
 
 	return nil
@@ -403,11 +371,7 @@ func (f *FS) Chown(path string, _, _ int) error {
 	defer f.mu.RUnlock()
 
 	if _, err := f.getEntry(path); err != nil {
-		return &fs.PathError{
-			Op:   "chown",
-			Path: path,
-			Err:  err,
-		}
+		return &fs.PathError{Op: "chown", Path: path, Err: err}
 	}
 
 	return nil
@@ -419,11 +383,7 @@ func (f *FS) Chmod(path string, mode fs.FileMode) error {
 
 	de, err := f.getEntry(path)
 	if err != nil {
-		return &fs.PathError{
-			Op:   "chmod",
-			Path: path,
-			Err:  err,
-		}
+		return &fs.PathError{Op: "chmod", Path: path, Err: err}
 	}
 
 	de.setMode(mode & fs.ModePerm)
@@ -436,11 +396,7 @@ func (f *FS) Lchown(path string, _, _ int) error {
 	defer f.mu.RUnlock()
 
 	if _, err := f.getLEntry(path); err != nil {
-		return &fs.PathError{
-			Op:   "lchown",
-			Path: path,
-			Err:  err,
-		}
+		return &fs.PathError{Op: "lchown", Path: path, Err: err}
 	}
 
 	return nil
@@ -452,11 +408,7 @@ func (f *FS) Chtimes(path string, atime time.Time, mtime time.Time) error {
 
 	de, err := f.getEntry(path)
 	if err != nil {
-		return &fs.PathError{
-			Op:   "chtimes",
-			Path: path,
-			Err:  err,
-		}
+		return &fs.PathError{Op: "chtimes", Path: path, Err: err}
 	}
 
 	de.setTimes(atime, mtime)
@@ -470,11 +422,7 @@ func (f *FS) Lchtimes(path string, atime time.Time, mtime time.Time) error {
 
 	de, err := f.getLEntry(path)
 	if err != nil {
-		return &fs.PathError{
-			Op:   "lchtimes",
-			Path: path,
-			Err:  err,
-		}
+		return &fs.PathError{Op: "lchtimes", Path: path, Err: err}
 	}
 
 	de.setTimes(atime, mtime)

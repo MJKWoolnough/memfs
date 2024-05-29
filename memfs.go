@@ -19,22 +19,14 @@ func (f *fsRO) joinRoot(path string) string {
 func (f *fsRO) Open(path string) (fs.File, error) {
 	de, err := f.getEntry(path)
 	if err != nil {
-		return nil, &fs.PathError{
-			Op:   "open",
-			Path: path,
-			Err:  err,
-		}
+		return nil, &fs.PathError{Op: "open", Path: path, Err: err}
 	}
 
 	_, fileName := filepath.Split(path)
 
 	of, err := de.open(fileName, opRead|opSeek)
 	if err != nil {
-		return nil, &fs.PathError{
-			Op:   "open",
-			Path: path,
-			Err:  err,
-		}
+		return nil, &fs.PathError{Op: "open", Path: path, Err: err}
 	}
 
 	return of, nil
@@ -121,20 +113,12 @@ func (f *fsRO) getEntryWithParent(path string, exists exists) (dNode, *dirEnt, e
 func (f *fsRO) ReadDir(path string) ([]fs.DirEntry, error) {
 	d, err := f.getDirEnt(path)
 	if err != nil {
-		return nil, &fs.PathError{
-			Op:   "readdir",
-			Path: path,
-			Err:  err,
-		}
+		return nil, &fs.PathError{Op: "readdir", Path: path, Err: err}
 	}
 
 	es, err := d.getEntries()
 	if err != nil {
-		return nil, &fs.PathError{
-			Op:   "readdir",
-			Path: path,
-			Err:  err,
-		}
+		return nil, &fs.PathError{Op: "readdir", Path: path, Err: err}
 	}
 
 	return es, nil
@@ -143,20 +127,12 @@ func (f *fsRO) ReadDir(path string) ([]fs.DirEntry, error) {
 func (f *fsRO) ReadFile(path string) ([]byte, error) {
 	de, err := f.getEntry(path)
 	if err != nil {
-		return nil, &fs.PathError{
-			Op:   "readfile",
-			Path: path,
-			Err:  err,
-		}
+		return nil, &fs.PathError{Op: "readfile", Path: path, Err: err}
 	}
 
 	data, err := de.bytes()
 	if err != nil {
-		return nil, &fs.PathError{
-			Op:   "readfile",
-			Path: path,
-			Err:  err,
-		}
+		return nil, &fs.PathError{Op: "readfile", Path: path, Err: err}
 	}
 
 	return data, nil
@@ -165,11 +141,7 @@ func (f *fsRO) ReadFile(path string) ([]byte, error) {
 func (f *fsRO) Stat(path string) (fs.FileInfo, error) {
 	de, err := f.getEntry(path)
 	if err != nil {
-		return nil, &fs.PathError{
-			Op:   "stat",
-			Path: path,
-			Err:  err,
-		}
+		return nil, &fs.PathError{Op: "stat", Path: path, Err: err}
 	}
 
 	base := filepath.Base(path)
@@ -187,11 +159,7 @@ func (f *fsRO) Stat(path string) (fs.FileInfo, error) {
 func (f *fsRO) LStat(path string) (fs.FileInfo, error) {
 	de, err := f.getLEntry(path)
 	if err != nil {
-		return nil, &fs.PathError{
-			Op:   "lstat",
-			Path: path,
-			Err:  err,
-		}
+		return nil, &fs.PathError{Op: "lstat", Path: path, Err: err}
 	}
 
 	return de, nil
@@ -200,28 +168,16 @@ func (f *fsRO) LStat(path string) (fs.FileInfo, error) {
 func (f *fsRO) Readlink(path string) (string, error) {
 	de, err := f.getLEntry(path)
 	if err != nil {
-		return "", &fs.PathError{
-			Op:   "readlink",
-			Path: path,
-			Err:  err,
-		}
+		return "", &fs.PathError{Op: "readlink", Path: path, Err: err}
 	}
 
 	if de.Mode()&fs.ModeSymlink == 0 {
-		return "", &fs.PathError{
-			Op:   "readlink",
-			Path: path,
-			Err:  fs.ErrInvalid,
-		}
+		return "", &fs.PathError{Op: "readlink", Path: path, Err: fs.ErrInvalid}
 	}
 
 	b, err := de.string()
 	if err != nil {
-		return "", &fs.PathError{
-			Op:   "readlink",
-			Path: path,
-			Err:  err,
-		}
+		return "", &fs.PathError{Op: "readlink", Path: path, Err: err}
 	}
 
 	return b, nil
@@ -230,17 +186,9 @@ func (f *fsRO) Readlink(path string) (string, error) {
 func (f *fsRO) sub(path string) (directoryEntry, error) {
 	de, err := f.getEntry(path)
 	if err != nil {
-		return nil, &fs.PathError{
-			Op:   "sub",
-			Path: path,
-			Err:  err,
-		}
+		return nil, &fs.PathError{Op: "sub", Path: path, Err: err}
 	} else if !de.IsDir() {
-		return nil, &fs.PathError{
-			Op:   "sub",
-			Path: path,
-			Err:  fs.ErrInvalid,
-		}
+		return nil, &fs.PathError{Op: "sub", Path: path, Err: fs.ErrInvalid}
 	}
 
 	return de, nil

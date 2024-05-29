@@ -12,7 +12,7 @@ type dnodeRW struct {
 }
 
 func (d *dnodeRW) open(name string, _ opMode) (fs.File, error) {
-	if d.mode&0o444 == 0 {
+	if d.mode&modeRead == 0 {
 		return nil, fs.ErrPermission
 	}
 
@@ -57,7 +57,7 @@ func (d *dnodeRW) removeEntry(name string) error {
 	d.mu.Lock()
 	defer d.mu.Unlock()
 
-	if d.mode&0o222 == 0 {
+	if d.mode&modeWrite == 0 {
 		return fs.ErrPermission
 	}
 

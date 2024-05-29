@@ -54,7 +54,7 @@ type dnode struct {
 }
 
 func (d *dnode) open(name string, _ opMode) (fs.File, error) {
-	if d.mode&0o444 == 0 {
+	if d.mode&modeRead == 0 {
 		return nil, fs.ErrPermission
 	}
 
@@ -73,7 +73,7 @@ func (d *dnode) string() (string, error) {
 }
 
 func (d *dnode) getEntry(name string) (*dirEnt, error) {
-	if d.mode&0o444 == 0 {
+	if d.mode&modeRead == 0 {
 		return nil, fs.ErrPermission
 	}
 
@@ -87,7 +87,7 @@ func (d *dnode) getEntry(name string) (*dirEnt, error) {
 }
 
 func (d *dnode) setEntry(de *dirEnt) error {
-	if d.mode&0o222 == 0 {
+	if d.mode&modeWrite == 0 {
 		return fs.ErrPermission
 	}
 
@@ -102,7 +102,7 @@ func (d *dnode) hasEntries() bool {
 }
 
 func (d *dnode) getEntries() ([]fs.DirEntry, error) {
-	if d.mode&0o444 == 0 {
+	if d.mode&modeRead == 0 {
 		return nil, fs.ErrPermission
 	}
 
@@ -116,7 +116,7 @@ func (d *dnode) getEntries() ([]fs.DirEntry, error) {
 }
 
 func (d *dnode) removeEntry(name string) error {
-	if d.mode&0o222 == 0 {
+	if d.mode&modeWrite == 0 {
 		return fs.ErrPermission
 	}
 
@@ -167,7 +167,7 @@ func (d *directory) Close() error {
 }
 
 func (d *directory) ReadDir(n int) ([]fs.DirEntry, error) {
-	if d.mode&0o444 == 0 {
+	if d.mode&modeRead == 0 {
 		return nil, fs.ErrPermission
 	}
 

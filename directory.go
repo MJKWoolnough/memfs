@@ -229,3 +229,7 @@ func (d *dnode) IsDir() bool {
 func (d *directory) Sys() any {
 	return d
 }
+
+func (d *directory) String() string {
+	return fs.FormatFileInfo(d)
+}

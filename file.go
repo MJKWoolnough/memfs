@@ -266,3 +266,7 @@ func (i *inode) IsDir() bool {
 func (f *file) Sys() any {
 	return f
 }
+
+func (f *file) String() string {
+	return fs.FormatFileInfo(f)
+}

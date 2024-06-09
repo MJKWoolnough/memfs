@@ -48,6 +48,10 @@ func (d *dirEnt) Sys() any {
 	return d.directoryEntry
 }
 
+func (d *dirEnt) String() string {
+	return fs.FormatDirEntry(d)
+}
+
 type dnode struct {
 	entries []*dirEnt
 	modtime time.Time

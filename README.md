@@ -32,7 +32,7 @@ func (f *FS) Chmod(path string, mode fs.FileMode) error
 #### func (*FS) Chown
 
 ```go
-func (f *FS) Chown(path string, uid, gid int) error
+func (f *FS) Chown(path string, _, _ int) error
 ```
 
 #### func (*FS) Chtimes
@@ -56,7 +56,7 @@ func (f *FS) LStat(path string) (fs.FileInfo, error)
 #### func (*FS) Lchown
 
 ```go
-func (f *FS) Lchown(path string, uid, gid int) error
+func (f *FS) Lchown(path string, _, _ int) error
 ```
 
 #### func (*FS) Lchtimes
@@ -80,13 +80,13 @@ func (f *FS) Mkdir(path string, perm fs.FileMode) error
 #### func (*FS) MkdirAll
 
 ```go
-func (f *FS) MkdirAll(path string, perm fs.FileMode) error
+func (f *FS) MkdirAll(p string, perm fs.FileMode) error
 ```
 
 #### func (*FS) Open
 
 ```go
-func (f *FS) Open(path string) (fs.File, error)
+func (f *FS) Open(p string) (fs.File, error)
 ```
 
 #### func (*FS) OpenFile
@@ -247,6 +247,12 @@ func (f *File) Seek(offset int64, whence int) (int64, error)
 
 ```go
 func (f *File) Stat() (fs.FileInfo, error)
+```
+
+#### func (*File) String
+
+```go
+func (f *File) String() string
 ```
 
 #### func (*File) Sys

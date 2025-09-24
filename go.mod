@@ -1,3 +1,3 @@
 module vimagination.zapto.org/memfs
 
-go 1.20
+go 1.23
